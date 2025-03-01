@@ -1,0 +1,35 @@
+import { 
+  HtmlIcon, 
+  CssIcon, 
+  JavascriptIcon, 
+  TypescriptIcon, 
+  ReactIcon, 
+  NodejsIcon, 
+  NginxIcon, 
+  StrapiIcon, 
+  MongodbIcon, 
+  MysqlIcon, 
+  ReduxIcon, 
+  ExpressIcon, 
+  NestjsIcon, 
+  DockerIcon, 
+  AwsIcon 
+} from "@/components/icons";
+
+export const skillsData = [
+  { name: 'HTML', icon: HtmlIcon, color: 'text-orange-500' },
+  { name: 'CSS', icon: CssIcon, color: 'text-blue-500' },
+  { name: 'Javascript', icon: JavascriptIcon, color: 'text-yellow-500' },
+  { name: 'Typescript', icon: TypescriptIcon, color: 'text-blue-600' },
+  { name: 'React', icon: ReactIcon, color: 'text-cyan-400' },
+  { name: 'Redux', icon: ReduxIcon, color: 'text-purple-500' },
+  { name: 'Node.js', icon: NodejsIcon, color: 'text-green-500' },
+  { name: 'Express', icon: ExpressIcon, color: 'text-gray-400' },
+  { name: 'NestJS', icon: NestjsIcon, color: 'text-red-500' },
+  { name: 'MongoDB', icon: MongodbIcon, color: 'text-green-600' },
+  { name: 'MySQL', icon: MysqlIcon, color: 'text-blue-500' },
+  { name: 'Nginx', icon: NginxIcon, color: 'text-green-500' },
+  { name: 'Strapi', icon: StrapiIcon, color: 'text-purple-600' },
+  { name: 'Docker', icon: DockerIcon, color: 'text-blue-500' },
+  { name: 'AWS', icon: AwsIcon, color: 'text-yellow-500' },
+];
