@@ -17,7 +17,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="dark">
       <head>
         <meta
           name="viewport"
@@ -26,32 +26,36 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/favicon.ico" />
+        {/* Force dark mode always */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
+                // Always force dark mode
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+                
+                // Store dark theme in localStorage
                 try {
-                  // Get stored theme from localStorage
-                  const theme = localStorage.getItem('theme');
-                  
-                  // If theme exists in localStorage, use it
-                  if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                  } else if (theme === 'light') {
-                    document.documentElement.classList.add('light');
-                  } else {
-                    // If no stored theme, check system preference
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    if (prefersDark) {
-                      document.documentElement.classList.add('dark');
-                    } else {
-                      document.documentElement.classList.add('light');
-                    }
-                  }
+                  localStorage.setItem('theme', 'dark');
                 } catch (e) {
-                  // Fallback if localStorage is not available
-                  console.error('Error accessing localStorage:', e);
+                  console.error('Failed to save theme preference', e);
                 }
+                
+                // Define a simple API that always returns dark
+                window.__theme = {
+                  get: function() {
+                    return 'dark';
+                  },
+                  set: function() {
+                    // Do nothing, always dark
+                    return 'dark';
+                  },
+                  toggle: function() {
+                    // No toggling, always returns dark
+                    return 'dark';
+                  }
+                };
               })();
             `,
           }}

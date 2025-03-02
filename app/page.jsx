@@ -1,14 +1,14 @@
 import BackToTopButton from "@/components/BackToTopButton";
-import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import Hero from "@/components/sections/Hero";
+import Navbar from "@/components/layout/Navbar";
 import About from "@/components/sections/About";
-import Experience from "@/components/sections/Experience";
-import Education from "@/components/sections/Education";
-import Skills from "@/components/sections/Skills";
-import Projects from "@/components/sections/Projects";
 import Blogs from "@/components/sections/Blogs";
 import Contact from "@/components/sections/Contact";
+import Education from "@/components/sections/Education";
+import Experience from "@/components/sections/Experience";
+import Hero from "@/components/sections/Hero";
+import Projects from "@/components/sections/Projects";
+import Skills from "@/components/sections/Skills";
 
 export default function Home() {
   return (
