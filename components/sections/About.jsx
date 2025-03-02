@@ -1,13 +1,20 @@
-'use client';
+"use client";
 
 import { aboutData } from "@/data/about";
 import { motion } from "framer-motion";
 
+/**
+ * About component that displays the about me section
+ * @returns {JSX.Element} The About section component
+ */
 export default function About() {
   return (
-    <section id="about" className="py-16 md:py-20 bg-white dark:bg-gradient-to-b dark:from-[#1E293B] dark:to-[#0F172A]">
+    <section
+      id="about"
+      className="py-16 md:py-20 bg-white dark:bg-gradient-to-b dark:from-[#1E293B] dark:to-[#0F172A]"
+    >
       <div className="container mx-auto px-4">
-        <motion.h2 
+        <motion.h2
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -16,7 +23,7 @@ export default function About() {
         >
           About Me
         </motion.h2>
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}

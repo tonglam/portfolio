@@ -1,3 +1,13 @@
+/**
+ * Data for the About section
+ * @typedef {Object} AboutData
+ * @property {string} title - The section title
+ * @property {string} content - The main content text
+ * @property {string} image - Path to the about image
+ * @property {string} imageAlt - Alt text for the image
+ */
+
+/** @type {AboutData} */
 export const aboutData = {
   title: "WHO I AM?",
   content: `My name is Qitong Lan. I am a professional and enthusiastic programmer in my daily life. 
@@ -7,5 +17,5 @@ export const aboutData = {
   skill is based on JavaScript and I love to do most of the things using JavaScript. I am 
   available for any kind of job opportunity that suits my skills and interests.`,
   image: "/moonlight-coding.jpg",
-  imageAlt: "About Me"
+  imageAlt: "About Me",
 };
