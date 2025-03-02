@@ -1,102 +1,33 @@
 "use client";
 
-import { GithubIcon, LinkedinIcon, TwitterIcon } from "@/components/icons";
+import { GithubIcon, LinkedinIcon, XIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import certificates from "@/data/certificates";
+import { developerProfileCode } from "@/data/codeSnippets";
+import socialProfiles from "@/data/socialLinks";
+import useTypewriter from "@/hooks/useTypewriter";
+import highlightCodeSyntax from "@/lib/utils/codeHighlighter";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
+// Map of icon components for easy reference
+const socialIcons = {
+  GithubIcon,
+  LinkedinIcon,
+  XIcon,
+};
+
+/**
+ * Hero section component with animated code typing effect
+ */
 export default function Hero() {
-  const [isTyping, setIsTyping] = useState(true);
-  const [currentLine, setCurrentLine] = useState(0);
-  const [currentChar, setCurrentChar] = useState(0);
+  // Use the code content from data file
+  const codeLines = useMemo(() => developerProfileCode, []);
 
-  const codeLines = useMemo(
-    () => [
-      "const coder = {",
-      "  name: 'Tong',",
-      "  skills: ['React', 'NextJS', 'Express',",
-      "          'MySQL', 'MongoDB', 'Docker', 'AWS'],",
-      "  hardWorker: true,",
-      "  quickLearner: true,",
-      "  problemSolver: true,",
-      "  hireable: function() {",
-      "    return (",
-      "      this.hardWorker &&",
-      "      this.problemSolver",
-      "    );",
-      "  }",
-      "};",
-    ],
-    []
-  );
-
-  const [displayedCode, setDisplayedCode] = useState(
-    Array(codeLines.length).fill("")
-  );
-
-  useEffect(() => {
-    if (!isTyping) return;
-
-    const typingInterval = setInterval(() => {
-      if (currentLine < codeLines.length) {
-        if (currentChar < codeLines[currentLine].length) {
-          setDisplayedCode((prev) => {
-            const newCode = [...prev];
-            newCode[currentLine] = codeLines[currentLine].substring(
-              0,
-              currentChar + 1
-            );
-            return newCode;
-          });
-          setCurrentChar((prev) => prev + 1);
-        } else {
-          setCurrentLine((prev) => prev + 1);
-          setCurrentChar(0);
-        }
-      } else {
-        setIsTyping(false);
-        clearInterval(typingInterval);
-      }
-    }, 30);
-
-    return () => clearInterval(typingInterval);
-  }, [isTyping, currentLine, currentChar, codeLines]);
-
-  const formatCodeLine = (line) => {
-    // Keywords
-    line = line.replace(
-      /\b(const|function|return|this)\b/g,
-      '<span class="text-[#ff79c6] dark:text-[#ff79c6]">$1</span>'
-    );
-
-    // Values
-    line = line.replace(
-      /\b(true|false)\b/g,
-      '<span class="text-[#bd93f9] dark:text-[#bd93f9]">$1</span>'
-    );
-
-    // Strings
-    line = line.replace(
-      /'([^']*)'/g,
-      "<span class=\"text-[#f1fa8c] dark:text-[#f1fa8c]\">'$1'</span>"
-    );
-
-    // Operators
-    line = line.replace(
-      /(&amp;&amp;|>=)/g,
-      '<span class="text-[#ff79c6] dark:text-[#ff79c6]">$1</span>'
-    );
-
-    // Properties
-    line = line.replace(
-      /\b(name|skills|hardWorker|quickLearner|problemSolver|hireable|length)\b(?!['"])/g,
-      '<span class="text-[#8be9fd] dark:text-[#8be9fd]">$1</span>'
-    );
-
-    return line;
-  };
+  const { displayedCode, isTyping, currentLine, currentChar } =
+    useTypewriter(codeLines);
 
   const handleDownloadResume = () => {
     // Track download event if analytics are implemented
@@ -126,82 +57,61 @@ export default function Hero() {
 
           {/* AWS Certification Badges */}
           <div className="flex flex-wrap gap-4 items-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="flex items-center bg-white dark:bg-[#1E293B] rounded-full pl-1 pr-3 py-1 shadow-md"
-            >
-              <div className="w-8 h-8 mr-2">
-                <Image
-                  src="https://images.credly.com/size/340x340/images/00634f82-b07f-4bbd-a6bb-53de397fc3a6/image.png"
-                  alt="AWS Certified Cloud Practitioner"
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-              </div>
-              <span className="text-xs font-medium">AWS CLF</span>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-              className="flex items-center bg-white dark:bg-[#1E293B] rounded-full pl-1 pr-3 py-1 shadow-md"
-            >
-              <div className="w-8 h-8 mr-2">
-                <Image
-                  src="https://images.credly.com/size/340x340/images/0e284c3f-5164-4b21-8660-0d84737941bc/image.png"
-                  alt="AWS Solutions Architect"
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-              </div>
-              <span className="text-xs font-medium">AWS SAS</span>
-            </motion.div>
+            {certificates.map((certificate, index) => (
+              <motion.div
+                key={certificate.id}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.2 + index * 0.1 }}
+                className="flex items-center bg-white dark:bg-[#1E293B] rounded-full pl-1 pr-3 py-1 shadow-md"
+              >
+                <a
+                  href={certificate.credentialUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`Verify ${certificate.name} Certification`}
+                  className="flex items-center"
+                >
+                  <div className="w-8 h-8 mr-2">
+                    <Image
+                      src={certificate.imageUrl}
+                      alt={certificate.name}
+                      width={32}
+                      height={32}
+                      className="rounded-full"
+                    />
+                  </div>
+                  <span className="text-xs font-medium">
+                    {certificate.shortName}
+                  </span>
+                </a>
+              </motion.div>
+            ))}
           </div>
 
           <div className="flex space-x-4">
-            <Link href="https://github.com/tonglam" target="_blank">
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full w-10 h-10 sm:w-12 sm:h-12 border-[#3B82F6] dark:border-[#F472B6] hover:bg-gradient-to-r hover:from-[#3B82F6]/20 hover:to-[#6366F1]/20 dark:hover:from-[#F472B6]/20 dark:hover:to-[#EC4899]/20 flex items-center justify-center"
-              >
-                <GithubIcon
-                  className="text-[#3B82F6] dark:text-[#F472B6]"
-                  size={20}
-                />
-              </Button>
-            </Link>
-
-            <Link href="https://www.linkedin.com/in/qitonglan/" target="_blank">
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full w-10 h-10 sm:w-12 sm:h-12 border-[#3B82F6] dark:border-[#F472B6] hover:bg-gradient-to-r hover:from-[#3B82F6]/20 hover:to-[#6366F1]/20 dark:hover:from-[#F472B6]/20 dark:hover:to-[#EC4899]/20 flex items-center justify-center"
-              >
-                <LinkedinIcon
-                  className="text-[#3B82F6] dark:text-[#F472B6]"
-                  size={20}
-                />
-              </Button>
-            </Link>
-
-            <Link href="https://x.com/tong_lam_14" target="_blank">
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full w-10 h-10 sm:w-12 sm:h-12 border-[#3B82F6] dark:border-[#F472B6] hover:bg-gradient-to-r hover:from-[#3B82F6]/20 hover:to-[#6366F1]/20 dark:hover:from-[#F472B6]/20 dark:hover:to-[#EC4899]/20 flex items-center justify-center"
-              >
-                <TwitterIcon
-                  className="text-[#3B82F6] dark:text-[#F472B6]"
-                  size={20}
-                />
-              </Button>
-            </Link>
+            {socialProfiles.map((profile) => {
+              const IconComponent = socialIcons[profile.icon];
+              return (
+                <Link
+                  key={profile.id}
+                  href={profile.url}
+                  target="_blank"
+                  aria-label={profile.ariaLabel}
+                >
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full w-10 h-10 sm:w-12 sm:h-12 border-[#3B82F6] dark:border-[#F472B6] hover:bg-gradient-to-r hover:from-[#3B82F6]/20 hover:to-[#6366F1]/20 dark:hover:from-[#F472B6]/20 dark:hover:to-[#EC4899]/20 flex items-center justify-center"
+                  >
+                    <IconComponent
+                      className="text-[#3B82F6] dark:text-[#F472B6]"
+                      size={20}
+                    />
+                  </Button>
+                </Link>
+              );
+            })}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -245,7 +155,9 @@ export default function Hero() {
                     className="line text-xs md:text-base leading-tight md:leading-relaxed"
                   >
                     <span
-                      dangerouslySetInnerHTML={{ __html: formatCodeLine(line) }}
+                      dangerouslySetInnerHTML={{
+                        __html: highlightCodeSyntax(line),
+                      }}
                     />
                     {index === currentLine && isTyping && (
                       <motion.span

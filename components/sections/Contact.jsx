@@ -1,20 +1,42 @@
 "use client";
 
+import { sendEmail } from "@/app/actions/email";
 import {
   EmailIcon,
-  FacebookIcon,
   GithubIcon,
   LinkedinIcon,
   LocationIcon,
-  MediumIcon,
-  TwitterIcon,
+  XIcon,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { contactData } from "@/data/contact";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
+
+// Map of icon components for easy reference - consistent with Hero component
+const socialIcons = {
+  GithubIcon,
+  LinkedinIcon,
+  XIcon,
+};
+
+// Button component that shows proper loading state
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type="submit"
+      disabled={pending}
+      className="w-full bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] hover:from-[#6366F1] hover:to-[#3B82F6] dark:hover:from-[#EC4899] dark:hover:to-[#F472B6] text-white text-sm py-6 flex items-center justify-center"
+    >
+      {pending ? "SENDING..." : "SEND MESSAGE"}
+    </Button>
+  );
+}
 
 export default function Contact() {
   const { toast } = useToast();
@@ -24,36 +46,7 @@ export default function Contact() {
     subject: "",
     message: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Expose a test function to the window object for testing
-  useEffect(() => {
-    // Expose a test function to the window
-    window.testSendEmail = () => {
-      // Pre-fill the form with test data
-      setFormData({
-        name: "Test User",
-        email: "test@example.com",
-        subject: "Test Email",
-        message: "This is a test message from the browser console.",
-      });
-
-      // Wait a moment for the state to update, then submit
-      setTimeout(() => {
-        console.log("Submitting test form data...");
-        document
-          .querySelector("form")
-          .dispatchEvent(
-            new Event("submit", { cancelable: true, bubbles: true })
-          );
-      }, 100);
-    };
-
-    return () => {
-      // Clean up
-      delete window.testSendEmail;
-    };
-  }, []);
+  const formRef = useRef(null);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -63,9 +56,15 @@ export default function Contact() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  // Client action that wraps the server action
+  async function clientAction(formData) {
+    // Get values from the form data
+    formData = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      subject: formData.get("subject"),
+      message: formData.get("message"),
+    };
 
     // Validate form
     if (
@@ -77,83 +76,47 @@ export default function Contact() {
       toast({
         title: "Error",
         description: "Please fill in all fields",
-        status: "error",
+        variant: "destructive",
         duration: 3000,
-        isClosable: true,
       });
-      setIsSubmitting(false);
       return;
     }
 
     try {
-      console.log("Starting email submission process...");
+      const result = await sendEmail(formData);
 
-      // Call our server API route instead of Resend directly
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-      console.log("Response received:", response.status);
-      console.log("Response data:", data);
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to send email");
+      if (!result.success) {
+        throw new Error(result.error || "Failed to send email");
       }
 
       // Show success message
       toast({
         title: "Message sent!",
         description: "Thank you for reaching out. I'll get back to you soon.",
-        status: "success",
         duration: 5000,
-        isClosable: true,
       });
 
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-      });
+      // Reset form using the ref
+      if (formRef.current) {
+        formRef.current.reset();
+        // Also reset the state
+        setFormData({
+          name: "",
+          email: "",
+          subject: "",
+          message: "",
+        });
+      }
     } catch (error) {
-      console.error("Error submitting form:", error);
-
-      // Show error message
       toast({
         title: "Error sending message",
         description:
           error.message || "Something went wrong. Please try again later.",
-        status: "error",
+        variant: "destructive",
         duration: 5000,
-        isClosable: true,
       });
-    } finally {
-      setIsSubmitting(false);
     }
-  };
-
-  const getSocialIcon = (platform) => {
-    switch (platform) {
-      case "github":
-        return <GithubIcon size={20} className="text-gray-100" />;
-      case "linkedin":
-        return <LinkedinIcon size={20} className="text-gray-100" />;
-      case "twitter":
-        return <TwitterIcon size={20} className="text-gray-100" />;
-      case "medium":
-        return <MediumIcon size={20} className="text-gray-100" />;
-      case "facebook":
-        return <FacebookIcon size={20} className="text-gray-100" />;
-      default:
-        return null;
-    }
-  };
+  }
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
@@ -196,7 +159,11 @@ export default function Contact() {
               {contactData.intro}
             </p>
 
-            <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
+            <form
+              ref={formRef}
+              action={clientAction}
+              className="space-y-4 md:space-y-6"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label
@@ -208,6 +175,7 @@ export default function Contact() {
                   <input
                     type="text"
                     id="name"
+                    name="name"
                     placeholder="John Doe"
                     value={formData.name}
                     onChange={handleChange}
@@ -225,6 +193,7 @@ export default function Contact() {
                   <input
                     type="email"
                     id="email"
+                    name="email"
                     placeholder="john@example.com"
                     value={formData.email}
                     onChange={handleChange}
@@ -243,6 +212,7 @@ export default function Contact() {
                 <input
                   type="text"
                   id="subject"
+                  name="subject"
                   placeholder="How can I help you?"
                   value={formData.subject}
                   onChange={handleChange}
@@ -259,6 +229,7 @@ export default function Contact() {
                 </label>
                 <textarea
                   id="message"
+                  name="message"
                   rows={5}
                   placeholder="Write your message here..."
                   value={formData.message}
@@ -271,13 +242,7 @@ export default function Contact() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] hover:from-[#6366F1] hover:to-[#3B82F6] dark:hover:from-[#EC4899] dark:hover:to-[#F472B6] text-white text-sm py-6 flex items-center justify-center"
-                >
-                  {isSubmitting ? "SENDING..." : "SEND MESSAGE"}
-                </Button>
+                <SubmitButton />
               </motion.div>
             </form>
           </motion.div>
@@ -350,19 +315,26 @@ export default function Contact() {
                 Follow Me
               </h3>
               <div className="grid grid-cols-5 gap-4">
-                {contactData.socialLinks.map((link, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ y: -5 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Link href={link.url} target="_blank">
-                      <div className="bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] hover:from-[#6366F1] hover:to-[#3B82F6] dark:hover:from-[#EC4899] dark:hover:to-[#F472B6] p-3 rounded-lg shadow-md flex items-center justify-center transition-all duration-300">
-                        {getSocialIcon(link.platform)}
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
+                {contactData.socialLinks.map((profile) => {
+                  const IconComponent = socialIcons[profile.icon];
+                  return (
+                    <motion.div
+                      key={profile.id}
+                      whileHover={{ y: -5 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Link
+                        href={profile.url}
+                        target="_blank"
+                        aria-label={profile.ariaLabel}
+                      >
+                        <div className="bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] hover:from-[#6366F1] hover:to-[#3B82F6] dark:hover:from-[#EC4899] dark:hover:to-[#F472B6] p-3 rounded-lg shadow-md flex items-center justify-center transition-all duration-300">
+                          <IconComponent size={20} className="text-gray-100" />
+                        </div>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
 

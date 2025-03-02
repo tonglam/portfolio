@@ -23,6 +23,7 @@ import {
   FaTimes,
   FaTwitter,
 } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import {
   SiExpress,
   SiMongodb,
@@ -49,6 +50,10 @@ export const FacebookIcon = ({ size = 24, className }) => (
 
 export const TwitterIcon = ({ size = 24, className }) => (
   <FaTwitter size={size} className={className} />
+);
+
+export const XIcon = ({ size = 24, className }) => (
+  <FaXTwitter size={size} className={className} />
 );
 
 export const MediumIcon = ({ size = 24, className }) => (
