@@ -2,61 +2,25 @@
 
 import {
   EmailIcon,
-  FacebookIcon,
   GithubIcon,
   LinkedinIcon,
   LocationIcon,
-  MediumIcon,
-  TwitterIcon,
+  XIcon,
 } from "@/components/icons";
 import { contactData } from "@/data/contact";
 import { navigationLinks } from "@/data/navigation";
+import socialProfiles from "@/data/socialLinks";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-export default function Footer() {
-  const getSocialIcon = (platform) => {
-    switch (platform) {
-      case "github":
-        return (
-          <GithubIcon
-            size={20}
-            className="text-gray-400 hover:text-[#2563EB] dark:hover:text-[#38BDF8] transition-colors duration-300"
-          />
-        );
-      case "linkedin":
-        return (
-          <LinkedinIcon
-            size={20}
-            className="text-gray-400 hover:text-[#2563EB] dark:hover:text-[#38BDF8] transition-colors duration-300"
-          />
-        );
-      case "twitter":
-        return (
-          <TwitterIcon
-            size={20}
-            className="text-gray-400 hover:text-[#2563EB] dark:hover:text-[#38BDF8] transition-colors duration-300"
-          />
-        );
-      case "medium":
-        return (
-          <MediumIcon
-            size={20}
-            className="text-gray-400 hover:text-[#2563EB] dark:hover:text-[#38BDF8] transition-colors duration-300"
-          />
-        );
-      case "facebook":
-        return (
-          <FacebookIcon
-            size={20}
-            className="text-gray-400 hover:text-[#2563EB] dark:hover:text-[#38BDF8] transition-colors duration-300"
-          />
-        );
-      default:
-        return null;
-    }
-  };
+// Map of icon components for easy reference - consistent with other components
+const socialIcons = {
+  GithubIcon,
+  LinkedinIcon,
+  XIcon,
+};
 
+export default function Footer() {
   return (
     <footer className="pt-16 pb-8 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gradient-to-r dark:from-[#0F172A] dark:to-[#1E293B]">
       <div className="container mx-auto px-4">
@@ -79,16 +43,23 @@ export default function Footer() {
                 Full-stack engineer evolving for the new era of tech.
               </p>
               <div className="flex space-x-3">
-                {contactData.socialLinks.map((link, index) => (
-                  <Link
-                    key={index}
-                    href={link.url}
-                    target="_blank"
-                    className="transition-transform hover:scale-110"
-                  >
-                    {getSocialIcon(link.platform)}
-                  </Link>
-                ))}
+                {socialProfiles.map((profile) => {
+                  const IconComponent = socialIcons[profile.icon];
+                  return (
+                    <Link
+                      key={profile.id}
+                      href={profile.url}
+                      target="_blank"
+                      aria-label={profile.ariaLabel}
+                      className="transition-transform hover:scale-110"
+                    >
+                      <IconComponent
+                        size={20}
+                        className="text-gray-400 hover:text-[#2563EB] dark:hover:text-[#38BDF8] transition-colors duration-300"
+                      />
+                    </Link>
+                  );
+                })}
               </div>
             </motion.div>
           </div>

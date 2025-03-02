@@ -1,49 +1,17 @@
 "use client";
 
 import { CheckIcon } from "@/components/icons";
-import { experienceData } from "@/data/experience";
+import {
+  companyDetails,
+  experienceData,
+  gainedSkills,
+  skillsData,
+} from "@/data/experience";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Experience() {
-  // Company details with responsibilities
-  const companyDetails = {
-    "eSurfing Cloud": {
-      logo: "https://media.licdn.com/dms/image/v2/D560BAQH82DslRiJ2kQ/company-logo_100_100/company-logo_100_100/0/1685497414232?e=1749081600&v=beta&t=re1qSuRl4fNR5hpaRMQOKA_1ybOKsKODTuyx-LcAObw",
-      url: "https://www.esurfingcloud.com/",
-      displayName: "China Telecom eSurfing Cloud",
-      responsibilities: [
-        "Led the development of cloud-native applications using microservices architecture",
-        "Implemented CI/CD pipelines for automated testing and deployment",
-        "Optimized application performance and scalability on cloud infrastructure",
-      ],
-      technologies: ["React", "Node.js", "Docker", "Kubernetes", "AWS"],
-    },
-    "NetEase, Inc": {
-      logo: "https://media.licdn.com/dms/image/v2/C510BAQEq55a369mthA/company-logo_100_100/company-logo_100_100/0/1631411965736/netease_logo?e=1749081600&v=beta&t=ZZ-r9EK1avN3PS72kLAhMDhMAcNVJQCV26et-I6yG5Y",
-      url: "https://www.neteasegames.com/",
-      displayName: "NetEase, Inc",
-      responsibilities: [
-        "Developed and maintained high-traffic web applications",
-        "Designed and implemented RESTful APIs for mobile applications",
-        "Collaborated with cross-functional teams to deliver features on schedule",
-      ],
-      technologies: ["JavaScript", "TypeScript", "React", "Redux", "MongoDB"],
-    },
-    "China Telecom Corporation Limited": {
-      logo: "https://media.licdn.com/dms/image/v2/C4D0BAQEChOu06vSNew/company-logo_100_100/company-logo_100_100/0/1631342960927?e=1749081600&v=beta&t=cDPENsKVKA-dH8u4NHjFuzjytCnkMdi73HfaV8v1FJI",
-      url: "https://www.chinatelecom-h.com/en/global/home.php",
-      displayName: "China Telecom Corporation Limited",
-      responsibilities: [
-        "Built and maintained internal web applications",
-        "Implemented database solutions for data management",
-        "Provided technical support and troubleshooting",
-      ],
-      technologies: ["Java", "Spring", "MySQL", "HTML/CSS", "JavaScript"],
-    },
-  };
-
   return (
     <section
       id="experience"
@@ -71,29 +39,38 @@ export default function Experience() {
           >
             <div className="sticky top-24">
               <div className="bg-white dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#2D3748] rounded-xl p-6 shadow-lg">
-                <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
-                  Career Growth
+                <h3 className="text-lg font-bold mb-6 text-gray-900 dark:text-white">
+                  Career Timeline
                 </h3>
 
-                <div className="relative">
+                <div className="relative py-8">
                   {/* Career path line */}
-                  <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] z-0"></div>
+                  <div className="absolute left-3 top-0 bottom-0 w-1 bg-gradient-to-b from-[#3B82F6] via-[#6366F1] to-[#8B5CF6] dark:from-[#F472B6] dark:via-[#EC4899] dark:to-[#D946EF] z-0 rounded-full"></div>
 
                   {experienceData.map((exp, index) => (
                     <div
                       key={index}
-                      className="relative z-10 mb-8 last:mb-0 pl-10"
+                      className="relative z-10 mb-20 last:mb-10 pl-12"
                     >
-                      {/* Timeline dot */}
-                      <div className="absolute left-3 top-0 w-6 h-6 rounded-full bg-white dark:bg-[#1E293B] border-4 border-[#3B82F6] dark:border-[#F472B6] transform -translate-x-1/2 z-20"></div>
+                      {/* Timeline dot with pulse effect */}
+                      <div className="absolute left-3 top-0 transform -translate-x-1/2 z-20">
+                        <div className="w-7 h-7 rounded-full bg-white dark:bg-[#1E293B] border-4 border-[#3B82F6] dark:border-[#F472B6] flex items-center justify-center">
+                          {index === 0 && (
+                            <span className="text-[#3B82F6] dark:text-[#F472B6] text-xs font-bold"></span>
+                          )}
+                        </div>
+                        {/* Pulse effect */}
+                        <div className="absolute top-0 left-0 w-7 h-7 rounded-full bg-[#3B82F6]/30 dark:bg-[#F472B6]/30 animate-ping"></div>
+                      </div>
 
-                      <div className="text-sm text-[#2563EB] dark:text-[#38BDF8] mb-1">
+                      {/* Date badge */}
+                      <div className="inline-block px-3 py-1 rounded-full bg-[#3B82F6]/10 dark:bg-[#F472B6]/10 text-[#3B82F6] dark:text-[#F472B6] text-sm font-medium mb-2">
                         {exp.period}
                       </div>
-                      <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="font-semibold text-lg text-gray-900 dark:text-white mb-1">
                         {exp.title}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-sm text-gray-600 dark:text-gray-400 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
                         {companyDetails[exp.company]?.displayName ||
                           exp.company}
                       </div>
@@ -101,23 +78,23 @@ export default function Experience() {
                   ))}
 
                   {/* Career path end dot */}
-                  <div className="absolute left-3 bottom-0 w-6 h-6 rounded-full bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] transform -translate-x-1/2 z-20 flex items-center justify-center">
-                    <span className="text-white text-xs">✓</span>
+                  <div className="absolute left-3 bottom-0 w-7 h-7 rounded-full bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] transform -translate-x-1/2 z-20 flex items-center justify-center">
+                    <span className="text-white text-xs">⭐</span>
                   </div>
                 </div>
 
                 {/* Career stats */}
-                <div className="grid grid-cols-2 gap-4 mt-8">
-                  <div className="bg-gray-50 dark:bg-[#0F172A] rounded-lg p-3 text-center">
-                    <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899]">
+                <div className="grid grid-cols-2 gap-4 mt-12">
+                  <div className="bg-gray-50 dark:bg-[#0F172A] rounded-lg p-4 text-center">
+                    <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899]">
                       9+
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">
                       Years Experience
                     </div>
                   </div>
-                  <div className="bg-gray-50 dark:bg-[#0F172A] rounded-lg p-3 text-center">
-                    <div className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899]">
+                  <div className="bg-gray-50 dark:bg-[#0F172A] rounded-lg p-4 text-center">
+                    <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899]">
                       3
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">
@@ -139,24 +116,18 @@ export default function Experience() {
                   Skills Gained
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {Array.from(
-                    new Set(
-                      experienceData.flatMap(
-                        (exp) => companyDetails[exp.company]?.technologies || []
-                      )
-                    )
-                  ).map((tech, index) => (
+                  {gainedSkills.map((skill, index) => (
                     <span
                       key={index}
                       className="text-xs px-3 py-1.5 rounded-full bg-[#3B82F6]/10 dark:bg-[#F472B6]/10 text-[#3B82F6] dark:text-[#F472B6]"
                     >
-                      {tech}
+                      {skill}
                     </span>
                   ))}
                 </div>
               </motion.div>
 
-              {/* Professional Growth - Moved from right side to here */}
+              {/* Professional Growth */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -169,85 +140,27 @@ export default function Experience() {
                 </h3>
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-700 dark:text-gray-300">
-                        Frontend Development
-                      </span>
-                      <span className="text-[#2563EB] dark:text-[#38BDF8]">
-                        90%
-                      </span>
+                  {skillsData.map((skill, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {skill.name}
+                        </span>
+                        <span className="text-[#2563EB] dark:text-[#38BDF8]">
+                          {skill.percentage}%
+                        </span>
+                      </div>
+                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${skill.percentage}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1, delay: 0.1 + index * 0.1 }}
+                          className="h-full bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] rounded-full"
+                        ></motion.div>
+                      </div>
                     </div>
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "90%" }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1, delay: 0.1 }}
-                        className="h-full bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] rounded-full"
-                      ></motion.div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-700 dark:text-gray-300">
-                        Backend Development
-                      </span>
-                      <span className="text-[#2563EB] dark:text-[#38BDF8]">
-                        85%
-                      </span>
-                    </div>
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "85%" }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1, delay: 0.2 }}
-                        className="h-full bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] rounded-full"
-                      ></motion.div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-700 dark:text-gray-300">
-                        Cloud Infrastructure
-                      </span>
-                      <span className="text-[#2563EB] dark:text-[#38BDF8]">
-                        80%
-                      </span>
-                    </div>
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "80%" }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1, delay: 0.3 }}
-                        className="h-full bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] rounded-full"
-                      ></motion.div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-700 dark:text-gray-300">
-                        DevOps
-                      </span>
-                      <span className="text-[#2563EB] dark:text-[#38BDF8]">
-                        75%
-                      </span>
-                    </div>
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "75%" }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1, delay: 0.4 }}
-                        className="h-full bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] rounded-full"
-                      ></motion.div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </motion.div>
             </div>
@@ -351,22 +264,25 @@ export default function Experience() {
                         </div>
                       </div>
 
-                      {/* Achievements - Only show for first job */}
-                      {index === 0 && (
-                        <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
-                          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                            Key Achievements:
-                          </h4>
-                          <div className="bg-[#2563EB]/5 dark:bg-[#38BDF8]/5 rounded-lg p-3 border-l-4 border-[#2563EB] dark:border-[#38BDF8]">
-                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                              Led the migration of legacy systems to cloud
-                              infrastructure, resulting in a 40% reduction in
-                              operational costs and 60% improvement in
-                              application performance.
-                            </p>
+                      {/* Achievements - Show for all jobs */}
+                      {company.achievements &&
+                        company.achievements.length > 0 && (
+                          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                              Key Achievements:
+                            </h4>
+                            {company.achievements.map((achievement, idx) => (
+                              <div
+                                key={idx}
+                                className="bg-[#2563EB]/5 dark:bg-[#38BDF8]/5 rounded-lg p-3 border-l-4 border-[#2563EB] dark:border-[#38BDF8] mb-2 last:mb-0"
+                              >
+                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                  {achievement}
+                                </p>
+                              </div>
+                            ))}
                           </div>
-                        </div>
-                      )}
+                        )}
                     </div>
 
                     {/* Gradient bottom border that appears on hover */}
