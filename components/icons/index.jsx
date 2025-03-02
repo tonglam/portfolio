@@ -1,38 +1,38 @@
-import { 
-  FaGithub, 
-  FaLinkedin, 
-  FaFacebook, 
-  FaTwitter, 
-  FaMediumM,
+import {
+  FaArrowUp,
+  FaAws,
+  FaBars,
   FaCheck,
   FaComment,
-  FaArrowUp,
-  FaBars,
-  FaTimes,
-  FaEnvelope,
-  FaPhone,
-  FaMapMarkerAlt,
-  FaHtml5,
   FaCss3Alt,
-  FaJs,
-  FaReact,
-  FaNodeJs,
-  FaDocker,
-  FaAws,
-  FaNpm,
   FaDatabase,
-  FaServer
-} from 'react-icons/fa';
-import { 
-  SiTypescript, 
-  SiNginx, 
-  SiStrapi, 
-  SiMongodb, 
-  SiMysql, 
-  SiRedux, 
-  SiExpress, 
-  SiNestjs 
-} from 'react-icons/si';
+  FaDocker,
+  FaEnvelope,
+  FaFacebook,
+  FaGithub,
+  FaHtml5,
+  FaJs,
+  FaLinkedin,
+  FaMapMarkerAlt,
+  FaMediumM,
+  FaNodeJs,
+  FaNpm,
+  FaPhone,
+  FaReact,
+  FaServer,
+  FaTimes,
+  FaTwitter,
+} from "react-icons/fa";
+import {
+  SiExpress,
+  SiMongodb,
+  SiMysql,
+  SiNestjs,
+  SiNginx,
+  SiRedux,
+  SiStrapi,
+  SiTypescript,
+} from "react-icons/si";
 
 // Social Media Icons
 export const GithubIcon = ({ size = 24, className }) => (
@@ -164,7 +164,9 @@ export const NpmIcon = ({ size = 24, className }) => (
 
 // Helper function to create icon components with consistent props
 export const createIconComponent = (Icon) => {
-  return ({ size = 24, className }) => (
+  const IconComponent = ({ size = 24, className }) => (
     <Icon size={size} className={className} />
   );
+  IconComponent.displayName = `Icon${Icon.name || "Component"}`;
+  return IconComponent;
 };
