@@ -1,6 +1,6 @@
 "use client";
 
-import { skillsData } from "@/data/skills";
+import { flattenedSkillsData, skillsData } from "@/data/skills";
 import { motion, useAnimation, useInView } from "framer-motion";
 import { useEffect, useRef } from "react";
 
@@ -34,43 +34,29 @@ export default function Skills() {
         <div className="relative overflow-hidden" ref={containerRef}>
           {/* First row of skills moving from right to left */}
           <SkillsRow
-            skills={skillsData.slice(0, 8)}
+            skills={flattenedSkillsData.slice(0, 8)}
             direction="left"
             speed={35}
           />
 
           {/* Second row of skills moving from left to right */}
           <SkillsRow
-            skills={skillsData.slice(8)}
+            skills={flattenedSkillsData.slice(8, 16)}
             direction="right"
             speed={30}
           />
         </div>
 
         {/* Skill categories */}
-        <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-          <SkillCategory
-            title="Frontend"
-            skills={[
-              "HTML",
-              "CSS",
-              "Javascript",
-              "Typescript",
-              "React",
-              "Redux",
-            ]}
-            delay={0.1}
-          />
-          <SkillCategory
-            title="Backend"
-            skills={["Node.js", "Express", "NestJS", "MongoDB", "MySQL"]}
-            delay={0.3}
-          />
-          <SkillCategory
-            title="DevOps"
-            skills={["Nginx", "Docker", "AWS", "CI/CD", "Git"]}
-            delay={0.5}
-          />
+        <div className="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+          {skillsData.categories.map((category, index) => (
+            <SkillCategory
+              key={index}
+              title={category.name}
+              skills={category.skills.map((skill) => skill.name)}
+              delay={0.1 + index * 0.1}
+            />
+          ))}
         </div>
       </div>
     </section>

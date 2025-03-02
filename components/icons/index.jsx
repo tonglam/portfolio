@@ -1,3 +1,5 @@
+import { AiOutlineCode } from "react-icons/ai";
+import { BsKanban } from "react-icons/bs";
 import {
   FaArrowUp,
   FaAws,
@@ -9,8 +11,11 @@ import {
   FaDocker,
   FaEnvelope,
   FaFacebook,
+  FaGitAlt,
   FaGithub,
+  FaGithubAlt,
   FaHtml5,
+  FaJava,
   FaJs,
   FaLinkedin,
   FaMapMarkerAlt,
@@ -18,21 +23,33 @@ import {
   FaNodeJs,
   FaNpm,
   FaPhone,
+  FaPython,
   FaReact,
   FaServer,
+  FaTerminal,
   FaTimes,
   FaTwitter,
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
+import { GrStatusInfo } from "react-icons/gr";
 import {
+  SiConfluence,
   SiExpress,
+  SiFlask,
+  SiJenkins,
+  SiJira,
+  SiJunit5,
   SiMongodb,
   SiMysql,
-  SiNestjs,
+  SiNextdotjs,
   SiNginx,
-  SiRedux,
-  SiStrapi,
+  SiPostgresql,
+  SiPostman,
+  SiRedis,
+  SiSpringboot,
+  SiSqlite,
   SiTypescript,
+  SiVitest,
 } from "react-icons/si";
 
 // Social Media Icons
@@ -165,6 +182,91 @@ export const ServerIcon = ({ size = 24, className }) => (
 
 export const NpmIcon = ({ size = 24, className }) => (
   <FaNpm size={size} className={className} />
+);
+
+// New technology icons
+export const JavaIcon = ({ size = 24, className }) => (
+  <FaJava size={size} className={className} />
+);
+
+export const PythonIcon = ({ size = 24, className }) => (
+  <FaPython size={size} className={className} />
+);
+
+export const SqlIcon = ({ size = 24, className }) => (
+  <DatabaseIcon size={size} className={className} />
+);
+
+export const NextjsIcon = ({ size = 24, className }) => (
+  <SiNextdotjs size={size} className={className} />
+);
+
+export const SpringBootIcon = ({ size = 24, className }) => (
+  <SiSpringboot size={size} className={className} />
+);
+
+export const FlaskIcon = ({ size = 24, className }) => (
+  <SiFlask size={size} className={className} />
+);
+
+export const PostgresqlIcon = ({ size = 24, className }) => (
+  <SiPostgresql size={size} className={className} />
+);
+
+export const RedisIcon = ({ size = 24, className }) => (
+  <SiRedis size={size} className={className} />
+);
+
+export const SqliteIcon = ({ size = 24, className }) => (
+  <SiSqlite size={size} className={className} />
+);
+
+export const JunitIcon = ({ size = 24, className }) => (
+  <SiJunit5 size={size} className={className} />
+);
+
+export const VitestIcon = ({ size = 24, className }) => (
+  <SiVitest size={size} className={className} />
+);
+
+export const PytestIcon = ({ size = 24, className }) => (
+  <AiOutlineCode size={size} className={className} />
+);
+
+export const PostmanIcon = ({ size = 24, className }) => (
+  <SiPostman size={size} className={className} />
+);
+
+export const GitIcon = ({ size = 24, className }) => (
+  <FaGitAlt size={size} className={className} />
+);
+
+export const JenkinsIcon = ({ size = 24, className }) => (
+  <SiJenkins size={size} className={className} />
+);
+
+export const AgileIcon = ({ size = 24, className }) => (
+  <GrStatusInfo size={size} className={className} />
+);
+
+export const KanbanIcon = ({ size = 24, className }) => (
+  <BsKanban size={size} className={className} />
+);
+
+export const JiraIcon = ({ size = 24, className }) => (
+  <SiJira size={size} className={className} />
+);
+
+export const ShellIcon = ({ size = 24, className }) => (
+  <FaTerminal size={size} className={className} />
+);
+
+export const ConfluenceIcon = ({ size = 24, className }) => (
+  <SiConfluence size={size} className={className} />
+);
+
+export const GithubProjectsIcon = ({ size = 24, className }) => (
+  <FaGithubAlt size={size} className={className} />
 );
 
 // Helper function to create icon components with consistent props
