@@ -42,6 +42,7 @@ export const gainedSkills = [
   "Cloud",
   "Agile development",
   "AWS",
+  "AI Coding",
 ];
 
 // Professional skills data

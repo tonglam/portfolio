@@ -1,0 +1,26 @@
+{
+  "name": "notion-migration",
+  "version": "1.0.0",
+  "description": "Migrate Notion technical notes to a structured database format",
+  "main": "notion-db-migration.js",
+  "scripts": {
+    "start": "node notion-db-migration.js",
+    "migrate": "node notion-db-migration.js",
+    "migrate:keep": "node notion-db-migration.js --no-clear",
+    "migrate:clear": "node notion-db-migration.js --clear",
+    "test": "node test-connection.js"
+  },
+  "keywords": [
+    "notion",
+    "migration",
+    "database",
+    "portfolio",
+    "technical-notes"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@notionhq/client": "^2.2.14",
+    "dotenv": "^16.3.1"
+  }
+}

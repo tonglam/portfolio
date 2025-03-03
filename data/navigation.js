@@ -5,4 +5,5 @@ export const navigationLinks = [
   { href: "#skills", label: "SKILLS" },
   { href: "#projects", label: "PROJECTS" },
   { href: "#blogs", label: "BLOGS" },
+  { href: "#contract", label: "CONTRACT" },
 ];
