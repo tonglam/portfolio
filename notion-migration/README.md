@@ -189,7 +189,7 @@ This mapping provides:
 
 3. **Statistics**: Use the `--stats` option to view detailed statistics about the image generation process:
 
-   ```
+   ```plaintext
    === Image Generation Statistics ===
    Total entries: 120
    Successfully generated: 98 (82%)
