@@ -46,16 +46,20 @@ The tools in this toolkit include:
 
 1. Clone or download this repository
 2. Install dependencies:
-   ```
+
+   ```bash
    npm install
    ```
+
 3. Configure your environment variables by copying `.env.example` to `.env`:
-   ```
+
+   ```bash
    cp .env.example .env
    ```
+
 4. Edit the `.env` file with your API keys and database information:
 
-   ```
+   ```env
    # Notion API
    NOTION_API_KEY=your_notion_api_key
    NOTION_DATABASE_ID=your_database_id
@@ -66,7 +70,8 @@ The tools in this toolkit include:
    ```
 
 5. Test your connection:
-   ```
+
+   ```bash
    node test-connection.js
    ```
 
