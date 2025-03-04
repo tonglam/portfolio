@@ -6,6 +6,8 @@
  * and creates entries in the target database.
  *
  * Features:
+ * - Two-phase approach to reduce API calls and handle rate limiting
+ * - Respects Notion API rate limit (3 requests per second average)
  * - Identifies top-level categories (Java, Python, JavaScript, etc.)
  * - Processes pages recursively, preserving the category structure
  * - Extracts content, generates excerpts, and identifies tags
@@ -17,13 +19,16 @@
  * Usage:
  * - Run with default options: node notion-db-migration.js
  * - Run without clearing database: node notion-db-migration.js --no-clear
+ * - Run with a limit: node notion-db-migration.js --limit 10
+ * - Run with batch size: node notion-db-migration.js --batch-size 5
+ * - Run with delay: node notion-db-migration.js --delay 400
  *
  * Environment variables (in .env file):
  * - NOTION_API_KEY: Your Notion API key
  * - SOURCE_PAGE_ID: ID of the source page containing technical notes
  * - NOTION_DATABASE_ID: ID of the target database
  *
- * @version 1.0.0
+ * @version 2.1.0
  */
 
 // Check for required dependencies and load environment variables
@@ -54,15 +59,75 @@ console.log(`- DATABASE_ID: ${DATABASE_ID}`);
 const validCategoriesSet = new Set();
 
 /**
+ * Utility function to introduce delay
+ * @param {number} ms - Milliseconds to delay
+ * @returns {Promise<void>}
+ */
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Call a Notion API function with retry logic for rate limits
+ * @param {Function} apiCall - Function to call
+ * @param {number} maxRetries - Maximum number of retries
+ * @param {number} baseDelay - Base delay in milliseconds
+ * @returns {Promise<any>} - Result of the API call
+ */
+async function callWithRetry(apiCall, maxRetries = 5, baseDelay = 1500) {
+  let lastError;
+  let retryDelay = baseDelay;
+
+  for (let retryCount = 0; retryCount <= maxRetries; retryCount++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      lastError = error;
+
+      // Check if this is a rate limiting error
+      if (
+        error.code === "rate_limited" ||
+        (error.status && error.status === 429)
+      ) {
+        // If we have a retry-after header, use that value, otherwise use exponential backoff
+        const retryAfter = error.headers?.["retry-after"];
+        const waitTime = retryAfter
+          ? parseInt(retryAfter, 10) * 1000
+          : retryDelay * Math.pow(1.5, retryCount);
+
+        console.log(
+          `Rate limited. Waiting ${Math.round(
+            waitTime / 1000
+          )} seconds before retry ${retryCount + 1}/${maxRetries}...`
+        );
+        await delay(waitTime);
+
+        // Increase base delay for subsequent requests to prevent hitting limits again
+        retryDelay = Math.min(retryDelay * 1.5, 10000); // Cap at 10 seconds
+      } else {
+        // If it's not a rate limit error, rethrow immediately
+        throw error;
+      }
+    }
+  }
+
+  // If we've exhausted all retries
+  console.error(`Failed after ${maxRetries} retries. Last error:`, lastError);
+  throw lastError;
+}
+
+/**
  * Checks if a page has meaningful content beyond just structural blocks
  */
 async function hasActualContent(pageId) {
   try {
     // Get all blocks from the page
-    const response = await notion.blocks.children.list({
-      block_id: pageId,
-      page_size: 100,
-    });
+    const response = await callWithRetry(() =>
+      notion.blocks.children.list({
+        block_id: pageId,
+        page_size: 100,
+      })
+    );
 
     // Check if there are any content blocks (paragraphs, headings, lists, etc.)
     const contentBlocks = response.results.filter((block) => {
@@ -120,33 +185,16 @@ async function hasActualContent(pageId) {
 }
 
 /**
- * Gets all top-level categories under the source page
- * @returns {Promise<Array>} - Array of category objects with id and title
+ * Extract text from rich text array
+ * @param {Array} richTextArray - Array of rich text objects
+ * @returns {string} - The extracted text
  */
-async function getTopLevelCategories() {
-  try {
-    const response = await notion.blocks.children.list({
-      block_id: SOURCE_PAGE_ID,
-      page_size: 100,
-    });
-
-    const categories = [];
-
-    for (const block of response.results) {
-      if (block.type === "child_page") {
-        categories.push({
-          id: block.id,
-          title: block.child_page.title,
-        });
-        console.log(`Found top-level category: ${block.child_page.title}`);
-      }
-    }
-
-    return categories;
-  } catch (error) {
-    console.error("Error getting top-level categories:", error);
-    return [];
+function extractRichText(richTextArray) {
+  if (!richTextArray || richTextArray.length === 0) {
+    return "";
   }
+
+  return richTextArray.map((richText) => richText.plain_text || "").join("");
 }
 
 /**
@@ -161,10 +209,12 @@ async function extractTextContent(blockId, maxDepth = 3, currentDepth = 0) {
   if (currentDepth > maxDepth) return "";
 
   try {
-    const response = await notion.blocks.children.list({
-      block_id: blockId,
-      page_size: 100,
-    });
+    const response = await callWithRetry(() =>
+      notion.blocks.children.list({
+        block_id: blockId,
+        page_size: 100,
+      })
+    );
 
     if (!response.results || response.results.length === 0) {
       return "";
@@ -256,19 +306,6 @@ async function extractTextContent(blockId, maxDepth = 3, currentDepth = 0) {
     );
     return "";
   }
-}
-
-/**
- * Extract text from rich text array
- * @param {Array} richTextArray - Array of rich text objects
- * @returns {string} - The extracted text
- */
-function extractRichText(richTextArray) {
-  if (!richTextArray || richTextArray.length === 0) {
-    return "";
-  }
-
-  return richTextArray.map((richText) => richText.plain_text || "").join("");
 }
 
 /**
@@ -365,370 +402,6 @@ function generateExcerpt(content, maxLength = 160) {
 }
 
 /**
- * Generate an AI-enhanced summary of content if available
- * Note: This function requires integration with an external AI service
- * in production. For now, it falls back to the standard excerpt generation.
- *
- * @param {string} content - The content to summarize
- * @param {string} title - The title of the page
- * @param {maxLength} maxLength - Maximum length of the summary
- * @returns {string} - The generated summary
- */
-function generateAISummary(content, title, maxLength = 160) {
-  // This is where you would integrate with DeepSeek, Gemini, or another AI service
-  // For now, we'll use our improved excerpt generation
-
-  // If implementing AI summarization, you would:
-  // 1. Send the content to the AI API
-  // 2. Request a concise summary
-  // 3. Process and return the result
-
-  // TODO: Replace with actual AI API call when integrating with an AI service
-
-  return generateExcerpt(content, maxLength);
-}
-
-/**
- * Traverse a category and collect all pages
- * @param {Object} category - The category to traverse
- * @param {string} parentCategory - The parent category title
- * @param {number} depth - Current depth in the hierarchy
- * @returns {Promise<Object>} - Object containing pages and statistics
- */
-async function traverseCategory(category, parentCategory = "", depth = 0) {
-  const isTopLevel = depth === 0;
-  const pages = [];
-
-  try {
-    // Check if this is a top-level category under Technical Notes or a MIT Unit
-    const isTechnicalNoteCategory = isTopLevel && parentCategory === "";
-    const isMITUnit = parentCategory === "MIT Units";
-
-    // Log what we're processing
-    if (isTopLevel) {
-      console.log(`\nProcessing top-level category: ${category.title}`);
-    } else {
-      console.log(
-        `  Processing subcategory: ${category.title} (parent: ${parentCategory}, depth: ${depth})`
-      );
-    }
-
-    // Get the blocks for this category
-    const response = await notion.blocks.children.list({
-      block_id: category.id,
-      page_size: 100,
-    });
-
-    // Check if this category has children
-    const hasChildren = response.results.some(
-      (block) => block.type === "child_page"
-    );
-
-    // Check if this category has actual content
-    const hasContent = await hasActualContent(category.id);
-
-    // Determine the category name for this page
-    let categoryName;
-    if (isTechnicalNoteCategory) {
-      // Top-level Technical Notes categories - use their own name as category
-      categoryName = category.title;
-    } else if (isMITUnit) {
-      // MIT Units - add CITS prefix to the category name
-      categoryName = `CITS${category.title}`;
-    } else if (parentCategory) {
-      // For subcategories, use the parent category
-      categoryName = parentCategory;
-    } else {
-      // Default case - uncategorized
-      categoryName = "Uncategorized";
-    }
-
-    // Check if the category is in our valid categories set
-    const isValidCategory = validCategoriesSet.has(categoryName);
-
-    // Determine if this page should be migrated
-    let shouldMigrate = false;
-
-    // For Technical Notes and MIT Units categories themselves, we want to include them only if they have content
-    if ((isTechnicalNoteCategory || isMITUnit) && hasContent) {
-      shouldMigrate = true;
-    }
-    // For subcategories and content pages, include them if they have content AND a valid category
-    else if (depth > 0 && hasContent && isValidCategory) {
-      shouldMigrate = true;
-    }
-
-    // If the current page should be migrated, add it to our list
-    if (shouldMigrate) {
-      // Add CITS prefix to MIT Unit category titles
-      const displayTitle = isMITUnit ? `CITS${category.title}` : category.title;
-
-      pages.push({
-        id: category.id,
-        title: displayTitle,
-        category: categoryName,
-        depth: depth,
-        isTopLevel: isTopLevel,
-        hasChildren: hasChildren,
-        hasContent: hasContent,
-      });
-
-      if (!isValidCategory) {
-        console.log(
-          `  → WARNING: Adding page with invalid category: ${displayTitle} (category: ${categoryName})`
-        );
-      } else {
-        console.log(
-          `  → Adding to migration: ${displayTitle} (category: ${categoryName})`
-        );
-      }
-    } else {
-      if (!isValidCategory && depth > 0) {
-        console.log(
-          `  → Skipping: ${category.title} (invalid category: ${categoryName})`
-        );
-      } else {
-        console.log(
-          `  → Skipping: ${category.title} (doesn't meet migration criteria)`
-        );
-      }
-    }
-
-    // Recursively process child pages
-    if (hasChildren) {
-      for (const block of response.results) {
-        if (block.type === "child_page") {
-          const childPageTitle = block.child_page.title;
-
-          // Process the child page
-          const childPages = await traverseCategory(
-            { id: block.id, title: childPageTitle },
-            categoryName, // Pass the current category as the parent
-            depth + 1 // Increment the depth
-          );
-
-          // Add the child pages to our list
-          pages.push(...childPages);
-        }
-      }
-    }
-
-    return pages;
-  } catch (error) {
-    console.error(`Error processing category ${category.title}:`, error);
-    return [];
-  }
-}
-
-/**
- * Get all pages from all categories
- * @param {Array} categories - Array of top-level categories
- * @returns {Promise<Array>} - Array of all pages to migrate
- */
-async function getAllPages(categories) {
-  console.log("Collecting all pages from categories...");
-
-  // Process all categories and collect pages
-  const allPagesResults = await Promise.all(
-    categories.map((category) => traverseCategory(category))
-  );
-
-  // Combine all pages from all categories
-  let allPages = [];
-  let totalProcessed = 0;
-  let totalWithContent = 0;
-
-  allPagesResults.forEach((result) => {
-    allPages = allPages.concat(result);
-    totalProcessed += result.length;
-    totalWithContent += result.filter((page) => page.hasContent).length;
-  });
-
-  // Log summary statistics
-  console.log("\nCollection Summary:");
-  console.log(`Total pages processed: ${totalProcessed}`);
-  console.log(`Pages with content: ${totalWithContent}`);
-  console.log(`Pages to be migrated: ${allPages.length}`);
-
-  return allPages;
-}
-
-/**
- * Check if an entry needs to be updated
- * @param {string} pageId - The ID of the page
- * @param {string} lastEditedTime - The last edited time of the page
- * @param {Array} existingEntries - Array of existing database entries
- * @returns {string|null} - The ID of the existing entry if it needs update, null otherwise
- */
-function needsUpdate(pageId, lastEditedTime, existingEntries) {
-  // Find the existing entry for this page
-  const existingEntry = existingEntries.find((entry) => {
-    const originalPageUrl = entry.properties["Original Page"]?.url;
-    if (!originalPageUrl) return false;
-
-    // Extract the page ID from the URL
-    const urlPageId = originalPageUrl.split("/").pop();
-    return urlPageId === pageId.replace(/-/g, "");
-  });
-
-  if (!existingEntry) return null; // No existing entry
-
-  // Get the last edited time of the existing entry
-  const entryLastEdited =
-    existingEntry.properties["Last Edited"]?.date?.start ||
-    existingEntry.last_edited_time;
-
-  // If the page was edited after the entry, it needs update
-  if (new Date(lastEditedTime) > new Date(entryLastEdited)) {
-    return existingEntry.id;
-  }
-
-  return null; // No update needed
-}
-
-/**
- * Process a page and add it to the database
- * @param {NotionClient} client - The Notion client
- * @param {string} databaseId - The database ID
- * @param {Object} pageInfo - Information about the page
- * @returns {Promise<void>}
- */
-async function processPage(client, databaseId, pageInfo) {
-  const { id, title, category, depth, isTopLevel, hasContent } = pageInfo;
-
-  try {
-    console.log(`\nProcessing page: ${title}`);
-    console.log(`  Category: ${category}`);
-    console.log(`  Depth: ${depth}`);
-    console.log(`  Is Top Level: ${isTopLevel}`);
-    console.log(`  Has Content: ${hasContent}`);
-
-    // Retrieve page metadata to get creation date
-    const pageMetadata = await client.pages.retrieve({ page_id: id });
-    const createdTime = pageMetadata.created_time || new Date().toISOString();
-
-    // Extract page content and cover images
-    const content = await extractTextContent(id);
-    const coverImageUrl = await extractFirstImage(id);
-
-    // Generate display title
-    // For top-level categories, append "Notes" - e.g., "Python Notes"
-    const displayTitle = isTopLevel
-      ? title.startsWith("CITS")
-        ? title
-        : `${title} Notes`
-      : title;
-
-    // Generate excerpt
-    let excerpt = "";
-    if (content) {
-      // Use AI-enhanced summary for pages with content
-      excerpt = await generateAISummary(content, 150);
-    } else if (isTopLevel) {
-      // For top-level categories without content, create a simple description
-      excerpt = `Notes and resources about ${
-        title.startsWith("CITS") ? title : title.toLowerCase()
-      }.`;
-    }
-
-    // Extract tags
-    const tags = extractTags(content, title, category);
-
-    console.log(`  Title: ${displayTitle}`);
-    console.log(`  Created Time: ${createdTime}`);
-    console.log(
-      `  Excerpt: ${excerpt.substring(0, 50)}${
-        excerpt.length > 50 ? "..." : ""
-      }`
-    );
-    console.log(`  Tags: ${tags.join(", ")}`);
-    console.log(`  Type: ${isTopLevel ? "Category" : "Article"}`);
-    console.log(`  Depth: ${depth}`);
-
-    // Prepare database entry properties - Use the actual property names from your Notion database
-    const properties = {
-      Title: {
-        title: [
-          {
-            text: {
-              content: displayTitle,
-            },
-          },
-        ],
-      },
-      Category: {
-        select: {
-          name: category || "Uncategorized",
-        },
-      },
-      Status: {
-        select: {
-          name: "Published",
-        },
-      },
-      Type: {
-        select: {
-          name: isTopLevel ? "Category" : "Article",
-        },
-      },
-      Excerpt: {
-        rich_text: [
-          {
-            text: {
-              content: excerpt.slice(0, 2000), // Limit to 2000 chars for Notion API
-            },
-          },
-        ],
-      },
-      Tags: {
-        multi_select: tags.map((tag) => ({ name: tag })),
-      },
-      "Original Page": {
-        url: `https://www.notion.so/${id.replace(/-/g, "")}`,
-      },
-      "Date Created": {
-        date: {
-          start: createdTime,
-        },
-      },
-    };
-
-    // Prepare the page data
-    const pageData = {
-      parent: {
-        database_id: databaseId,
-      },
-      properties,
-    };
-
-    // If we have a cover image, add it to the page data
-    if (coverImageUrl) {
-      pageData.cover = {
-        type: "external",
-        external: {
-          url: coverImageUrl,
-        },
-      };
-    }
-
-    // Create the database entry
-    try {
-      const response = await client.pages.create(pageData);
-
-      console.log(`  ✓ Added to database: ${title}`);
-      return response;
-    } catch (error) {
-      console.error(`  ✗ Error creating database entry: ${error.message}`);
-      console.error(JSON.stringify(error.body, null, 2));
-      return null;
-    }
-  } catch (error) {
-    console.error(`  ✗ Error processing page ${title}:`, error.message);
-    return null;
-  }
-}
-
-/**
  * Extract the first image URL from a page
  * @param {string} pageId - The ID of the page
  * @returns {Promise<string|null>} - The URL of the first image or null if none found
@@ -736,7 +409,9 @@ async function processPage(client, databaseId, pageInfo) {
 async function extractFirstImage(pageId) {
   try {
     // First, check if the page has a cover image
-    const pageResponse = await notion.pages.retrieve({ page_id: pageId });
+    const pageResponse = await callWithRetry(() =>
+      notion.pages.retrieve({ page_id: pageId })
+    );
 
     if (pageResponse.cover) {
       if (pageResponse.cover.type === "external") {
@@ -747,10 +422,12 @@ async function extractFirstImage(pageId) {
     }
 
     // If no cover image, look for the first image in the content
-    const blocks = await notion.blocks.children.list({
-      block_id: pageId,
-      page_size: 100,
-    });
+    const blocks = await callWithRetry(() =>
+      notion.blocks.children.list({
+        block_id: pageId,
+        page_size: 100,
+      })
+    );
 
     for (const block of blocks.results) {
       if (block.type === "image") {
@@ -771,260 +448,6 @@ async function extractFirstImage(pageId) {
 }
 
 /**
- * Generate a URL-friendly slug from a title
- * @param {string} title - The title to generate a slug from
- * @param {string} pageId - The page ID to ensure uniqueness
- * @returns {string} - The generated slug
- */
-function generateSlug(title, pageId) {
-  if (!title) return pageId.replace(/-/g, "");
-
-  // Convert to lowercase and replace spaces with hyphens
-  let slug = title
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "") // Remove non-word chars
-    .replace(/[\s_-]+/g, "-") // Replace spaces and underscores with hyphens
-    .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
-
-  // Add the last 8 chars of the page ID for uniqueness
-  const uniqueId = pageId.replace(/-/g, "").slice(-8);
-  return `${slug}-${uniqueId}`;
-}
-
-/**
- * Clear all entries from the database
- * @returns {Promise<void>}
- */
-async function clearDatabase() {
-  try {
-    console.log("Clearing existing database entries...");
-
-    // Get existing entries
-    const existingEntries = await getExistingEntries();
-
-    if (existingEntries.length === 0) {
-      console.log("No existing entries found in the database.");
-      return;
-    }
-
-    console.log(`Found ${existingEntries.length} existing entries to remove.`);
-
-    // Archive (delete) each entry
-    for (const entry of existingEntries) {
-      const title =
-        entry.properties.Title?.title?.[0]?.text?.content || "Untitled";
-      console.log(`Removing entry: ${title}`);
-
-      try {
-        await notion.pages.update({
-          page_id: entry.id,
-          archived: true,
-        });
-      } catch (error) {
-        console.error(`Error removing entry ${entry.id}:`, error.message);
-      }
-    }
-
-    console.log("Database cleared successfully.");
-  } catch (error) {
-    console.error("Error clearing database:", error.message);
-  }
-}
-
-/**
- * Get all existing entries from the database
- * @returns {Promise<Array>} - Array of existing entries
- */
-async function getExistingEntries() {
-  try {
-    const response = await notion.databases.query({
-      database_id: DATABASE_ID,
-      page_size: 100,
-    });
-
-    return response.results || [];
-  } catch (error) {
-    console.error(`Error getting existing entries: ${error.message}`);
-    return [];
-  }
-}
-
-/**
- * Migrate all pages to the Notion database
- * @param {NotionClient} client - The Notion client
- * @param {string} databaseId - The database ID
- * @param {Object[]} allPages - Array of all pages to migrate
- */
-async function migrateAllPages(client, databaseId, allPages) {
-  try {
-    console.log("Starting migration process...");
-
-    // Clear existing database entries
-    console.log("Clearing existing database entries...");
-    const existingEntries = await queryAllDatabaseEntries(client, databaseId);
-    console.log(`Found ${existingEntries.length} existing entries.`);
-
-    if (existingEntries.length > 0) {
-      console.log("Deleting existing entries...");
-      for (const entry of existingEntries) {
-        try {
-          await client.pages.update({
-            page_id: entry.id,
-            archived: true,
-          });
-          console.log(
-            `  Archived entry: ${
-              entry.properties.Title?.title[0]?.plain_text || entry.id
-            }`
-          );
-        } catch (error) {
-          console.error(`  Error archiving entry ${entry.id}:`, error.message);
-        }
-      }
-      console.log(`Deleted ${existingEntries.length} existing entries.`);
-    }
-
-    // Log the types of pages we're migrating
-    console.log("\nPreparing to migrate pages...");
-    console.log(`Total pages to migrate: ${allPages.length}`);
-
-    // Log migration progress
-    const total = allPages.length;
-    let success = 0;
-    let errors = 0;
-
-    // Process all pages
-    for (let i = 0; i < allPages.length; i++) {
-      const page = allPages[i];
-      try {
-        // Log progress every 10 pages
-        if (i % 10 === 0 || i === allPages.length - 1) {
-          console.log(`Progress: ${i}/${total} pages processed`);
-        }
-
-        await processPage(client, databaseId, page);
-        success++;
-      } catch (error) {
-        console.error(`Error processing page "${page.title}":`, error.message);
-        errors++;
-      }
-    }
-
-    // Summary of migration
-    console.log("\nMigration completed!");
-    console.log(`Total pages: ${total}`);
-    console.log(`Successfully migrated: ${success}`);
-    console.log(`Errors: ${errors}`);
-  } catch (error) {
-    console.error("Migration failed:", error);
-  }
-}
-
-/**
- * Main function to run the migration
- * @param {Object} options - Migration options
- * @param {boolean} options.clearDatabase - Whether to clear the database before migration
- * @returns {Promise<void>}
- */
-async function runMigration(options = { clearDatabase: true }) {
-  console.log("Starting Notion Technical Notes migration...");
-  console.log("Configuration:");
-  console.log(`- SOURCE_PAGE_ID: ${SOURCE_PAGE_ID}`);
-  console.log(`- DATABASE_ID: ${DATABASE_ID}`);
-
-  try {
-    // Validate configuration
-    if (!NOTION_API_KEY) {
-      throw new Error("NOTION_API_KEY is not set in environment variables");
-    }
-
-    if (!SOURCE_PAGE_ID) {
-      throw new Error("SOURCE_PAGE_ID is not set in environment variables");
-    }
-
-    if (!DATABASE_ID) {
-      throw new Error("DATABASE_ID is not set in environment variables");
-    }
-
-    // Clear the database if requested
-    if (options.clearDatabase) {
-      await clearDatabase();
-    }
-
-    // Start the migration
-    console.log("Starting migration of articles...");
-
-    // Verify the source page exists
-    try {
-      await notion.pages.retrieve({
-        page_id: SOURCE_PAGE_ID,
-      });
-    } catch (error) {
-      throw new Error(`Source page not found: ${error.message}`);
-    }
-
-    // Verify the database exists
-    try {
-      await notion.databases.retrieve({
-        database_id: DATABASE_ID,
-      });
-    } catch (error) {
-      throw new Error(`Database not found: ${error.message}`);
-    }
-
-    // Migrate all pages
-    await migrateAllPages(
-      notion,
-      DATABASE_ID,
-      await getAllPages(await getTopLevelCategories())
-    );
-  } catch (error) {
-    console.error("Migration failed:", error.message);
-    process.exit(1);
-  }
-}
-
-// Run the migration if this file is executed directly
-if (require.main === module) {
-  // Parse command line arguments
-  const args = process.argv.slice(2);
-  const options = {
-    clearDatabase: !args.includes("--no-clear"),
-  };
-
-  console.log("Notion Technical Notes Migration Tool");
-  console.log("====================================");
-
-  if (!options.clearDatabase) {
-    console.log("Running in append mode (--no-clear flag detected)");
-  }
-
-  runMigration(options)
-    .then(() => {
-      console.log("Migration completed successfully!");
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error("Migration failed:", error.message);
-      process.exit(1);
-    });
-}
-
-// Export functions for testing
-module.exports = {
-  runMigration,
-  clearDatabase,
-  getTopLevelCategories,
-  processPage,
-  extractTextContent,
-  extractTags,
-  generateExcerpt,
-  extractFirstImage,
-  hasActualContent,
-};
-
-/**
  * Query all entries in the Notion database
  * @param {NotionClient} client - The Notion client
  * @param {string} databaseId - The database ID
@@ -1037,11 +460,13 @@ async function queryAllDatabaseEntries(client, databaseId) {
 
   while (hasMore) {
     try {
-      const response = await client.databases.query({
-        database_id: databaseId,
-        start_cursor: startCursor,
-        page_size: 100, // Maximum allowed by Notion API
-      });
+      const response = await callWithRetry(() =>
+        client.databases.query({
+          database_id: databaseId,
+          start_cursor: startCursor,
+          page_size: 100, // Maximum allowed by Notion API
+        })
+      );
 
       allEntries = allEntries.concat(response.results);
 
@@ -1056,30 +481,38 @@ async function queryAllDatabaseEntries(client, databaseId) {
   return allEntries;
 }
 
-async function main() {
-  console.log("Starting Notion database migration...");
-  console.log(`Source page ID: ${SOURCE_PAGE_ID}`);
-  console.log(`Target database ID: ${DATABASE_ID}`);
+/**
+ * PHASE 1: Collect all data from source Notion pages
+ * This function efficiently gathers all pages and metadata in a single traversal
+ * to minimize API calls.
+ */
+async function collectAllData(options = {}) {
+  const { delayMs = 400 } = options; // Default to 400ms (safe for 3 req/sec limit)
+  console.log(
+    `[${new Date().toISOString()}] PHASE 1: Collecting all data from source Notion pages (delay: ${delayMs}ms)...`
+  );
+  console.log(`Rate limit: 3 requests per second average (Notion API limit)`);
 
-  // Track statistics
-  let totalPages = 0;
-  let totalProcessed = 0;
-  let skippedInvalidCategory = 0;
+  // Data structure to hold all collected information
+  const collectedData = {
+    validCategories: new Set(),
+    allPages: [],
+    metadataCache: new Map(), // Cache page metadata to avoid duplicate API calls
+  };
 
   try {
-    // Initialize the Notion client
-    const notion = new Client({ auth: NOTION_API_KEY });
-
-    // Verify we can connect to the Notion API
-    const listUsersResponse = await notion.users.list({});
-    console.log("Successfully connected to Notion API.");
-
     // Step 1: Get top-level categories
-    console.log("\nFetching top-level categories...");
-    const response = await notion.blocks.children.list({
-      block_id: SOURCE_PAGE_ID,
-      page_size: 100,
-    });
+    console.log(
+      `[${
+        new Date().toISOString().split("T")[1].split(".")[0]
+      }] Fetching top-level categories...`
+    );
+    const response = await callWithRetry(() =>
+      notion.blocks.children.list({
+        block_id: SOURCE_PAGE_ID,
+        page_size: 100,
+      })
+    );
 
     const topLevelPages = response.results
       .filter((block) => block.type === "child_page")
@@ -1093,131 +526,643 @@ async function main() {
     // Add Technical Notes categories to valid categories set
     topLevelPages.forEach((page) => {
       if (page.title !== "MIT Units") {
-        validCategoriesSet.add(page.title);
+        collectedData.validCategories.add(page.title);
       }
     });
 
-    // Identify MIT Units page ID for special handling
+    // Find MIT Units page ID for special handling
     const mitUnitsPage = topLevelPages.find(
       (page) => page.title === "MIT Units"
     );
-    const mitUnitsId = mitUnitsPage ? mitUnitsPage.id : null;
 
-    if (mitUnitsId) {
-      console.log(`Found MIT Units page with ID: ${mitUnitsId}`);
+    // Process MIT Units first to gather all valid categories
+    if (mitUnitsPage) {
+      console.log("Processing MIT Units to gather valid category names...");
+      await delay(delayMs); // Add delay to avoid rate limiting
 
-      // Get subpages of MIT Units to add as valid categories with CITS prefix
-      const mitUnitsResponse = await notion.blocks.children.list({
-        block_id: mitUnitsId,
-        page_size: 100,
-      });
+      const mitUnitsResponse = await callWithRetry(() =>
+        notion.blocks.children.list({
+          block_id: mitUnitsPage.id,
+          page_size: 100,
+        })
+      );
 
       const mitUnitsSubpages = mitUnitsResponse.results
         .filter((block) => block.type === "child_page")
         .map((block) => ({
           id: block.id,
-          title: `CITS${block.child_page.title}`,
+          title: block.child_page.title,
+          prefixedTitle: `CITS${block.child_page.title}`,
         }));
 
-      // Add MIT Units subpages to valid categories
+      // Add MIT Units subpages to valid categories with CITS prefix
       mitUnitsSubpages.forEach((page) => {
-        validCategoriesSet.add(page.title);
+        collectedData.validCategories.add(page.prefixedTitle);
       });
 
-      console.log(`Valid categories (${validCategoriesSet.size}):`);
-      console.log([...validCategoriesSet].join(", "));
-    } else {
       console.log(
-        "MIT Units page not found. Proceeding without MIT Units categories."
+        `Added ${mitUnitsSubpages.length} MIT Units categories with CITS prefix.`
       );
     }
 
-    // Step 2: Traverse each top-level category and gather all pages to migrate
-    console.log("\nTraversing categories to gather pages for migration...");
-    const pagesToMigrate = [];
+    console.log(`Valid categories (${collectedData.validCategories.size}):`);
+    console.log([...collectedData.validCategories].join(", "));
 
-    for (const page of topLevelPages) {
-      console.log(`\nTraversing category: ${page.title}`);
+    // Step 2: Recursively collect all pages and their data
+    console.log("\nCollecting all pages recursively...");
 
-      // Special handling for MIT Units - we want to find its subpages
-      if (page.id === mitUnitsId) {
-        console.log(
-          "This is the MIT Units category - adding its subpages with CITS prefix"
+    // Process each top-level category
+    let categoryCounter = 0;
+    for (const category of topLevelPages) {
+      categoryCounter++;
+      console.log(
+        `\n[${
+          new Date().toISOString().split("T")[1].split(".")[0]
+        }] Processing top-level category: ${
+          category.title
+        } (${categoryCounter}/${topLevelPages.length})`
+      );
+
+      // Special handling for MIT Units
+      if (category.title === "MIT Units") {
+        // Get MIT Units subpages
+        const mitUnitsResponse = await callWithRetry(() =>
+          notion.blocks.children.list({
+            block_id: category.id,
+            page_size: 100,
+          })
         );
 
-        // Get the subpages under MIT Units
-        const mitSubpagesResponse = await notion.blocks.children.list({
-          block_id: page.id,
-          page_size: 100,
-        });
+        // Process each MIT Units subpage
+        for (const block of mitUnitsResponse.results) {
+          if (block.type === "child_page") {
+            const subpageTitle = block.child_page.title;
+            const prefixedTitle = `CITS${subpageTitle}`;
 
-        const mitSubpages = mitSubpagesResponse.results
-          .filter((block) => block.type === "child_page")
-          .map((block) => ({
-            id: block.id,
-            title: block.child_page.title,
-          }));
+            console.log(
+              `  Processing MIT Units subpage: ${subpageTitle} (${prefixedTitle})`
+            );
 
-        console.log(`Found ${mitSubpages.length} subpages under MIT Units.`);
+            // Add this page to our collection
+            collectedData.allPages.push({
+              id: block.id,
+              title: subpageTitle,
+              prefixedTitle,
+              category: prefixedTitle,
+              parent: "MIT Units",
+              depth: 1,
+              isTopLevel: false,
+              isMITUnit: true,
+            });
 
-        // Add these subpages to our list to traverse
-        for (const subpage of mitSubpages) {
-          const results = await traverseCategory(
-            subpage,
-            "MIT Units", // Set the parent category to "MIT Units"
-            1 // These are at depth 1
-          );
-          pagesToMigrate.push(...results);
+            // Process subpages recursively
+            await collectSubpages(
+              block.id,
+              prefixedTitle,
+              prefixedTitle,
+              2, // Depth 2 for children of MIT Unit subpages
+              false, // Not top level
+              true, // Is MIT Unit
+              collectedData,
+              delayMs
+            );
+          }
+
+          await delay(delayMs); // Add delay between processing siblings
         }
       } else {
-        // Standard traversal for other top-level categories
-        const results = await traverseCategory(page);
-        pagesToMigrate.push(...results);
-      }
-    }
+        // For regular top-level categories
+        // Add this top-level category as a page itself (if it has content)
+        collectedData.allPages.push({
+          id: category.id,
+          title: category.title,
+          category: category.title,
+          parent: "",
+          depth: 0,
+          isTopLevel: true,
+          isMITUnit: false,
+        });
 
-    console.log(`\nGathered ${pagesToMigrate.length} pages to migrate.`);
-
-    // Step 3: Filter out pages with invalid categories
-    const validPagesToMigrate = pagesToMigrate.filter((page) => {
-      if (validCategoriesSet.has(page.category)) {
-        return true;
-      } else {
-        console.log(
-          `Skipping page with invalid category: ${page.title} (category: ${page.category})`
+        // Process its subpages recursively
+        await collectSubpages(
+          category.id,
+          category.title,
+          category.title,
+          1, // Depth 1 for children of top-level categories
+          false, // Not top level
+          false, // Not MIT Unit
+          collectedData,
+          delayMs
         );
-        skippedInvalidCategory++;
-        return false;
       }
-    });
-
-    console.log(
-      `\nFiltered to ${validPagesToMigrate.length} pages with valid categories.`
-    );
-    console.log(
-      `Skipped ${skippedInvalidCategory} pages with invalid categories.`
-    );
-
-    // Step 4: Process and migrate each valid page
-    console.log("\nMigrating pages to the database...");
-
-    for (const pageInfo of validPagesToMigrate) {
-      await processPage(notion, DATABASE_ID, pageInfo);
-      totalProcessed++;
     }
 
-    console.log("\nMigration complete!");
-    console.log(`Total pages processed: ${totalProcessed}`);
     console.log(
-      `Pages skipped due to invalid category: ${skippedInvalidCategory}`
+      `\nCollection complete. Found ${collectedData.allPages.length} total pages.`
     );
+    return collectedData;
   } catch (error) {
-    console.error("Migration failed:", error);
+    console.error("Error collecting data:", error);
+    throw error;
   }
 }
 
-// Call the main function to start the migration
-main().catch((error) => {
-  console.error("Migration failed:", error);
-  process.exit(1);
-});
+/**
+ * Helper function to recursively collect subpages
+ * @param {string} parentId - The ID of the parent page
+ * @param {string} parentTitle - The title of the parent page
+ * @param {string} category - The category name for these subpages
+ * @param {number} depth - The current depth in the hierarchy
+ * @param {boolean} isTopLevel - Whether this is a top-level page
+ * @param {boolean} isMITUnit - Whether this is part of MIT Units
+ * @param {Object} collectedData - The data collection object
+ * @param {number} delayMs - Delay between API calls in milliseconds
+ */
+async function collectSubpages(
+  parentId,
+  parentTitle,
+  category,
+  depth,
+  isTopLevel,
+  isMITUnit,
+  collectedData,
+  delayMs
+) {
+  try {
+    console.log(
+      `  [${
+        new Date().toISOString().split("T")[1].split(".")[0]
+      }] Collecting subpages for: ${parentTitle} (depth: ${depth})`
+    );
+
+    // Add delay to avoid rate limiting
+    await delay(delayMs);
+    console.log(`    Requesting children for: ${parentTitle}...`);
+
+    // Get child blocks for this parent
+    const response = await callWithRetry(() =>
+      notion.blocks.children.list({
+        block_id: parentId,
+        page_size: 100,
+      })
+    );
+
+    const childPages = response.results.filter(
+      (block) => block.type === "child_page"
+    );
+    console.log(
+      `    Found ${childPages.length} child pages for: ${parentTitle}`
+    );
+
+    // Process child pages
+    let childCounter = 0;
+    for (const block of response.results) {
+      if (block.type === "child_page") {
+        childCounter++;
+        const childTitle = block.child_page.title;
+        const childId = block.id;
+
+        console.log(
+          `    [${childCounter}/${childPages.length}] Processing child: ${childTitle}`
+        );
+
+        // Add this page to our collection
+        collectedData.allPages.push({
+          id: childId,
+          title: childTitle,
+          category: category, // Inherit parent's category
+          parent: parentTitle,
+          depth,
+          isTopLevel,
+          isMITUnit,
+        });
+
+        // Process its subpages recursively
+        await collectSubpages(
+          childId,
+          childTitle,
+          category, // Keep the same category
+          depth + 1,
+          false, // Not top level
+          isMITUnit,
+          collectedData,
+          delayMs
+        );
+      }
+
+      // Add delay between processing siblings
+      if (block.type === "child_page") {
+        console.log(
+          `    Waiting ${delayMs}ms before processing next sibling...`
+        );
+        await delay(delayMs);
+      }
+    }
+
+    console.log(`  Completed processing all children of: ${parentTitle}`);
+  } catch (error) {
+    console.error(`Error collecting subpages for ${parentTitle}:`, error);
+    // Continue with other pages rather than failing the entire process
+  }
+}
+
+/**
+ * PHASE 2: Process collected data and create database entries
+ * This function processes the data locally and creates database entries in batches
+ * to minimize API calls and handle rate limiting.
+ */
+async function processAndCreateEntries(collectedData, options = {}) {
+  const {
+    batchSize = 5,
+    delayBetweenBatches = 3000, // Increased to 3000ms
+    limit = Infinity,
+    clearDatabase = true,
+  } = options;
+
+  console.log(
+    "PHASE 2: Processing collected data and creating database entries..."
+  );
+  console.log(
+    `Batch size: ${batchSize}, Delay between batches: ${delayBetweenBatches}ms`
+  );
+  console.log(`Rate limit: 3 requests per second average (Notion API limit)`);
+
+  try {
+    // Clear existing database if requested
+    if (clearDatabase) {
+      console.log("Clearing existing database entries...");
+      const existingEntries = await queryAllDatabaseEntries(
+        notion,
+        DATABASE_ID
+      );
+      console.log(`Found ${existingEntries.length} existing entries to clear.`);
+
+      // Archive entries in batches to avoid rate limiting
+      for (let i = 0; i < existingEntries.length; i += batchSize) {
+        const batch = existingEntries.slice(i, i + batchSize);
+        console.log(
+          `Clearing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(
+            existingEntries.length / batchSize
+          )}`
+        );
+
+        const promises = batch.map((entry) =>
+          callWithRetry(() =>
+            notion.pages.update({
+              page_id: entry.id,
+              archived: true,
+            })
+          )
+        );
+
+        await Promise.all(promises);
+        console.log(`Batch cleared. Waiting before next batch...`);
+        await delay(delayBetweenBatches);
+      }
+    }
+
+    // Filter pages to include only those with valid categories
+    console.log(
+      "Filtering pages to include only those with valid categories..."
+    );
+    const validPages = collectedData.allPages.filter((page) =>
+      collectedData.validCategories.has(page.category)
+    );
+
+    console.log(
+      `Filtered to ${validPages.length} pages with valid categories.`
+    );
+    console.log(
+      `Skipped ${
+        collectedData.allPages.length - validPages.length
+      } pages with invalid categories.`
+    );
+
+    // Apply the limit if specified
+    const pagesToProcess = validPages.slice(0, limit);
+    console.log(
+      `Will process ${pagesToProcess.length} pages (limit: ${
+        limit !== Infinity ? limit : "none"
+      })`
+    );
+
+    // Process pages in batches
+    console.log(
+      `Processing in batches of ${batchSize} with ${delayBetweenBatches}ms delay between batches...`
+    );
+
+    let totalProcessed = 0;
+    let totalSuccess = 0;
+    let totalFailures = 0;
+
+    for (let i = 0; i < pagesToProcess.length; i += batchSize) {
+      const batch = pagesToProcess.slice(i, i + batchSize);
+      console.log(
+        `\nProcessing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(
+          pagesToProcess.length / batchSize
+        )}`
+      );
+
+      // Process each page in the batch (in parallel)
+      const results = await Promise.allSettled(
+        batch.map((page) => processPageAndCreateEntry(page, collectedData))
+      );
+
+      // Count successes and failures
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          console.log(`  ✓ Successfully processed: ${batch[index].title}`);
+          totalSuccess++;
+        } else {
+          console.error(`  ✗ Failed to process: ${batch[index].title}`);
+          console.error(`    Error: ${result.reason}`);
+          totalFailures++;
+        }
+        totalProcessed++;
+      });
+
+      // Add delay between batches
+      if (i + batchSize < pagesToProcess.length) {
+        console.log(
+          `Batch complete. Waiting ${delayBetweenBatches}ms before next batch...`
+        );
+        await delay(delayBetweenBatches);
+      }
+    }
+
+    // Log final statistics
+    console.log("\nMigration complete!");
+    console.log(`Total pages processed: ${totalProcessed}`);
+    console.log(`Successfully migrated: ${totalSuccess}`);
+    console.log(`Failed migrations: ${totalFailures}`);
+  } catch (error) {
+    console.error("Error processing data and creating entries:", error);
+    throw error;
+  }
+}
+
+/**
+ * Process a single page and create a database entry
+ * @param {Object} page - The page information
+ * @param {Object} collectedData - The collected data
+ * @returns {Promise<Object>} - The created database entry
+ */
+async function processPageAndCreateEntry(page, collectedData) {
+  try {
+    console.log(`Processing page: ${page.title} (category: ${page.category})`);
+
+    // Check if the page has content
+    const hasContent = await hasActualContent(page.id);
+
+    // Skip pages without content
+    if (!hasContent && !page.isTopLevel) {
+      console.log(`  Skipping ${page.title} - no content`);
+      return null;
+    }
+
+    // Get page metadata
+    const pageMetadata = await callWithRetry(() =>
+      notion.pages.retrieve({ page_id: page.id })
+    );
+    const createdTime = pageMetadata.created_time || new Date().toISOString();
+
+    // Extract content and images
+    const content = await extractTextContent(page.id);
+    const coverImageUrl = await extractFirstImage(page.id);
+
+    // Generate display title (add "Notes" suffix for top-level categories except MIT Units)
+    const displayTitle =
+      page.isTopLevel && !page.isMITUnit ? `${page.title} Notes` : page.title;
+
+    // Generate excerpt
+    let excerpt = "";
+    if (content) {
+      excerpt = generateExcerpt(content, 150);
+    } else if (page.isTopLevel) {
+      excerpt = `Notes and resources about ${page.title.toLowerCase()}.`;
+    }
+
+    // Extract tags
+    const tags = extractTags(content, page.title, page.category);
+
+    // Prepare database entry properties
+    const properties = {
+      Title: {
+        title: [
+          {
+            text: {
+              content: displayTitle,
+            },
+          },
+        ],
+      },
+      Category: {
+        select: {
+          name: page.category || "Uncategorized",
+        },
+      },
+      Status: {
+        select: {
+          name: "Published",
+        },
+      },
+      Excerpt: {
+        rich_text: [
+          {
+            text: {
+              content: excerpt.slice(0, 2000), // Limit to 2000 chars for Notion API
+            },
+          },
+        ],
+      },
+      Tags: {
+        multi_select: tags.map((tag) => ({ name: tag })),
+      },
+      "Original Page": {
+        url: `https://www.notion.so/${page.id.replace(/-/g, "")}`,
+      },
+      "Date Created": {
+        date: {
+          start: createdTime,
+        },
+      },
+    };
+
+    // Add Published property if needed
+    properties.Published = {
+      checkbox: true,
+    };
+
+    // Prepare the page data
+    const pageData = {
+      parent: {
+        database_id: DATABASE_ID,
+      },
+      properties,
+    };
+
+    // If we have a cover image, add it to the page data
+    if (coverImageUrl) {
+      pageData.cover = {
+        type: "external",
+        external: {
+          url: coverImageUrl,
+        },
+      };
+    }
+
+    // Create the database entry
+    const response = await callWithRetry(() => notion.pages.create(pageData));
+    console.log(`  ✓ Created database entry for: ${displayTitle}`);
+
+    return response;
+  } catch (error) {
+    console.error(`  ✗ Error processing page ${page.title}:`, error.message);
+    throw error;
+  }
+}
+
+/**
+ * Main function to run the migration with the two-phase approach
+ */
+async function runImprovedMigration(options = {}) {
+  console.log(
+    "Starting Notion Technical Notes migration (Two-Phase Approach)..."
+  );
+  console.log(`Source page ID: ${SOURCE_PAGE_ID}`);
+  console.log(`Target database ID: ${DATABASE_ID}`);
+  console.log("Rate limit: 3 requests per second average (Notion API limit)");
+
+  try {
+    // Phase 1: Collect all data efficiently
+    const collectedData = await collectAllData({
+      delayMs: options.delayMs || 400, // Default to 400ms (safe for 3 req/sec limit)
+    });
+
+    // Phase 2: Process data and create entries in batches
+    await processAndCreateEntries(collectedData, {
+      batchSize: options.batchSize || 5,
+      delayBetweenBatches: options.delayBetweenBatches || 3000, // Increased to 3000ms
+      limit: options.limit || Infinity,
+      clearDatabase: options.clearDatabase !== false,
+    });
+
+    console.log("Migration successfully completed!");
+    return true;
+  } catch (error) {
+    console.error("Migration failed:", error);
+    return false;
+  }
+}
+
+// Run the migration if this file is executed directly
+if (require.main === module) {
+  // Parse command line arguments
+  const args = process.argv.slice(2);
+  const options = {
+    clearDatabase: !args.includes("--no-clear"),
+  };
+
+  // Add support for --limit flag
+  const limitArg = args.find(
+    (arg) => arg.startsWith("--limit=") || arg === "--limit"
+  );
+  if (limitArg) {
+    if (limitArg === "--limit" && args.length > args.indexOf(limitArg) + 1) {
+      options.limit =
+        parseInt(args[args.indexOf(limitArg) + 1], 10) || Infinity;
+    } else if (limitArg.startsWith("--limit=")) {
+      options.limit = parseInt(limitArg.split("=")[1], 10) || Infinity;
+    }
+  }
+
+  // Add support for --batch-size flag
+  const batchSizeArg = args.find(
+    (arg) => arg.startsWith("--batch-size=") || arg === "--batch-size"
+  );
+  if (batchSizeArg) {
+    if (
+      batchSizeArg === "--batch-size" &&
+      args.length > args.indexOf(batchSizeArg) + 1
+    ) {
+      options.batchSize =
+        parseInt(args[args.indexOf(batchSizeArg) + 1], 10) || 5;
+    } else if (batchSizeArg.startsWith("--batch-size=")) {
+      options.batchSize = parseInt(batchSizeArg.split("=")[1], 10) || 5;
+    }
+  }
+
+  // Add support for --delay flag
+  const delayArg = args.find(
+    (arg) => arg.startsWith("--delay=") || arg === "--delay"
+  );
+  if (delayArg) {
+    if (delayArg === "--delay" && args.length > args.indexOf(delayArg) + 1) {
+      options.delayMs = parseInt(args[args.indexOf(delayArg) + 1], 10) || 400;
+    } else if (delayArg.startsWith("--delay=")) {
+      options.delayMs = parseInt(delayArg.split("=")[1], 10) || 400;
+    }
+  }
+
+  // Add support for --delay-between-batches flag
+  const delayBetweenBatchesArg = args.find(
+    (arg) =>
+      arg.startsWith("--delay-between-batches=") ||
+      arg === "--delay-between-batches"
+  );
+  if (delayBetweenBatchesArg) {
+    if (
+      delayBetweenBatchesArg === "--delay-between-batches" &&
+      args.length > args.indexOf(delayBetweenBatchesArg) + 1
+    ) {
+      options.delayBetweenBatches =
+        parseInt(args[args.indexOf(delayBetweenBatchesArg) + 1], 10) || 3000;
+    } else if (delayBetweenBatchesArg.startsWith("--delay-between-batches=")) {
+      options.delayBetweenBatches =
+        parseInt(delayBetweenBatchesArg.split("=")[1], 10) || 3000;
+    }
+  }
+
+  console.log("Notion Technical Notes Migration Tool (Two-Phase Approach)");
+  console.log("=====================================================");
+  console.log("Options:");
+  console.log(`- Clear database: ${options.clearDatabase}`);
+  console.log(
+    `- Limit: ${options.limit !== undefined ? options.limit : "No limit"}`
+  );
+  console.log(`- Batch size: ${options.batchSize || 5}`);
+  console.log(`- Delay between requests: ${options.delayMs || 400}ms`);
+  console.log(
+    `- Delay between batches: ${options.delayBetweenBatches || 3000}ms`
+  );
+  console.log("- Rate limit: 3 requests per second average (Notion API limit)");
+
+  runImprovedMigration(options)
+    .then((success) => {
+      if (success) {
+        console.log("Migration completed successfully!");
+        process.exit(0);
+      } else {
+        console.error("Migration failed.");
+        process.exit(1);
+      }
+    })
+    .catch((error) => {
+      console.error("Migration failed with an unhandled error:", error);
+      process.exit(1);
+    });
+}
+
+// Export functions for testing
+module.exports = {
+  runImprovedMigration,
+  collectAllData,
+  processAndCreateEntries,
+  extractTextContent,
+  extractTags,
+  generateExcerpt,
+  extractFirstImage,
+  hasActualContent,
+  callWithRetry,
+  delay,
+};

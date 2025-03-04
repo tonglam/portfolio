@@ -8,6 +8,9 @@
     "migrate": "node notion-db-migration.js",
     "migrate:keep": "node notion-db-migration.js --no-clear",
     "migrate:clear": "node notion-db-migration.js --clear",
+    "update": "node notion-db-update.js",
+    "update:single": "node notion-db-update.js --single-entry",
+    "add-properties": "node add-properties.js",
     "test": "node test-connection.js"
   },
   "keywords": [
@@ -20,7 +23,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@google/generative-ai": "^0.2.1",
     "@notionhq/client": "^2.2.14",
-    "dotenv": "^16.3.1"
+    "axios": "^1.8.1",
+    "dotenv": "^16.4.7",
+    "openai": "^4.28.0"
   }
 }
