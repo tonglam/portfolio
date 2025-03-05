@@ -253,7 +253,7 @@ async function createImageGenerationTask(title, summary) {
     const response = await axios.post(
       "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis",
       {
-        model: "wanx2.1-t2i-plus",
+        model: "wanx2.1-t2i-turbo",
         input: {
           prompt: prompt,
           negative_prompt: negative_prompt,
