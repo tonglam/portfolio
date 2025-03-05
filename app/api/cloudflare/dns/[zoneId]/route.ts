@@ -3,16 +3,16 @@ import {
   getCloudflareClient,
   getDnsRecords,
 } from "@/lib/cloudflare";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * GET handler for /api/cloudflare/dns/[zoneId] endpoint
  * Fetches DNS records for a specific Cloudflare zone
- * @param {Object} request - The request object
- * @param {Object} params - The route parameters
- * @param {string} params.zoneId - The Cloudflare zone ID
  */
-export async function GET(request, { params }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { zoneId: string } }
+) {
   try {
     const { zoneId } = params;
 
@@ -33,7 +33,7 @@ export async function GET(request, { params }) {
 
     // Return DNS records as JSON response
     return NextResponse.json({ success: true, dnsRecords });
-  } catch (error) {
+  } catch (error: any) {
     console.error(
       `Error in Cloudflare DNS records API for zone ${params?.zoneId}:`,
       error
@@ -53,11 +53,11 @@ export async function GET(request, { params }) {
 /**
  * POST handler for /api/cloudflare/dns/[zoneId] endpoint
  * Creates a new DNS record in the specified zone
- * @param {Object} request - The request object
- * @param {Object} params - The route parameters
- * @param {string} params.zoneId - The Cloudflare zone ID
  */
-export async function POST(request, { params }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { zoneId: string } }
+) {
   try {
     const { zoneId } = params;
 
@@ -99,7 +99,7 @@ export async function POST(request, { params }) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error(
       `Error creating DNS record in zone ${params?.zoneId}:`,
       error
