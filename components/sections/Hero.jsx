@@ -6,7 +6,7 @@ import certificates from "@/data/certificates";
 import { developerProfileCode } from "@/data/codeSnippets";
 import socialProfiles from "@/data/socialLinks";
 import useTypewriter from "@/hooks/useTypewriter";
-import highlightCodeSyntax from "@/lib/utils/codeHighlighter";
+import highlightCodeSyntax from "@/lib/codeHighlighter";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
