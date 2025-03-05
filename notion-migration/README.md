@@ -256,7 +256,7 @@ This script has intelligent processing logic that:
 - Skips entries where the image was previously uploaded to R2
 - Processes entries in batches to avoid overwhelming APIs
 
-##### Options
+##### Option
 
 - `--batch-size <number>`: Process entries in batches (default: 10)
 - `--delay <ms>`: Add a delay between entries (default: 1000ms)
@@ -336,7 +336,7 @@ This mapping provides:
 
 Images are stored in the R2 bucket with the following structure:
 
-```
+```plaintext
 images/{uuid}.{extension}
 ```
 
