@@ -1,3 +1,4 @@
+import { CACHE_SETTINGS, EXTERNAL_URLS } from "@/config/constants";
 import { NextResponse } from "next/server";
 
 // Helper function to extract plain text from Notion rich text array
@@ -17,22 +18,19 @@ function extractPlainText(richTextArray) {
 
 export async function GET(request, { params }) {
   try {
-    const slug = params.slug;
+    const { slug } = params;
 
     if (!slug) {
       return NextResponse.json({ error: "Slug is required" }, { status: 400 });
     }
 
-    // Cache control - R2 data updates at 5am daily
-    const cacheControl = "public, max-age=3600, stale-while-revalidate=86400"; // 1 hour fresh, 24 hours stale
+    // Cache control
+    const cacheControl = CACHE_SETTINGS.BLOG.CONTROL;
 
     // Fetch data from R2 storage
-    const response = await fetch(
-      "https://pub-d8dffa084afd41feb7c476a46103017d.r2.dev/blog-data.json",
-      {
-        next: { revalidate: 3600 }, // Revalidate every hour
-      }
-    );
+    const response = await fetch(EXTERNAL_URLS.BLOG_DATA_SOURCE, {
+      next: { revalidate: CACHE_SETTINGS.BLOG.REVALIDATE },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch blog data: ${response.status}`);
@@ -40,116 +38,108 @@ export async function GET(request, { params }) {
 
     const allPosts = await response.json();
 
-    // Process posts - extract data from Notion API format
-    const processedPosts = allPosts
-      .map((post) => {
-        if (!post.properties) {
-          return null;
-        }
+    // Process posts to find the matching slug
+    const post = allPosts.find((post) => {
+      if (!post.properties || !post.properties.Title) {
+        return false;
+      }
 
-        // Extract the post ID (for slug)
-        const id = post.id || "";
+      const title = extractPlainText(post.properties.Title.title);
+      const postSlug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
 
-        // Extract title from title property
-        const title =
-          post.properties.Title && post.properties.Title.title
-            ? extractPlainText(post.properties.Title.title)
-            : "Untitled Post";
+      return postSlug === slug;
+    });
 
-        // Extract image URL from R2ImageUrl property
-        const r2ImageUrl =
-          post.properties.R2ImageUrl && post.properties.R2ImageUrl.url
-            ? post.properties.R2ImageUrl.url
-            : post.properties.Image && post.properties.Image.url
-            ? post.properties.Image.url
-            : "https://via.placeholder.com/1470x800";
+    if (!post) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
 
-        // Extract date from Date Created property (format as MMM DD, YYYY)
-        let date = "Unknown date";
-        if (
-          post.properties["Date Created"] &&
-          post.properties["Date Created"].date &&
-          post.properties["Date Created"].date.start
-        ) {
-          const postDate = new Date(post.properties["Date Created"].date.start);
-          // Format the date as MMM DD, YYYY (e.g., "Jun 15, 2023")
-          date = postDate.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          });
-        }
+    // Extract post data
+    const id = post.id;
+    const title = extractPlainText(post.properties.Title.title);
 
-        // Extract minutes read from Mins Read property
-        const minRead =
-          post.properties["Mins Read"] && post.properties["Mins Read"].number
-            ? `${post.properties["Mins Read"].number} Min Read`
-            : "3 Min Read";
+    // Extract image URL
+    const r2ImageUrl =
+      post.properties.R2ImageUrl && post.properties.R2ImageUrl.url
+        ? post.properties.R2ImageUrl.url
+        : post.properties.Image && post.properties.Image.url
+        ? post.properties.Image.url
+        : EXTERNAL_URLS.PLACEHOLDERS.BLOG_IMAGE;
 
-        // Extract summary from Summary property
-        const summary =
-          post.properties.Summary && post.properties.Summary.rich_text
-            ? extractPlainText(post.properties.Summary.rich_text)
-            : post.properties.Excerpt && post.properties.Excerpt.rich_text
-            ? extractPlainText(post.properties.Excerpt.rich_text)
-            : "No summary available";
+    // Extract date
+    let date = "Unknown date";
+    if (
+      post.properties["Date Created"] &&
+      post.properties["Date Created"].date &&
+      post.properties["Date Created"].date.start
+    ) {
+      const postDate = new Date(post.properties["Date Created"].date.start);
+      date = postDate.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    }
 
-        // Extract category from Category property
-        const category =
-          post.properties.Category &&
-          post.properties.Category.select &&
-          post.properties.Category.select.name
-            ? post.properties.Category.select.name
-            : "Uncategorized";
+    // Extract minutes read
+    const minRead =
+      post.properties["Mins Read"] && post.properties["Mins Read"].number
+        ? `${post.properties["Mins Read"].number} Min Read`
+        : "3 Min Read";
 
-        // Extract content from Content property if it exists
-        const content =
-          post.properties.Content && post.properties.Content.rich_text
-            ? extractPlainText(post.properties.Content.rich_text)
-            : post.properties.Excerpt && post.properties.Excerpt.rich_text
-            ? extractPlainText(post.properties.Excerpt.rich_text)
-            : null;
+    // Extract summary
+    const summary =
+      post.properties.Summary && post.properties.Summary.rich_text
+        ? extractPlainText(post.properties.Summary.rich_text)
+        : post.properties.Excerpt && post.properties.Excerpt.rich_text
+        ? extractPlainText(post.properties.Excerpt.rich_text)
+        : "No summary available";
 
-        // Create a slug from the title or use the ID
-        const postSlug = title
-          ? title
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, "-")
-              .replace(/(^-|-$)/g, "")
-          : id;
+    // Extract category
+    const category =
+      post.properties.Category &&
+      post.properties.Category.select &&
+      post.properties.Category.select.name
+        ? post.properties.Category.select.name
+        : "Uncategorized";
 
-        return {
-          r2ImageUrl,
+    // Extract tags
+    const tags =
+      post.properties.Tags && post.properties.Tags.multi_select
+        ? post.properties.Tags.multi_select.map((tag) => tag.name)
+        : [category];
+
+    // Extract content blocks
+    const blocks = post.blocks || [];
+
+    // Create a link to the original Notion page
+    const originalPageUrl = EXTERNAL_URLS.NOTION.PAGE(id);
+
+    // Return the post data with appropriate cache headers
+    return NextResponse.json(
+      {
+        post: {
+          id,
           title,
+          r2ImageUrl,
           date,
           minRead,
           summary,
           category,
-          slug: postSlug,
-          content,
-          id,
-        };
-      })
-      .filter(Boolean); // Remove null entries
-
-    // Find the post with the matching slug
-    const foundPost = processedPosts.find(
-      (post) => post.slug === slug || post.id === slug
-    );
-
-    if (!foundPost) {
-      return NextResponse.json(
-        { error: "Blog post not found" },
-        { status: 404 }
-      );
-    }
-
-    // Return the post with appropriate cache headers
-    return NextResponse.json(foundPost, {
-      headers: {
-        "Cache-Control": cacheControl,
+          tags,
+          blocks,
+          originalPageUrl,
+        },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": cacheControl,
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching blog post:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

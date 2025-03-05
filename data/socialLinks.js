@@ -2,6 +2,7 @@
  * Social media profile links
  * Single source of truth for all social media links used throughout the site
  */
+import { EXTERNAL_URLS } from "@/config/constants";
 
 /**
  * Main social profiles with structured data
@@ -10,7 +11,7 @@ export const socialProfiles = [
   {
     id: "github",
     name: "GitHub",
-    url: "https://github.com/tonglam",
+    url: EXTERNAL_URLS.SOCIAL.GITHUB,
     icon: "GithubIcon",
     username: "tonglam",
     ariaLabel: "View GitHub profile",
@@ -18,7 +19,7 @@ export const socialProfiles = [
   {
     id: "linkedin",
     name: "LinkedIn",
-    url: "https://www.linkedin.com/in/qitonglan/",
+    url: EXTERNAL_URLS.SOCIAL.LINKEDIN,
     icon: "LinkedinIcon",
     username: "qitonglan",
     ariaLabel: "Connect on LinkedIn",
@@ -26,7 +27,7 @@ export const socialProfiles = [
   {
     id: "twitter",
     name: "X (Twitter)",
-    url: "https://x.com/tong_lam_14",
+    url: EXTERNAL_URLS.SOCIAL.TWITTER,
     icon: "XIcon",
     username: "tong_lam_14",
     ariaLabel: "Follow on X (Twitter)",

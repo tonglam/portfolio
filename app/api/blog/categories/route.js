@@ -1,17 +1,15 @@
+import { CACHE_SETTINGS, EXTERNAL_URLS } from "@/config/constants";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    // Cache control - R2 data updates at 5am daily
-    const cacheControl = "public, max-age=3600, stale-while-revalidate=86400"; // 1 hour fresh, 24 hours stale
+    // Cache control
+    const cacheControl = CACHE_SETTINGS.BLOG.CONTROL;
 
     // Fetch data from R2 storage
-    const response = await fetch(
-      "https://pub-d8dffa084afd41feb7c476a46103017d.r2.dev/blog-data.json",
-      {
-        next: { revalidate: 3600 }, // Revalidate every hour
-      }
-    );
+    const response = await fetch(EXTERNAL_URLS.BLOG_DATA_SOURCE, {
+      next: { revalidate: CACHE_SETTINGS.BLOG.REVALIDATE },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch blog data: ${response.status}`);
@@ -27,33 +25,41 @@ export async function GET() {
       );
     }
 
-    // Extract categories from Notion API format - only from Category.select.name
-    const categoriesSet = new Set();
-
-    // Process each post to extract categories
-    allPosts.forEach((post) => {
-      if (!post.properties) return;
-
-      // Extract category from the "Category" property which is a select field
-      if (post.properties.Category && post.properties.Category.select) {
-        const categoryName = post.properties.Category.select.name;
-        if (categoryName) {
-          categoriesSet.add(categoryName);
+    // Extract categories from Notion API format
+    const categories = allPosts.reduce((acc, post) => {
+      if (
+        post.properties &&
+        post.properties.Category &&
+        post.properties.Category.select &&
+        post.properties.Category.select.name
+      ) {
+        const category = post.properties.Category.select.name;
+        if (!acc.includes(category)) {
+          acc.push(category);
         }
       }
-    });
+      return acc;
+    }, []);
 
-    // Create final categories array with "All" first
-    const categories = ["All", ...Array.from(categoriesSet).sort()];
+    // Sort categories alphabetically
+    categories.sort();
 
-    console.log("Extracted categories:", categories);
+    // Add "All" as the first category
+    const finalCategories = ["All", ...categories];
+
+    console.log("Extracted categories:", finalCategories);
 
     // Return the categories with appropriate cache headers
-    return NextResponse.json(categories, {
-      headers: {
-        "Cache-Control": cacheControl,
+    return NextResponse.json(
+      {
+        categories: finalCategories,
       },
-    });
+      {
+        headers: {
+          "Cache-Control": cacheControl,
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching blog categories:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

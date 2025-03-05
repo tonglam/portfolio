@@ -1,3 +1,4 @@
+import { CACHE_SETTINGS, DEFAULTS, EXTERNAL_URLS } from "@/config/constants";
 import { NextResponse } from "next/server";
 
 /**
@@ -33,22 +34,18 @@ function extractPlainText(richTextArray) {
 // This is the function that will be called when the API endpoint is hit
 export async function GET(request) {
   try {
-    // Get query parameters
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
     const page = parseInt(searchParams.get("page")) || 1;
-    const limit = parseInt(searchParams.get("limit")) || 6;
+    const limit = parseInt(searchParams.get("limit")) || DEFAULTS.BLOG.LIMIT;
 
-    // Cache control - R2 data updates at 5am daily
-    const cacheControl = "public, max-age=3600, stale-while-revalidate=86400"; // 1 hour fresh, 24 hours stale
+    // Cache control
+    const cacheControl = CACHE_SETTINGS.BLOG.CONTROL;
 
     // Fetch data from R2 storage
-    const response = await fetch(
-      "https://pub-d8dffa084afd41feb7c476a46103017d.r2.dev/blog-data.json",
-      {
-        next: { revalidate: 3600 }, // Revalidate every hour
-      }
-    );
+    const response = await fetch(EXTERNAL_URLS.BLOG_DATA_SOURCE, {
+      next: { revalidate: CACHE_SETTINGS.BLOG.REVALIDATE },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch blog data: ${response.status}`);
@@ -87,7 +84,7 @@ export async function GET(request) {
             ? post.properties.R2ImageUrl.url
             : post.properties.Image && post.properties.Image.url
             ? post.properties.Image.url
-            : "https://via.placeholder.com/1470x800";
+            : EXTERNAL_URLS.PLACEHOLDERS.BLOG_IMAGE;
 
         // Extract date from Date Created property (format as MMM DD, YYYY)
         let date = "Unknown date";
@@ -106,10 +103,10 @@ export async function GET(request) {
         }
 
         // Extract minutes read from Mins Read property
-        const minsRead =
+        const minRead =
           post.properties["Mins Read"] && post.properties["Mins Read"].number
             ? `${post.properties["Mins Read"].number} Min Read`
-            : "3 Min Read";
+            : DEFAULTS.BLOG.MIN_READ;
 
         // Extract summary from Summary property
         const summary =
@@ -119,7 +116,7 @@ export async function GET(request) {
             ? extractPlainText(post.properties.Excerpt.rich_text)
             : "No summary available";
 
-        // Extract excerpt directly (might be same as summary in some cases)
+        // Extract excerpt from Excerpt property
         const excerpt =
           post.properties.Excerpt && post.properties.Excerpt.rich_text
             ? extractPlainText(post.properties.Excerpt.rich_text)
@@ -137,62 +134,59 @@ export async function GET(request) {
         const tags =
           post.properties.Tags && post.properties.Tags.multi_select
             ? post.properties.Tags.multi_select.map((tag) => tag.name)
-            : [];
-
-        // Extract Original Page URL if available
-        const originalPageUrl =
-          post.properties["Original Page"] &&
-          post.properties["Original Page"].url
-            ? post.properties["Original Page"].url
-            : `https://www.notion.so/${post.id.replace(/-/g, "")}`;
+            : [category]; // Default to category as a tag if no tags
 
         // Create a slug from the title or use the ID
-        const slug = title
+        const postSlug = title
           ? title
               .toLowerCase()
               .replace(/[^a-z0-9]+/g, "-")
               .replace(/(^-|-$)/g, "")
           : id;
 
+        // Create a link to the original Notion page
+        const originalPageUrl = EXTERNAL_URLS.NOTION.PAGE(id);
+
         return {
           r2ImageUrl,
           title,
           date,
-          minRead: minsRead,
+          minRead,
           summary,
           excerpt,
           category,
           tags,
-          slug,
+          slug: postSlug,
           id,
           originalPageUrl,
         };
       })
       .filter(Boolean); // Remove null entries
 
-    // Filter by category if provided
-    const filteredPosts =
-      category && category !== "All"
-        ? processedPosts.filter((post) => post.category === category)
-        : processedPosts;
+    // Filter by category if specified
+    const filteredPosts = category
+      ? processedPosts.filter((post) => post.category === category)
+      : processedPosts;
 
-    // Paginate the results
+    // Calculate pagination
+    const totalPosts = filteredPosts.length;
+    const totalPages = Math.ceil(totalPosts / limit);
     const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
+    const endIndex = startIndex + limit;
     const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
-    const totalPages = Math.ceil(filteredPosts.length / limit);
 
     // Debug log
     console.log(
       `Category filter: ${category}, Total: ${filteredPosts.length}, Paginated: ${paginatedPosts.length}`
     );
 
-    // Return the response with appropriate cache headers
+    // Return the posts with appropriate cache headers
     return NextResponse.json(
       {
         posts: paginatedPosts,
         totalPages,
-        totalPosts: filteredPosts.length,
+        totalPosts,
+        currentPage: page,
       },
       {
         headers: {

@@ -4,15 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -20,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useDebounce } from "@/hooks/use-debounce";
 import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 
@@ -451,22 +443,31 @@ export default function Blogs() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
-                className="mt-12 md:px-4 lg:px-8"
+                className="mt-12 flex justify-center"
               >
-                <Pagination>
-                  <PaginationContent className="gap-2">
-                    {currentPage > 1 && (
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage((prev) => Math.max(1, prev - 1));
-                          }}
-                        />
-                      </PaginationItem>
-                    )}
+                <div className="flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm shadow-sm border border-gray-100 dark:border-gray-700">
+                  {/* Previous Button */}
+                  <motion.button
+                    whileHover={currentPage > 1 ? { scale: 1.05 } : {}}
+                    whileTap={currentPage > 1 ? { scale: 0.95 } : {}}
+                    onClick={() => {
+                      if (currentPage > 1) {
+                        setCurrentPage((prev) => Math.max(1, prev - 1));
+                      }
+                    }}
+                    disabled={currentPage === 1}
+                    className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
+                      currentPage === 1
+                        ? "text-gray-400 cursor-not-allowed opacity-50"
+                        : "hover:bg-gradient-to-r hover:from-[#2563EB]/10 hover:to-[#4F46E5]/10 dark:hover:from-[#38BDF8]/10 dark:hover:to-[#818CF8]/10 text-gray-700 dark:text-gray-300"
+                    }`}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Previous</span>
+                  </motion.button>
 
+                  {/* Page Numbers */}
+                  <div className="flex gap-1">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                       (page) => {
                         // Show current page, first, last, and adjacent pages
@@ -483,18 +484,19 @@ export default function Blogs() {
                           isAdjacentToCurrentPage
                         ) {
                           return (
-                            <PaginationItem key={page}>
-                              <PaginationLink
-                                href="#"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setCurrentPage(page);
-                                }}
-                                isActive={isCurrentPage}
-                              >
-                                {page}
-                              </PaginationLink>
-                            </PaginationItem>
+                            <motion.button
+                              key={page}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => setCurrentPage(page)}
+                              className={`flex items-center justify-center h-9 w-9 rounded-lg font-medium transition-all duration-200 ${
+                                isCurrentPage
+                                  ? "bg-gradient-to-r from-[#2563EB] to-[#4F46E5] dark:from-[#38BDF8] dark:to-[#818CF8] text-white shadow-md"
+                                  : "text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#2563EB]/10 hover:to-[#4F46E5]/10 dark:hover:from-[#38BDF8]/10 dark:hover:to-[#818CF8]/10"
+                              }`}
+                            >
+                              {page}
+                            </motion.button>
                           );
                         } else if (
                           (page === 2 && currentPage > 3) ||
@@ -502,31 +504,42 @@ export default function Blogs() {
                             currentPage < totalPages - 2)
                         ) {
                           return (
-                            <PaginationItem key={page}>
-                              <PaginationEllipsis />
-                            </PaginationItem>
+                            <span
+                              key={page}
+                              className="flex h-9 w-9 items-center justify-center text-gray-500 dark:text-gray-400"
+                            >
+                              <MoreHorizontal className="h-5 w-5" />
+                            </span>
                           );
                         }
 
                         return null;
                       }
                     )}
+                  </div>
 
-                    {currentPage < totalPages && (
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage((prev) =>
-                              Math.min(totalPages, prev + 1)
-                            );
-                          }}
-                        />
-                      </PaginationItem>
-                    )}
-                  </PaginationContent>
-                </Pagination>
+                  {/* Next Button */}
+                  <motion.button
+                    whileHover={currentPage < totalPages ? { scale: 1.05 } : {}}
+                    whileTap={currentPage < totalPages ? { scale: 0.95 } : {}}
+                    onClick={() => {
+                      if (currentPage < totalPages) {
+                        setCurrentPage((prev) =>
+                          Math.min(totalPages, prev + 1)
+                        );
+                      }
+                    }}
+                    disabled={currentPage === totalPages}
+                    className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
+                      currentPage === totalPages
+                        ? "text-gray-400 cursor-not-allowed opacity-50"
+                        : "hover:bg-gradient-to-r hover:from-[#2563EB]/10 hover:to-[#4F46E5]/10 dark:hover:from-[#38BDF8]/10 dark:hover:to-[#818CF8]/10 text-gray-700 dark:text-gray-300"
+                    }`}
+                  >
+                    <span className="hidden sm:inline">Next</span>
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </motion.button>
+                </div>
               </motion.div>
             )}
           </>
