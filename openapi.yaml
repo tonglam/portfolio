@@ -1,0 +1,334 @@
+openapi: 3.0.0
+info:
+  title: Portfolio API
+  description: API for portfolio website with blog and contact functionality
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://your-portfolio-domain.com
+    description: Production server
+  - url: http://localhost:3000
+    description: Development server
+
+components:
+  schemas:
+    BlogPost:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the blog post
+        title:
+          type: string
+          description: Title of the blog post
+        r2ImageUrl:
+          type: string
+          format: uri
+          description: URL to the blog post featured image
+        date:
+          type: string
+          description: Publication date in format "MMM DD, YYYY"
+        minRead:
+          type: string
+          description: Estimated reading time (e.g., "3 Min Read")
+        summary:
+          type: string
+          description: Brief summary of the blog post
+        excerpt:
+          type: string
+          description: Longer excerpt of the blog post
+        category:
+          type: string
+          description: Category of the blog post
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags associated with the blog post
+        slug:
+          type: string
+          description: URL-friendly slug for the blog post
+        originalPageUrl:
+          type: string
+          format: uri
+          description: URL to the original Notion page
+      required:
+        - id
+        - title
+        - slug
+
+    BlogPostDetail:
+      allOf:
+        - $ref: "#/components/schemas/BlogPost"
+        - type: object
+          properties:
+            blocks:
+              type: array
+              description: Content blocks from Notion
+              items:
+                type: object
+
+    Category:
+      type: string
+      description: Blog category name
+
+    ContactMessage:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the person contacting
+        email:
+          type: string
+          format: email
+          description: Email address for reply
+        subject:
+          type: string
+          description: Subject of the contact message
+        message:
+          type: string
+          description: Content of the contact message
+      required:
+        - name
+        - email
+        - message
+
+  parameters:
+    pageParam:
+      name: page
+      in: query
+      description: Page number for pagination
+      required: false
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+
+    limitParam:
+      name: limit
+      in: query
+      description: Number of items per page
+      required: false
+      schema:
+        type: integer
+        default: 6
+        minimum: 1
+        maximum: 50
+
+    categoryParam:
+      name: category
+      in: query
+      description: Filter blog posts by category
+      required: false
+      schema:
+        type: string
+
+    searchQueryParam:
+      name: q
+      in: query
+      description: Search query string
+      required: true
+      schema:
+        type: string
+        minLength: 1
+
+    slugParam:
+      name: slug
+      in: path
+      description: Blog post slug
+      required: true
+      schema:
+        type: string
+
+paths:
+  /api/blog:
+    get:
+      summary: List blog posts
+      description: Retrieves a paginated list of blog posts, optionally filtered by category
+      parameters:
+        - $ref: "#/components/parameters/pageParam"
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/categoryParam"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BlogPost"
+                  totalPages:
+                    type: integer
+                    description: Total number of pages
+                  totalPosts:
+                    type: integer
+                    description: Total number of posts matching the criteria
+                  currentPage:
+                    type: integer
+                    description: Current page number
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/blog/{slug}:
+    get:
+      summary: Get blog post by slug
+      description: Retrieves a single blog post by its slug
+      parameters:
+        - $ref: "#/components/parameters/slugParam"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  post:
+                    $ref: "#/components/schemas/BlogPostDetail"
+        "404":
+          description: Blog post not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/blog/categories:
+    get:
+      summary: Get blog categories
+      description: Retrieves all available blog categories
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Category"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/blog/search:
+    get:
+      summary: Search blog posts
+      description: Searches blog posts by query string
+      parameters:
+        - $ref: "#/components/parameters/searchQueryParam"
+        - $ref: "#/components/parameters/pageParam"
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/categoryParam"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BlogPost"
+                  totalPages:
+                    type: integer
+                  totalPosts:
+                    type: integer
+                  currentPage:
+                    type: integer
+                  query:
+                    type: string
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/contact:
+    post:
+      summary: Send contact message
+      description: Sends a contact message from the website
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactMessage"
+      responses:
+        "200":
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

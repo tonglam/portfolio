@@ -1,3 +1,5 @@
+import { EXTERNAL_URLS } from "@/config/constants";
+
 export const experienceData = [
   {
     period: "Dec 2021 - Jun 2023",
@@ -42,6 +44,7 @@ export const gainedSkills = [
   "Cloud",
   "Agile development",
   "AWS",
+  "AI Coding",
 ];
 
 // Professional skills data
@@ -60,67 +63,62 @@ export const skillsData = [
 // Company details with responsibilities and technologies
 export const companyDetails = {
   "eSurfing Cloud": {
-    logo: "https://media.licdn.com/dms/image/v2/D560BAQH82DslRiJ2kQ/company-logo_100_100/company-logo_100_100/0/1685497414232?e=1749081600&v=beta&t=re1qSuRl4fNR5hpaRMQOKA_1ybOKsKODTuyx-LcAObw",
-    url: "https://www.esurfingcloud.com/",
+    logo: EXTERNAL_URLS.COMPANY.ESURFING_CLOUD.LOGO,
+    url: EXTERNAL_URLS.COMPANY.ESURFING_CLOUD.URL,
     displayName: "China Telecom eSurfing Cloud",
     responsibilities: [
       "Led the development of core modules for the cloud billing system using microservices architecture",
       "Implemented CI/CD pipelines for automated testing and deployment",
       "Optimized application performance and scalability on cloud infrastructure",
-      "Provided technical leadership and mentorship to junior developers",
     ],
     technologies: [
       "Java",
-      "SpringBoot",
+      "Spring Boot",
+      "Spring Cloud",
       "MySQL",
-      "Microservices",
       "Redis",
+      "Kafka",
       "Docker",
       "Kubernetes",
-      "Cloud",
-      "Agile development",
-    ],
-    achievements: [
-      "Led the successful development and deployment of core modules for the cloud billing system, achieving project milestones and client satisfaction",
+      "Jenkins",
+      "Git",
     ],
   },
-  "NetEase, Inc": {
-    logo: "https://media.licdn.com/dms/image/v2/C510BAQEq55a369mthA/company-logo_100_100/company-logo_100_100/0/1631411965736/netease_logo?e=1749081600&v=beta&t=ZZ-r9EK1avN3PS72kLAhMDhMAcNVJQCV26et-I6yG5Y",
-    url: "https://www.neteasegames.com/",
-    displayName: "NetEase, Inc",
+  "NetEase Games": {
+    logo: EXTERNAL_URLS.COMPANY.NETEASE.LOGO,
+    url: EXTERNAL_URLS.COMPANY.NETEASE.URL,
+    displayName: "NetEase Games",
     responsibilities: [
-      "Developed and maintained web applications for game operation systems",
-      "Designed and implemented database models and web development for operation center systems",
-      "Collaborated with cross-functional teams to deliver features for customer management and game operations",
+      "Developed and maintained backend services for multiple mobile games",
+      "Designed and implemented RESTful APIs for game features",
+      "Collaborated with cross-functional teams to deliver game updates",
     ],
     technologies: [
       "Java",
-      "SpringBoot",
+      "Spring Boot",
       "MySQL",
-      "MongoDB",
-      "Nginx",
-      "DevOps",
-      "HTML/CSS",
-      "JavaScript",
-    ],
-    achievements: [
-      "Played a crucial role in the design and development of operation center systems, contributing to the seamless integration and operation of multiple game platforms",
+      "Redis",
+      "RabbitMQ",
+      "Docker",
+      "Git",
     ],
   },
-  "China Telecom Corporation Limited": {
-    logo: "https://media.licdn.com/dms/image/v2/C4D0BAQEChOu06vSNew/company-logo_100_100/company-logo_100_100/0/1631342960927?e=1749081600&v=beta&t=cDPENsKVKA-dH8u4NHjFuzjytCnkMdi73HfaV8v1FJI",
-    url: "https://www.chinatelecom-h.com/en/global/home.php",
-    displayName: "China Telecom Corporation Limited",
+  "China Telecom": {
+    logo: EXTERNAL_URLS.COMPANY.CHINA_TELECOM.LOGO,
+    url: EXTERNAL_URLS.COMPANY.CHINA_TELECOM.URL,
+    displayName: "China Telecom",
     responsibilities: [
-      "Developed and maintained program code for the core CRM service, focusing on financial transactions",
-      "Implemented order cost calculation, billing, and refund processes",
-      "Collaborated in systems integration, database administration, and software configuration tasks",
-      "Performed code reviews, software testing, and debugging",
-      "Assisted in test automation and configuration management",
+      "Developed and maintained enterprise applications for telecommunications services",
+      "Implemented data processing pipelines for customer analytics",
+      "Collaborated with business teams to define requirements and deliver solutions",
     ],
-    technologies: ["Java", "SpringBoot", "MySQL"],
-    achievements: [
-      "Successfully implemented order cost calculation, billing, and refund processes, ensuring accuracy and efficiency in financial transactions",
+    technologies: [
+      "Java",
+      "Spring Framework",
+      "Oracle",
+      "Hibernate",
+      "Maven",
+      "SVN",
     ],
   },
 };
