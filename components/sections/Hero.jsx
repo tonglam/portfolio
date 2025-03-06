@@ -160,11 +160,7 @@ export default function Hero() {
                       }}
                     />
                     {index === currentLine && isTyping && (
-                      <motion.span
-                        className="inline-block w-1.5 h-3.5 md:w-2.5 md:h-5 bg-gray-800 dark:bg-white ml-0.5"
-                        animate={{ opacity: [1, 0] }}
-                        transition={{ repeat: Infinity, duration: 0.8 }}
-                      />
+                      <span className="inline-block w-1.5 h-3.5 md:w-2.5 md:h-5 bg-gray-800 dark:bg-white ml-0.5 animate-pulse" />
                     )}
                   </div>
                 ))}
@@ -173,10 +169,10 @@ export default function Hero() {
           </div>
 
           <motion.div
-            className="absolute -bottom-3 -right-3 md:-bottom-5 md:-right-5 bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] text-white py-1.5 px-3 md:py-3 md:px-5 rounded-md shadow-lg"
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 2, duration: 0.3 }}
+            transition={{ duration: 0.5 }}
+            className="absolute -bottom-3 -right-3 md:-bottom-5 md:-right-5 bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] text-white py-1.5 px-3 md:py-3 md:px-5 rounded-md shadow-lg"
           >
             <div className="text-xs md:text-sm font-bold">Result:</div>
             <div className="text-sm md:text-xl">

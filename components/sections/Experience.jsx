@@ -192,16 +192,19 @@ export default function Experience() {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
                         <div className="flex items-center mb-4 sm:mb-0">
                           <div className="w-12 h-12 mr-4 relative flex-shrink-0 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm border border-gray-200 dark:border-gray-700">
-                            <Image
-                              src={
-                                company.logo ||
-                                "https://via.placeholder.com/100"
-                              }
-                              alt={`${company.displayName} Logo`}
-                              width={48}
-                              height={48}
-                              className="rounded-full object-contain"
-                            />
+                            {company.logo ? (
+                              <Image
+                                src={company.logo}
+                                alt={`${company.displayName} Logo`}
+                                width={48}
+                                height={48}
+                                className="rounded-full object-contain"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600 font-bold text-sm rounded-full">
+                                {company.displayName.charAt(0)}
+                              </div>
+                            )}
                           </div>
                           <div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">

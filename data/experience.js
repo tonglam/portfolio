@@ -84,7 +84,7 @@ export const companyDetails = {
       "Git",
     ],
   },
-  "NetEase Games": {
+  "NetEase, Inc": {
     logo: EXTERNAL_URLS.COMPANY.NETEASE.LOGO,
     url: EXTERNAL_URLS.COMPANY.NETEASE.URL,
     displayName: "NetEase Games",
@@ -103,7 +103,7 @@ export const companyDetails = {
       "Git",
     ],
   },
-  "China Telecom": {
+  "China Telecom Corporation Limited": {
     logo: EXTERNAL_URLS.COMPANY.CHINA_TELECOM.LOGO,
     url: EXTERNAL_URLS.COMPANY.CHINA_TELECOM.URL,
     displayName: "China Telecom",

@@ -34,7 +34,6 @@ export const EXTERNAL_URLS = {
   // Placeholder images
   PLACEHOLDERS: {
     BLOG_IMAGE: "https://via.placeholder.com/1470x800",
-    COMPANY_LOGO: "https://via.placeholder.com/100",
   },
 
   // Map search

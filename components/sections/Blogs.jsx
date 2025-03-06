@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { fixDarkAnimation } from "@/components/ui/theme-fix";
 import {
   Tooltip,
   TooltipContent,
@@ -14,6 +15,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+
+// Create fixed motion components
+const MotionH2 = (props) => <motion.h2 {...fixDarkAnimation(props)} />;
+const MotionDiv = (props) => <motion.div {...fixDarkAnimation(props)} />;
+const MotionButton = (props) => <motion.button {...fixDarkAnimation(props)} />;
 
 export default function Blogs() {
   const [blogsData, setBlogsData] = useState([]);
@@ -32,7 +38,6 @@ export default function Blogs() {
   // Fetch blog posts based on current filters
   const fetchFilteredBlogs = useCallback(async () => {
     try {
-      console.log("Starting to fetch blogs...");
       setIsLoading(true);
 
       // Only show searching UI when explicitly searching
@@ -51,7 +56,6 @@ export default function Blogs() {
         ? `/api/blog/search?${params}&q=${debouncedSearchQuery}`
         : `/api/blog?${params}`;
 
-      console.log("Fetching from endpoint:", endpoint);
       const response = await fetch(endpoint);
 
       if (!response.ok) {
@@ -59,18 +63,14 @@ export default function Blogs() {
       }
 
       const data = await response.json();
-      console.log("Blog data received:", data);
 
       if (data.posts && Array.isArray(data.posts)) {
-        console.log(`Setting ${data.posts.length} blog posts`);
         setBlogsData(data.posts);
         setTotalPages(data.totalPages || 1);
       } else {
-        console.error("Invalid response format:", data);
         throw new Error("Invalid response format");
       }
     } catch (error) {
-      console.error("Error fetching blog posts:", error);
       setError(error.message);
       setBlogsData([]); // Clear blogs on error
     } finally {
@@ -84,7 +84,6 @@ export default function Blogs() {
     const maxRetries = 3;
 
     try {
-      console.log("Fetching blog categories...");
       const response = await fetch("/api/blog/categories");
 
       if (!response.ok) {
@@ -92,26 +91,26 @@ export default function Blogs() {
       }
 
       const data = await response.json();
-      console.log("Categories data received:", data);
 
-      if (Array.isArray(data) && data.length > 0) {
-        setCategories(data); // API already returns "All" as first category
+      // Check if data is an object with a categories array
+      if (
+        data &&
+        data.categories &&
+        Array.isArray(data.categories) &&
+        data.categories.length > 0
+      ) {
+        setCategories(data.categories); // Use the categories array from the response
+      } else if (Array.isArray(data) && data.length > 0) {
+        setCategories(data); // Handle direct array format as a fallback
       } else {
-        console.warn("Categories data is empty or not an array:", data);
         setCategories(["All"]); // Fallback to just "All" category
       }
     } catch (error) {
-      console.error("Error fetching categories:", error);
-
       if (retryCount < maxRetries) {
-        console.log(
-          `Retrying category fetch (${retryCount + 1}/${maxRetries})...`
-        );
         // Exponential backoff: 1s, 2s, 4s
         const delay = Math.pow(2, retryCount) * 1000;
         setTimeout(() => fetchCategories(retryCount + 1), delay);
       } else {
-        console.error("Max retries reached. Using fallback categories.");
         setCategories(["All"]); // Fallback to just "All" category
       }
     }
@@ -124,16 +123,11 @@ export default function Blogs() {
 
   // Fetch blogs when filters change
   useEffect(() => {
-    console.log("useEffect triggered for fetchFilteredBlogs");
     fetchFilteredBlogs();
   }, [fetchFilteredBlogs]);
 
   // Reset page number when category or search query changes
   useEffect(() => {
-    console.log("Category or search query changed to:", {
-      activeCategory,
-      debouncedSearchQuery,
-    });
     setCurrentPage(1);
   }, [activeCategory, debouncedSearchQuery]);
 
@@ -184,7 +178,7 @@ export default function Blogs() {
       className="py-16 md:py-20 bg-gray-50 dark:bg-transparent"
     >
       <div className="container mx-auto px-4">
-        <motion.h2
+        <MotionH2
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -192,7 +186,7 @@ export default function Blogs() {
           className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 bg-clip-text text-transparent bg-gradient-to-r from-[#2563EB] to-[#4F46E5] dark:from-[#38BDF8] dark:to-[#818CF8]"
         >
           Blogs
-        </motion.h2>
+        </MotionH2>
 
         {isLoading && blogsData.length === 0 ? (
           <div className="flex justify-center items-center h-64">
@@ -211,7 +205,7 @@ export default function Blogs() {
         ) : (
           <>
             {/* Category Filter */}
-            <motion.div
+            <MotionDiv
               className="flex flex-col gap-4 mb-10 md:px-4 lg:px-8"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -226,6 +220,9 @@ export default function Blogs() {
                     placeholder="Search blog posts..."
                     value={searchQuery}
                     onChange={handleSearchChange}
+                    id="blog-search"
+                    name="blog-search"
+                    autoComplete="off"
                     className="pr-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -266,7 +263,7 @@ export default function Blogs() {
                     return a.localeCompare(b);
                   })
                   .map((category, index) => (
-                    <motion.div
+                    <MotionDiv
                       key={category}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -283,10 +280,10 @@ export default function Blogs() {
                       >
                         {category}
                       </Button>
-                    </motion.div>
+                    </MotionDiv>
                   ))}
               </div>
-            </motion.div>
+            </MotionDiv>
 
             {/* Blog Grid */}
             {isLoading ? (
@@ -294,16 +291,16 @@ export default function Blogs() {
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
               </div>
             ) : blogsData.length > 0 ? (
-              <motion.div
+              <MotionDiv
                 variants={containerVariants}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="sync">
                   {blogsData.map((blog, index) => (
-                    <motion.div
+                    <MotionDiv
                       key={blog.slug || index}
                       variants={itemVariants}
                       exit={{ opacity: 0, y: 20 }}
@@ -410,10 +407,10 @@ export default function Blogs() {
                           </div>
                         </Card>
                       </a>
-                    </motion.div>
+                    </MotionDiv>
                   ))}
                 </AnimatePresence>
-              </motion.div>
+              </MotionDiv>
             ) : (
               <div className="text-center py-10">
                 <h3 className="text-xl font-medium text-gray-800 dark:text-gray-200 mb-2">
@@ -439,7 +436,7 @@ export default function Blogs() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <motion.div
+              <MotionDiv
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
@@ -447,7 +444,7 @@ export default function Blogs() {
               >
                 <div className="flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm shadow-sm border border-gray-100 dark:border-gray-700">
                   {/* Previous Button */}
-                  <motion.button
+                  <MotionButton
                     whileHover={currentPage > 1 ? { scale: 1.05 } : {}}
                     whileTap={currentPage > 1 ? { scale: 0.95 } : {}}
                     onClick={() => {
@@ -464,7 +461,7 @@ export default function Blogs() {
                   >
                     <ChevronLeft className="h-4 w-4 mr-1" />
                     <span className="hidden sm:inline">Previous</span>
-                  </motion.button>
+                  </MotionButton>
 
                   {/* Page Numbers */}
                   <div className="flex gap-1">
@@ -484,7 +481,7 @@ export default function Blogs() {
                           isAdjacentToCurrentPage
                         ) {
                           return (
-                            <motion.button
+                            <MotionButton
                               key={page}
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
@@ -496,7 +493,7 @@ export default function Blogs() {
                               }`}
                             >
                               {page}
-                            </motion.button>
+                            </MotionButton>
                           );
                         } else if (
                           (page === 2 && currentPage > 3) ||
@@ -519,7 +516,7 @@ export default function Blogs() {
                   </div>
 
                   {/* Next Button */}
-                  <motion.button
+                  <MotionButton
                     whileHover={currentPage < totalPages ? { scale: 1.05 } : {}}
                     whileTap={currentPage < totalPages ? { scale: 0.95 } : {}}
                     onClick={() => {
@@ -538,9 +535,9 @@ export default function Blogs() {
                   >
                     <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="h-4 w-4 ml-1" />
-                  </motion.button>
+                  </MotionButton>
                 </div>
-              </motion.div>
+              </MotionDiv>
             )}
           </>
         )}

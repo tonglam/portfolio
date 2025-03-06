@@ -179,6 +179,7 @@ export default function Contact() {
                     placeholder="John Doe"
                     value={formData.name}
                     onChange={handleChange}
+                    autoComplete="name"
                     className="w-full bg-white dark:bg-[#0F172A] border border-gray-300 dark:border-gray-700 rounded-md p-2 md:p-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-[#38BDF8] text-sm"
                   />
                 </div>
@@ -197,6 +198,7 @@ export default function Contact() {
                     placeholder="john@example.com"
                     value={formData.email}
                     onChange={handleChange}
+                    autoComplete="email"
                     className="w-full bg-white dark:bg-[#0F172A] border border-gray-300 dark:border-gray-700 rounded-md p-2 md:p-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-[#38BDF8] text-sm"
                   />
                 </div>
@@ -216,6 +218,7 @@ export default function Contact() {
                   placeholder="How can I help you?"
                   value={formData.subject}
                   onChange={handleChange}
+                  autoComplete="off"
                   className="w-full bg-white dark:bg-[#0F172A] border border-gray-300 dark:border-gray-700 rounded-md p-2 md:p-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-[#38BDF8] text-sm"
                 />
               </div>
@@ -234,6 +237,7 @@ export default function Contact() {
                   placeholder="Write your message here..."
                   value={formData.message}
                   onChange={handleChange}
+                  autoComplete="off"
                   className="w-full bg-white dark:bg-[#0F172A] border border-gray-300 dark:border-gray-700 rounded-md p-2 md:p-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] dark:focus:ring-[#38BDF8] text-sm"
                 ></textarea>
               </div>
