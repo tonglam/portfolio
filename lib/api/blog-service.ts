@@ -1,5 +1,6 @@
 import { DEFAULTS, EXTERNAL_URLS } from '@/config';
 import type { NotionPost, ProcessedBlogPost } from '@/types/api/blog';
+import type { NotionPropertyValue } from '@/types/api/notion';
 import type {
   FilesPropertyItemObjectResponse,
   RichTextItemResponse,
@@ -122,22 +123,40 @@ export async function fetchAndProcessBlogPosts(bypassCache = false): Promise<Pro
     const processedPosts = data.map((post): ProcessedBlogPost => {
       // Safer property extraction with defaults
       const getFileUrl = (
-        file: FilesPropertyItemObjectResponse | UrlPropertyItemObjectResponse | undefined
+        file:
+          | FilesPropertyItemObjectResponse
+          | UrlPropertyItemObjectResponse
+          | NotionPropertyValue
+          | undefined
       ): string => {
         if (!file) return '';
 
-        if (file.type === 'url') {
-          return file.url || '';
-        }
-        if (file.type === 'files' && file.files.length > 0) {
-          const firstFile = file.files[0];
-          if ('file' in firstFile) {
-            return firstFile.file.url;
+        // Handle Notion API types
+        if (typeof file === 'object' && 'type' in file) {
+          if (file.type === 'url' && 'url' in file) {
+            return file.url || '';
           }
-          if ('external' in firstFile) {
-            return firstFile.external.url;
+          if (
+            file.type === 'files' &&
+            'files' in file &&
+            Array.isArray(file.files) &&
+            file.files.length > 0
+          ) {
+            const firstFile = file.files[0];
+            if ('file' in firstFile) {
+              return firstFile.file.url;
+            }
+            if ('external' in firstFile) {
+              return firstFile.external.url;
+            }
           }
         }
+
+        // Handle custom NotionPropertyValue with url
+        if (typeof file === 'object' && 'url' in file && typeof file.url === 'string') {
+          return file.url;
+        }
+
         return '';
       };
 

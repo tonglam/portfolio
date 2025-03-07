@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger';
 import type { BlogPost, NotionPost, RichTextItemResponse } from '@/types/api/blog';
+import type { NotionText, RichTextItem } from '@/types/api/notion';
 import { getNotionImageUrl } from '../utils/image';
 import { generateExcerpt } from '../utils/string';
 import { extractBlockContent, getNotionBlocks, getNotionDatabase } from './notion';
@@ -88,29 +89,49 @@ function convertNotionToPost(post: NotionPost, content: string): BlogPost {
   const properties = post.properties;
 
   // Helper function to safely extract text from rich text
-  const getFirstRichText = (richText: RichTextItemResponse | RichTextItemResponse[]): string => {
-    const textArray = Array.isArray(richText) ? richText : [richText];
-    return textArray[0]?.plain_text || '';
+  const getFirstRichText = (
+    richText: NotionText[] | RichTextItem[] | RichTextItemResponse | undefined
+  ): string => {
+    if (!richText) return '';
+
+    // Handle array case
+    if (Array.isArray(richText)) {
+      if (richText.length === 0) return '';
+
+      const firstItem = richText[0];
+      // Check if the first item has plain_text property
+      if (firstItem && typeof firstItem === 'object' && 'plain_text' in firstItem) {
+        return firstItem.plain_text || '';
+      }
+      return '';
+    }
+
+    // Handle single item case
+    if (richText && typeof richText === 'object' && 'plain_text' in richText) {
+      return richText.plain_text || '';
+    }
+
+    return '';
   };
 
   return {
     id: post.id,
-    title: getFirstRichText(properties.Title.title),
-    slug: getFirstRichText(properties.Slug.rich_text),
-    summary: getFirstRichText(properties.Summary.rich_text),
-    category: properties.Category.select?.name ?? 'Uncategorized',
-    tags: properties.Tags.multi_select.map(tag => tag.name),
+    title: getFirstRichText(properties.Title?.title),
+    slug: getFirstRichText(properties.Slug?.rich_text),
+    summary: getFirstRichText(properties.Summary?.rich_text),
+    category: properties.Category?.select?.name ?? 'Uncategorized',
+    tags: properties.Tags?.multi_select?.map(tag => tag.name) || [],
     coverImage: {
       url: getNotionImageUrl(properties) || '',
-      alt: getFirstRichText(properties.Title.title),
+      alt: getFirstRichText(properties.Title?.title),
     },
-    published: properties.Published.checkbox,
-    featured: properties.Featured.checkbox,
-    notionUrl: post.url,
-    readingTime: `${getFirstRichText(properties.ReadingTime.rich_text) || '5'} min read`,
+    published: properties.Published?.checkbox || false,
+    featured: properties.Featured?.checkbox || false,
+    notionUrl: post.url || '',
+    readingTime: `${getFirstRichText(properties.ReadingTime?.rich_text) || '5'} min read`,
     content,
     excerpt: generateExcerpt(content),
-    createdAt: post.created_time,
-    updatedAt: post.last_edited_time,
+    createdAt: post.created_time || new Date().toISOString(),
+    updatedAt: post.last_edited_time || new Date().toISOString(),
   };
 }

@@ -1,8 +1,8 @@
 import { DEFAULTS, EXTERNAL_URLS } from '@/config';
 import type { NotionPost, ProcessedBlogPost } from '@/types/api/blog';
+import type { NotionPropertyValue } from '@/types/api/notion';
 import type {
   FilesPropertyItemObjectResponse,
-  RichTextItemResponse,
   RichTextPropertyItemObjectResponse,
   TitlePropertyItemObjectResponse,
   UrlPropertyItemObjectResponse,
@@ -34,46 +34,125 @@ const logger: Logger = {
   },
 };
 
+// Define a more specific type for our custom title property
+interface CustomTitleProperty {
+  title?: Array<{ plain_text?: string; [key: string]: unknown }>;
+  [key: string]: unknown;
+}
+
+// Near the top of the file, add these interfaces
+interface RichTextItem {
+  plain_text: string;
+  [key: string]: unknown;
+}
+
+// Update the isRichTextItem function to be more strict
+function isRichTextItem(item: unknown): item is RichTextItem {
+  if (!item || typeof item !== 'object') return false;
+
+  const obj = item as Record<string, unknown>;
+  return 'plain_text' in obj && typeof obj.plain_text === 'string';
+}
+
 /**
  * Helper function to extract text from title property
+ * Handles both Notion API's TitlePropertyItemObjectResponse and our custom types
  */
-function extractTitleText(title: TitlePropertyItemObjectResponse): string {
-  let result = '';
-  if (Array.isArray(title.title)) {
+function extractTitleText(
+  title: TitlePropertyItemObjectResponse | NotionPropertyValue | CustomTitleProperty | undefined
+): string {
+  if (!title) return '';
+
+  // Handle official Notion API type
+  if (
+    title &&
+    typeof title === 'object' &&
+    'type' in title &&
+    title.type === 'title' &&
+    'title' in title &&
+    Array.isArray(title.title)
+  ) {
+    let result = '';
     for (const richText of title.title) {
       if (isRichTextItem(richText)) {
         result += richText.plain_text;
       }
     }
+    return result;
   }
-  return result;
+
+  // Handle array type (NotionPropertyValue sometimes has title as an array)
+  if (Array.isArray(title)) {
+    return title
+      .filter(isRichTextItem)
+      .map(item => item.plain_text)
+      .join('');
+  }
+
+  // Handle custom title property
+  if (title && typeof title === 'object' && 'title' in title && Array.isArray(title.title)) {
+    return title.title
+      .filter(isRichTextItem)
+      .map(item => item.plain_text)
+      .join('');
+  }
+
+  return '';
 }
 
 /**
  * Helper function to extract text from rich text property
+ * Handles both Notion API's RichTextPropertyItemObjectResponse and our custom types
  */
-function extractRichText(richText: RichTextPropertyItemObjectResponse): string {
-  let result = '';
-  if (Array.isArray(richText.rich_text)) {
+function extractRichText(
+  richText:
+    | RichTextPropertyItemObjectResponse
+    | NotionPropertyValue
+    | CustomTitleProperty
+    | undefined
+): string {
+  if (!richText) return '';
+
+  // Handle official Notion API type
+  if (
+    richText &&
+    typeof richText === 'object' &&
+    'type' in richText &&
+    richText.type === 'rich_text' &&
+    'rich_text' in richText &&
+    Array.isArray(richText.rich_text)
+  ) {
+    let result = '';
     for (const text of richText.rich_text) {
       if (isRichTextItem(text)) {
         result += text.plain_text;
       }
     }
+    return result;
   }
-  return result;
-}
 
-/**
- * Type guard for RichTextItemResponse
- */
-function isRichTextItem(text: unknown): text is RichTextItemResponse {
-  return (
-    typeof text === 'object' &&
-    text !== null &&
-    'plain_text' in text &&
-    typeof (text as RichTextItemResponse).plain_text === 'string'
-  );
+  // Handle array type
+  if (Array.isArray(richText)) {
+    return richText
+      .filter(isRichTextItem)
+      .map((item: RichTextItem) => item.plain_text)
+      .join('');
+  }
+
+  // Handle rich_text property of custom type
+  if (
+    richText &&
+    typeof richText === 'object' &&
+    'rich_text' in richText &&
+    Array.isArray(richText.rich_text)
+  ) {
+    return richText.rich_text
+      .filter(isRichTextItem)
+      .map((item: RichTextItem) => item.plain_text)
+      .join('');
+  }
+
+  return '';
 }
 
 /**
@@ -121,22 +200,50 @@ export async function fetchAndProcessBlogPosts(bypassCache = false): Promise<Pro
     // Process posts: extract required fields
     const processedPosts = data.map((post): ProcessedBlogPost => {
       const getFileUrl = (
-        file: FilesPropertyItemObjectResponse | UrlPropertyItemObjectResponse
+        file:
+          | FilesPropertyItemObjectResponse
+          | UrlPropertyItemObjectResponse
+          | NotionPropertyValue
+          | undefined
       ): string => {
-        if (file.type === 'url') {
+        if (
+          file &&
+          typeof file === 'object' &&
+          'type' in file &&
+          file.type === 'url' &&
+          'url' in file
+        ) {
           return file.url || '';
         }
-        if (file.type === 'files' && file.files.length > 0) {
+        if (
+          file &&
+          typeof file === 'object' &&
+          'type' in file &&
+          file.type === 'files' &&
+          'files' in file &&
+          Array.isArray(file.files) &&
+          file.files.length > 0
+        ) {
           const firstFile = file.files[0];
-          if ('file' in firstFile) {
-            return firstFile.file.url;
+          if (firstFile.type === 'external' && 'external' in firstFile) {
+            return firstFile.external.url || '';
           }
-          if ('external' in firstFile) {
-            return firstFile.external.url;
+          if (firstFile.type === 'file' && 'file' in firstFile) {
+            return firstFile.file.url || '';
           }
+        }
+        if (file && typeof file === 'object' && 'url' in file && typeof file.url === 'string') {
+          return file.url;
         }
         return '';
       };
+
+      const tags =
+        post.properties.Tags &&
+        typeof post.properties.Tags === 'object' &&
+        'multi_select' in post.properties.Tags
+          ? post.properties.Tags.multi_select || []
+          : [];
 
       return {
         id: post.id,
@@ -145,7 +252,7 @@ export async function fetchAndProcessBlogPosts(bypassCache = false): Promise<Pro
         excerpt: extractRichText(post.properties.Excerpt),
         slug: extractRichText(post.properties.Slug),
         category: post.properties.Category.select?.name || '',
-        tags: post.properties.Tags.multi_select.map(tag => tag.name),
+        tags: tags.map(tag => tag.name),
         coverImage: getFileUrl(post.properties.CoverImage),
         originalCoverImage: getFileUrl(post.properties.OriginalCoverImage),
         dateCreated: post.properties.DateCreated.date?.start || '',
