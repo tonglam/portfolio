@@ -32,31 +32,28 @@
  */
 
 // Check for required dependencies and load environment variables
-require("dotenv").config();
+require('dotenv').config();
 
 // Get environment variables
-const NOTION_API_KEY = "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"; // process.env.NOTION_API_KEY;
-const SOURCE_PAGE_ID = "d5e4e5143d2c4a6fa8ca3ab2f162c22c"; // process.env.SOURCE_PAGE_ID;
-const DATABASE_ID = "1ab7ef86-a5ad-81ab-a4cb-f8b8f37ec491"; // process.env.NOTION_DATABASE_ID;
+const NOTION_API_KEY = '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'; // process.env.NOTION_API_KEY;
+const SOURCE_PAGE_ID = 'd5e4e5143d2c4a6fa8ca3ab2f162c22c'; // process.env.SOURCE_PAGE_ID;
+const DATABASE_ID = '1ab7ef86-a5ad-81ab-a4cb-f8b8f37ec491'; // process.env.NOTION_DATABASE_ID;
 
 if (!NOTION_API_KEY || !SOURCE_PAGE_ID || !DATABASE_ID) {
-  console.error("Error: Required environment variables are missing.");
+  console.error('Error: Required environment variables are missing.');
   console.error(
-    "Please ensure NOTION_API_KEY, SOURCE_PAGE_ID, and NOTION_DATABASE_ID are set in your .env file."
+    'Please ensure NOTION_API_KEY, SOURCE_PAGE_ID, and NOTION_DATABASE_ID are set in your .env file.'
   );
   process.exit(1);
 }
 
 // Initialize the Notion client
-const { Client } = require("@notionhq/client");
+const { Client } = require('@notionhq/client');
 const notion = new Client({ auth: NOTION_API_KEY });
 
-console.log("Using configuration:");
+console.log('Using configuration:');
 console.log(`- SOURCE_PAGE_ID: ${SOURCE_PAGE_ID}`);
 console.log(`- DATABASE_ID: ${DATABASE_ID}`);
-
-// Track all valid categories for validation
-const validCategoriesSet = new Set();
 
 /**
  * Utility function to introduce delay
@@ -64,7 +61,7 @@ const validCategoriesSet = new Set();
  * @returns {Promise<void>}
  */
 function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -85,12 +82,9 @@ async function callWithRetry(apiCall, maxRetries = 5, baseDelay = 1500) {
       lastError = error;
 
       // Check if this is a rate limiting error
-      if (
-        error.code === "rate_limited" ||
-        (error.status && error.status === 429)
-      ) {
+      if (error.code === 'rate_limited' || (error.status && error.status === 429)) {
         // If we have a retry-after header, use that value, otherwise use exponential backoff
-        const retryAfter = error.headers?.["retry-after"];
+        const retryAfter = error.headers?.['retry-after'];
         const waitTime = retryAfter
           ? parseInt(retryAfter, 10) * 1000
           : retryDelay * Math.pow(1.5, retryCount);
@@ -130,22 +124,22 @@ async function hasActualContent(pageId) {
     );
 
     // Check if there are any content blocks (paragraphs, headings, lists, etc.)
-    const contentBlocks = response.results.filter((block) => {
+    const contentBlocks = response.results.filter(block => {
       const blockType = block.type;
       // Consider these block types as meaningful content
       return [
-        "paragraph",
-        "heading_1",
-        "heading_2",
-        "heading_3",
-        "bulleted_list_item",
-        "numbered_list_item",
-        "to_do",
-        "toggle",
-        "code",
-        "quote",
-        "callout",
-        "image",
+        'paragraph',
+        'heading_1',
+        'heading_2',
+        'heading_3',
+        'bulleted_list_item',
+        'numbered_list_item',
+        'to_do',
+        'toggle',
+        'code',
+        'quote',
+        'callout',
+        'image',
       ].includes(blockType);
     });
 
@@ -154,15 +148,11 @@ async function hasActualContent(pageId) {
       const blockType = block.type;
 
       // Check if the block has text content
-      if (
-        block[blockType] &&
-        block[blockType].rich_text &&
-        block[blockType].rich_text.length > 0
-      ) {
+      if (block[blockType] && block[blockType].rich_text && block[blockType].rich_text.length > 0) {
         // Look for actual text content (not just whitespace)
         const textContent = block[blockType].rich_text
-          .map((rt) => rt.plain_text || "")
-          .join("")
+          .map(rt => rt.plain_text || '')
+          .join('')
           .trim();
 
         if (textContent.length > 0) {
@@ -171,7 +161,7 @@ async function hasActualContent(pageId) {
       }
 
       // Images are considered content even without text
-      if (blockType === "image") {
+      if (blockType === 'image') {
         return true;
       }
     }
@@ -191,10 +181,10 @@ async function hasActualContent(pageId) {
  */
 function extractRichText(richTextArray) {
   if (!richTextArray || richTextArray.length === 0) {
-    return "";
+    return '';
   }
 
-  return richTextArray.map((richText) => richText.plain_text || "").join("");
+  return richTextArray.map(richText => richText.plain_text || '').join('');
 }
 
 /**
@@ -206,7 +196,7 @@ function extractRichText(richTextArray) {
  */
 async function extractTextContent(blockId, maxDepth = 3, currentDepth = 0) {
   // Limit recursion depth
-  if (currentDepth > maxDepth) return "";
+  if (currentDepth > maxDepth) return '';
 
   try {
     const response = await callWithRetry(() =>
@@ -217,94 +207,83 @@ async function extractTextContent(blockId, maxDepth = 3, currentDepth = 0) {
     );
 
     if (!response.results || response.results.length === 0) {
-      return "";
+      return '';
     }
 
-    let content = "";
+    let content = '';
 
     for (const block of response.results) {
       // Skip child_page blocks as they are separate pages
-      if (block.type === "child_page") continue;
+      if (block.type === 'child_page') continue;
 
       // Extract text based on block type
       switch (block.type) {
-        case "paragraph":
-          content += extractRichText(block.paragraph.rich_text) + "\n\n";
+        case 'paragraph':
+          content += extractRichText(block.paragraph.rich_text) + '\n\n';
           break;
-        case "heading_1":
-          content += "# " + extractRichText(block.heading_1.rich_text) + "\n\n";
+        case 'heading_1':
+          content += '# ' + extractRichText(block.heading_1.rich_text) + '\n\n';
           break;
-        case "heading_2":
-          content +=
-            "## " + extractRichText(block.heading_2.rich_text) + "\n\n";
+        case 'heading_2':
+          content += '## ' + extractRichText(block.heading_2.rich_text) + '\n\n';
           break;
-        case "heading_3":
-          content +=
-            "### " + extractRichText(block.heading_3.rich_text) + "\n\n";
+        case 'heading_3':
+          content += '### ' + extractRichText(block.heading_3.rich_text) + '\n\n';
           break;
-        case "bulleted_list_item":
-          content +=
-            "• " + extractRichText(block.bulleted_list_item.rich_text) + "\n";
+        case 'bulleted_list_item':
+          content += '• ' + extractRichText(block.bulleted_list_item.rich_text) + '\n';
           break;
-        case "numbered_list_item":
-          content +=
-            "1. " + extractRichText(block.numbered_list_item.rich_text) + "\n";
+        case 'numbered_list_item':
+          content += '1. ' + extractRichText(block.numbered_list_item.rich_text) + '\n';
           break;
-        case "to_do":
-          const checkbox = block.to_do.checked ? "[x]" : "[ ]";
-          content +=
-            checkbox + " " + extractRichText(block.to_do.rich_text) + "\n";
+        case 'to_do':
+          const checkbox = block.to_do.checked ? '[x]' : '[ ]';
+          content += checkbox + ' ' + extractRichText(block.to_do.rich_text) + '\n';
           break;
-        case "toggle":
-          content += extractRichText(block.toggle.rich_text) + "\n";
+        case 'toggle':
+          content += extractRichText(block.toggle.rich_text) + '\n';
           break;
-        case "code":
-          content += "```" + (block.code.language || "") + "\n";
-          content += extractRichText(block.code.rich_text) + "\n";
-          content += "```\n\n";
+        case 'code':
+          content += '```' + (block.code.language || '') + '\n';
+          content += extractRichText(block.code.rich_text) + '\n';
+          content += '```\n\n';
           break;
-        case "quote":
-          content += "> " + extractRichText(block.quote.rich_text) + "\n\n";
+        case 'quote':
+          content += '> ' + extractRichText(block.quote.rich_text) + '\n\n';
           break;
-        case "callout":
-          content += "📌 " + extractRichText(block.callout.rich_text) + "\n\n";
+        case 'callout':
+          content += '📌 ' + extractRichText(block.callout.rich_text) + '\n\n';
           break;
-        case "divider":
-          content += "---\n\n";
+        case 'divider':
+          content += '---\n\n';
           break;
-        case "image":
-          let imageUrl = "";
-          if (block.image.type === "external") {
+        case 'image':
+          let imageUrl = '';
+          if (block.image.type === 'external') {
             imageUrl = block.image.external.url;
-          } else if (block.image.type === "file") {
+          } else if (block.image.type === 'file') {
             imageUrl = block.image.file.url;
           }
 
           const altText =
             block.image.caption && block.image.caption.length > 0
               ? extractRichText(block.image.caption)
-              : "Image";
+              : 'Image';
           content += `![${altText}](${imageUrl})\n\n`;
           break;
       }
 
       // Recursively extract content from children if the block has children
       if (block.has_children) {
-        const childContent = await extractTextContent(
-          block.id,
-          maxDepth,
-          currentDepth + 1
-        );
+        const childContent = await extractTextContent(block.id, maxDepth, currentDepth + 1);
         content += childContent;
       }
     }
 
     return content;
   } catch (error) {
-    console.error(
-      `Error extracting text content from block ${blockId}: ${error.message}`
-    );
-    return "";
+    console.error(`Error extracting text content from block ${blockId}: ${error.message}`);
+    return '';
   }
 }
 
@@ -319,9 +298,9 @@ function extractTags(content, title, category) {
   const tags = [];
 
   // Always include the category as a tag if it exists and isn't empty
-  if (category && category.trim() !== "") {
+  if (category && category.trim() !== '') {
     // For MIT Units prefixed with CITS, add both versions as tags
-    if (category.startsWith("CITS")) {
+    if (category.startsWith('CITS')) {
       tags.push(category); // Add with CITS prefix
       tags.push(category.substring(4)); // Add without CITS prefix
     } else {
@@ -330,9 +309,9 @@ function extractTags(content, title, category) {
   }
 
   // Add the title as a tag for non-category pages (if it's not already the category)
-  if (title && title !== category && !title.endsWith("Notes")) {
+  if (title && title !== category && !title.endsWith('Notes')) {
     // For MIT Units prefixed with CITS, use without the prefix for the tag
-    if (title.startsWith("CITS")) {
+    if (title.startsWith('CITS')) {
       tags.push(title.substring(4)); // Add without CITS prefix
     } else {
       tags.push(title);
@@ -352,7 +331,7 @@ function extractTags(content, title, category) {
   }
 
   // Remove duplicates and filter out tags with commas
-  return Array.from(new Set(tags)).filter((tag) => !tag.includes(","));
+  return Array.from(new Set(tags)).filter(tag => !tag.includes(','));
 }
 
 /**
@@ -362,10 +341,10 @@ function extractTags(content, title, category) {
  * @returns {string} - The generated excerpt
  */
 function generateExcerpt(content, maxLength = 160) {
-  if (!content) return "...";
+  if (!content) return '...';
 
   // Clean up content - remove extra spaces, newlines, etc.
-  const cleanContent = content.replace(/\n+/g, " ").replace(/\s+/g, " ").trim();
+  const cleanContent = content.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
 
   // If content is short enough, use it directly
   if (cleanContent.length <= maxLength) {
@@ -376,9 +355,9 @@ function generateExcerpt(content, maxLength = 160) {
   let excerpt = cleanContent.substring(0, maxLength);
 
   // Try to find a natural breaking point
-  const lastPeriod = excerpt.lastIndexOf(".");
-  const lastQuestion = excerpt.lastIndexOf("?");
-  const lastExclamation = excerpt.lastIndexOf("!");
+  const lastPeriod = excerpt.lastIndexOf('.');
+  const lastQuestion = excerpt.lastIndexOf('?');
+  const lastExclamation = excerpt.lastIndexOf('!');
 
   // Find the last sentence ending
   const lastSentenceEnd = Math.max(lastPeriod, lastQuestion, lastExclamation);
@@ -388,15 +367,15 @@ function generateExcerpt(content, maxLength = 160) {
     excerpt = cleanContent.substring(0, lastSentenceEnd + 1);
   } else {
     // Otherwise try to end at a word boundary
-    const lastSpace = excerpt.lastIndexOf(" ");
+    const lastSpace = excerpt.lastIndexOf(' ');
     if (lastSpace > 0) {
       excerpt = excerpt.substring(0, lastSpace);
     }
-    excerpt += "...";
+    excerpt += '...';
   }
 
   // Remove any lingering image markers
-  excerpt = excerpt.replace(/!Image/g, "").trim();
+  excerpt = excerpt.replace(/!Image/g, '').trim();
 
   return excerpt;
 }
@@ -409,14 +388,12 @@ function generateExcerpt(content, maxLength = 160) {
 async function extractFirstImage(pageId) {
   try {
     // First, check if the page has a cover image
-    const pageResponse = await callWithRetry(() =>
-      notion.pages.retrieve({ page_id: pageId })
-    );
+    const pageResponse = await callWithRetry(() => notion.pages.retrieve({ page_id: pageId }));
 
     if (pageResponse.cover) {
-      if (pageResponse.cover.type === "external") {
+      if (pageResponse.cover.type === 'external') {
         return pageResponse.cover.external.url;
-      } else if (pageResponse.cover.type === "file") {
+      } else if (pageResponse.cover.type === 'file') {
         return pageResponse.cover.file.url;
       }
     }
@@ -430,10 +407,10 @@ async function extractFirstImage(pageId) {
     );
 
     for (const block of blocks.results) {
-      if (block.type === "image") {
-        if (block.image.type === "external") {
+      if (block.type === 'image') {
+        if (block.image.type === 'external') {
           return block.image.external.url;
-        } else if (block.image.type === "file") {
+        } else if (block.image.type === 'file') {
           return block.image.file.url;
         }
       }
@@ -473,7 +450,7 @@ async function queryAllDatabaseEntries(client, databaseId) {
       hasMore = response.has_more;
       startCursor = response.next_cursor;
     } catch (error) {
-      console.error("Error querying database:", error.message);
+      console.error('Error querying database:', error.message);
       hasMore = false;
     }
   }
@@ -503,9 +480,7 @@ async function collectAllData(options = {}) {
   try {
     // Step 1: Get top-level categories
     console.log(
-      `[${
-        new Date().toISOString().split("T")[1].split(".")[0]
-      }] Fetching top-level categories...`
+      `[${new Date().toISOString().split('T')[1].split('.')[0]}] Fetching top-level categories...`
     );
     const response = await callWithRetry(() =>
       notion.blocks.children.list({
@@ -515,8 +490,8 @@ async function collectAllData(options = {}) {
     );
 
     const topLevelPages = response.results
-      .filter((block) => block.type === "child_page")
-      .map((block) => ({
+      .filter(block => block.type === 'child_page')
+      .map(block => ({
         id: block.id,
         title: block.child_page.title,
       }));
@@ -524,20 +499,18 @@ async function collectAllData(options = {}) {
     console.log(`Found ${topLevelPages.length} top-level categories.`);
 
     // Add Technical Notes categories to valid categories set
-    topLevelPages.forEach((page) => {
-      if (page.title !== "MIT Units") {
+    topLevelPages.forEach(page => {
+      if (page.title !== 'MIT Units') {
         collectedData.validCategories.add(page.title);
       }
     });
 
     // Find MIT Units page ID for special handling
-    const mitUnitsPage = topLevelPages.find(
-      (page) => page.title === "MIT Units"
-    );
+    const mitUnitsPage = topLevelPages.find(page => page.title === 'MIT Units');
 
     // Process MIT Units first to gather all valid categories
     if (mitUnitsPage) {
-      console.log("Processing MIT Units to gather valid category names...");
+      console.log('Processing MIT Units to gather valid category names...');
       await delay(delayMs); // Add delay to avoid rate limiting
 
       const mitUnitsResponse = await callWithRetry(() =>
@@ -548,28 +521,26 @@ async function collectAllData(options = {}) {
       );
 
       const mitUnitsSubpages = mitUnitsResponse.results
-        .filter((block) => block.type === "child_page")
-        .map((block) => ({
+        .filter(block => block.type === 'child_page')
+        .map(block => ({
           id: block.id,
           title: block.child_page.title,
           prefixedTitle: `CITS${block.child_page.title}`,
         }));
 
       // Add MIT Units subpages to valid categories with CITS prefix
-      mitUnitsSubpages.forEach((page) => {
+      mitUnitsSubpages.forEach(page => {
         collectedData.validCategories.add(page.prefixedTitle);
       });
 
-      console.log(
-        `Added ${mitUnitsSubpages.length} MIT Units categories with CITS prefix.`
-      );
+      console.log(`Added ${mitUnitsSubpages.length} MIT Units categories with CITS prefix.`);
     }
 
     console.log(`Valid categories (${collectedData.validCategories.size}):`);
-    console.log([...collectedData.validCategories].join(", "));
+    console.log([...collectedData.validCategories].join(', '));
 
     // Step 2: Recursively collect all pages and their data
-    console.log("\nCollecting all pages recursively...");
+    console.log('\nCollecting all pages recursively...');
 
     // Process each top-level category
     let categoryCounter = 0;
@@ -577,14 +548,14 @@ async function collectAllData(options = {}) {
       categoryCounter++;
       console.log(
         `\n[${
-          new Date().toISOString().split("T")[1].split(".")[0]
+          new Date().toISOString().split('T')[1].split('.')[0]
         }] Processing top-level category: ${
           category.title
         } (${categoryCounter}/${topLevelPages.length})`
       );
 
       // Special handling for MIT Units
-      if (category.title === "MIT Units") {
+      if (category.title === 'MIT Units') {
         // Get MIT Units subpages
         const mitUnitsResponse = await callWithRetry(() =>
           notion.blocks.children.list({
@@ -595,13 +566,11 @@ async function collectAllData(options = {}) {
 
         // Process each MIT Units subpage
         for (const block of mitUnitsResponse.results) {
-          if (block.type === "child_page") {
+          if (block.type === 'child_page') {
             const subpageTitle = block.child_page.title;
             const prefixedTitle = `CITS${subpageTitle}`;
 
-            console.log(
-              `  Processing MIT Units subpage: ${subpageTitle} (${prefixedTitle})`
-            );
+            console.log(`  Processing MIT Units subpage: ${subpageTitle} (${prefixedTitle})`);
 
             // Add this page to our collection
             collectedData.allPages.push({
@@ -609,7 +578,7 @@ async function collectAllData(options = {}) {
               title: subpageTitle,
               prefixedTitle,
               category: prefixedTitle,
-              parent: "MIT Units",
+              parent: 'MIT Units',
               depth: 1,
               isTopLevel: false,
               isMITUnit: true,
@@ -637,7 +606,7 @@ async function collectAllData(options = {}) {
           id: category.id,
           title: category.title,
           category: category.title,
-          parent: "",
+          parent: '',
           depth: 0,
           isTopLevel: true,
           isMITUnit: false,
@@ -657,12 +626,10 @@ async function collectAllData(options = {}) {
       }
     }
 
-    console.log(
-      `\nCollection complete. Found ${collectedData.allPages.length} total pages.`
-    );
+    console.log(`\nCollection complete. Found ${collectedData.allPages.length} total pages.`);
     return collectedData;
   } catch (error) {
-    console.error("Error collecting data:", error);
+    console.error('Error collecting data:', error);
     throw error;
   }
 }
@@ -691,7 +658,7 @@ async function collectSubpages(
   try {
     console.log(
       `  [${
-        new Date().toISOString().split("T")[1].split(".")[0]
+        new Date().toISOString().split('T')[1].split('.')[0]
       }] Collecting subpages for: ${parentTitle} (depth: ${depth})`
     );
 
@@ -707,24 +674,18 @@ async function collectSubpages(
       })
     );
 
-    const childPages = response.results.filter(
-      (block) => block.type === "child_page"
-    );
-    console.log(
-      `    Found ${childPages.length} child pages for: ${parentTitle}`
-    );
+    const childPages = response.results.filter(block => block.type === 'child_page');
+    console.log(`    Found ${childPages.length} child pages for: ${parentTitle}`);
 
     // Process child pages
     let childCounter = 0;
     for (const block of response.results) {
-      if (block.type === "child_page") {
+      if (block.type === 'child_page') {
         childCounter++;
         const childTitle = block.child_page.title;
         const childId = block.id;
 
-        console.log(
-          `    [${childCounter}/${childPages.length}] Processing child: ${childTitle}`
-        );
+        console.log(`    [${childCounter}/${childPages.length}] Processing child: ${childTitle}`);
 
         // Add this page to our collection
         collectedData.allPages.push({
@@ -751,10 +712,8 @@ async function collectSubpages(
       }
 
       // Add delay between processing siblings
-      if (block.type === "child_page") {
-        console.log(
-          `    Waiting ${delayMs}ms before processing next sibling...`
-        );
+      if (block.type === 'child_page') {
+        console.log(`    Waiting ${delayMs}ms before processing next sibling...`);
         await delay(delayMs);
       }
     }
@@ -779,22 +738,15 @@ async function processAndCreateEntries(collectedData, options = {}) {
     clearDatabase = true,
   } = options;
 
-  console.log(
-    "PHASE 2: Processing collected data and creating database entries..."
-  );
-  console.log(
-    `Batch size: ${batchSize}, Delay between batches: ${delayBetweenBatches}ms`
-  );
+  console.log('PHASE 2: Processing collected data and creating database entries...');
+  console.log(`Batch size: ${batchSize}, Delay between batches: ${delayBetweenBatches}ms`);
   console.log(`Rate limit: 3 requests per second average (Notion API limit)`);
 
   try {
     // Clear existing database if requested
     if (clearDatabase) {
-      console.log("Clearing existing database entries...");
-      const existingEntries = await queryAllDatabaseEntries(
-        notion,
-        DATABASE_ID
-      );
+      console.log('Clearing existing database entries...');
+      const existingEntries = await queryAllDatabaseEntries(notion, DATABASE_ID);
       console.log(`Found ${existingEntries.length} existing entries to clear.`);
 
       // Archive entries in batches to avoid rate limiting
@@ -806,7 +758,7 @@ async function processAndCreateEntries(collectedData, options = {}) {
           )}`
         );
 
-        const promises = batch.map((entry) =>
+        const promises = batch.map(entry =>
           callWithRetry(() =>
             notion.pages.update({
               page_id: entry.id,
@@ -822,28 +774,20 @@ async function processAndCreateEntries(collectedData, options = {}) {
     }
 
     // Filter pages to include only those with valid categories
-    console.log(
-      "Filtering pages to include only those with valid categories..."
-    );
-    const validPages = collectedData.allPages.filter((page) =>
+    console.log('Filtering pages to include only those with valid categories...');
+    const validPages = collectedData.allPages.filter(page =>
       collectedData.validCategories.has(page.category)
     );
 
+    console.log(`Filtered to ${validPages.length} pages with valid categories.`);
     console.log(
-      `Filtered to ${validPages.length} pages with valid categories.`
-    );
-    console.log(
-      `Skipped ${
-        collectedData.allPages.length - validPages.length
-      } pages with invalid categories.`
+      `Skipped ${collectedData.allPages.length - validPages.length} pages with invalid categories.`
     );
 
     // Apply the limit if specified
     const pagesToProcess = validPages.slice(0, limit);
     console.log(
-      `Will process ${pagesToProcess.length} pages (limit: ${
-        limit !== Infinity ? limit : "none"
-      })`
+      `Will process ${pagesToProcess.length} pages (limit: ${limit !== Infinity ? limit : 'none'})`
     );
 
     // Process pages in batches
@@ -865,12 +809,12 @@ async function processAndCreateEntries(collectedData, options = {}) {
 
       // Process each page in the batch (in parallel)
       const results = await Promise.allSettled(
-        batch.map((page) => processPageAndCreateEntry(page, collectedData))
+        batch.map(page => processPageAndCreateEntry(page, collectedData))
       );
 
       // Count successes and failures
       results.forEach((result, index) => {
-        if (result.status === "fulfilled") {
+        if (result.status === 'fulfilled') {
           console.log(`  ✓ Successfully processed: ${batch[index].title}`);
           totalSuccess++;
         } else {
@@ -883,20 +827,18 @@ async function processAndCreateEntries(collectedData, options = {}) {
 
       // Add delay between batches
       if (i + batchSize < pagesToProcess.length) {
-        console.log(
-          `Batch complete. Waiting ${delayBetweenBatches}ms before next batch...`
-        );
+        console.log(`Batch complete. Waiting ${delayBetweenBatches}ms before next batch...`);
         await delay(delayBetweenBatches);
       }
     }
 
     // Log final statistics
-    console.log("\nMigration complete!");
+    console.log('\nMigration complete!');
     console.log(`Total pages processed: ${totalProcessed}`);
     console.log(`Successfully migrated: ${totalSuccess}`);
     console.log(`Failed migrations: ${totalFailures}`);
   } catch (error) {
-    console.error("Error processing data and creating entries:", error);
+    console.error('Error processing data and creating entries:', error);
     throw error;
   }
 }
@@ -904,10 +846,10 @@ async function processAndCreateEntries(collectedData, options = {}) {
 /**
  * Process a single page and create a database entry
  * @param {Object} page - The page information
- * @param {Object} collectedData - The collected data
+ * @param {Object} _collectedData - Collected data (unused)
  * @returns {Promise<Object>} - The created database entry
  */
-async function processPageAndCreateEntry(page, collectedData) {
+async function processPageAndCreateEntry(page, _collectedData) {
   try {
     console.log(`Processing page: ${page.title} (category: ${page.category})`);
 
@@ -921,9 +863,7 @@ async function processPageAndCreateEntry(page, collectedData) {
     }
 
     // Get page metadata
-    const pageMetadata = await callWithRetry(() =>
-      notion.pages.retrieve({ page_id: page.id })
-    );
+    const pageMetadata = await callWithRetry(() => notion.pages.retrieve({ page_id: page.id }));
     const createdTime = pageMetadata.created_time || new Date().toISOString();
 
     // Extract content and images
@@ -931,11 +871,10 @@ async function processPageAndCreateEntry(page, collectedData) {
     const coverImageUrl = await extractFirstImage(page.id);
 
     // Generate display title (add "Notes" suffix for top-level categories except MIT Units)
-    const displayTitle =
-      page.isTopLevel && !page.isMITUnit ? `${page.title} Notes` : page.title;
+    const displayTitle = page.isTopLevel && !page.isMITUnit ? `${page.title} Notes` : page.title;
 
     // Generate excerpt
-    let excerpt = "";
+    let excerpt = '';
     if (content) {
       excerpt = generateExcerpt(content, 150);
     } else if (page.isTopLevel) {
@@ -958,12 +897,12 @@ async function processPageAndCreateEntry(page, collectedData) {
       },
       Category: {
         select: {
-          name: page.category || "Uncategorized",
+          name: page.category || 'Uncategorized',
         },
       },
       Status: {
         select: {
-          name: "Published",
+          name: 'Published',
         },
       },
       Excerpt: {
@@ -976,12 +915,12 @@ async function processPageAndCreateEntry(page, collectedData) {
         ],
       },
       Tags: {
-        multi_select: tags.map((tag) => ({ name: tag })),
+        multi_select: tags.map(tag => ({ name: tag })),
       },
-      "Original Page": {
-        url: `https://www.notion.so/${page.id.replace(/-/g, "")}`,
+      'Original Page': {
+        url: `https://www.notion.so/${page.id.replace(/-/g, '')}`,
       },
-      "Date Created": {
+      'Date Created': {
         date: {
           start: createdTime,
         },
@@ -1004,7 +943,7 @@ async function processPageAndCreateEntry(page, collectedData) {
     // If we have a cover image, add it to the page data
     if (coverImageUrl) {
       pageData.cover = {
-        type: "external",
+        type: 'external',
         external: {
           url: coverImageUrl,
         },
@@ -1026,12 +965,10 @@ async function processPageAndCreateEntry(page, collectedData) {
  * Main function to run the migration with the two-phase approach
  */
 async function runImprovedMigration(options = {}) {
-  console.log(
-    "Starting Notion Technical Notes migration (Two-Phase Approach)..."
-  );
+  console.log('Starting Notion Technical Notes migration (Two-Phase Approach)...');
   console.log(`Source page ID: ${SOURCE_PAGE_ID}`);
   console.log(`Target database ID: ${DATABASE_ID}`);
-  console.log("Rate limit: 3 requests per second average (Notion API limit)");
+  console.log('Rate limit: 3 requests per second average (Notion API limit)');
 
   try {
     // Phase 1: Collect all data efficiently
@@ -1047,10 +984,10 @@ async function runImprovedMigration(options = {}) {
       clearDatabase: options.clearDatabase !== false,
     });
 
-    console.log("Migration successfully completed!");
+    console.log('Migration successfully completed!');
     return true;
   } catch (error) {
-    console.error("Migration failed:", error);
+    console.error('Migration failed:', error);
     return false;
   }
 }
@@ -1060,95 +997,77 @@ if (require.main === module) {
   // Parse command line arguments
   const args = process.argv.slice(2);
   const options = {
-    clearDatabase: !args.includes("--no-clear"),
+    clearDatabase: !args.includes('--no-clear'),
   };
 
   // Add support for --limit flag
-  const limitArg = args.find(
-    (arg) => arg.startsWith("--limit=") || arg === "--limit"
-  );
+  const limitArg = args.find(arg => arg.startsWith('--limit=') || arg === '--limit');
   if (limitArg) {
-    if (limitArg === "--limit" && args.length > args.indexOf(limitArg) + 1) {
-      options.limit =
-        parseInt(args[args.indexOf(limitArg) + 1], 10) || Infinity;
-    } else if (limitArg.startsWith("--limit=")) {
-      options.limit = parseInt(limitArg.split("=")[1], 10) || Infinity;
+    if (limitArg === '--limit' && args.length > args.indexOf(limitArg) + 1) {
+      options.limit = parseInt(args[args.indexOf(limitArg) + 1], 10) || Infinity;
+    } else if (limitArg.startsWith('--limit=')) {
+      options.limit = parseInt(limitArg.split('=')[1], 10) || Infinity;
     }
   }
 
   // Add support for --batch-size flag
-  const batchSizeArg = args.find(
-    (arg) => arg.startsWith("--batch-size=") || arg === "--batch-size"
-  );
+  const batchSizeArg = args.find(arg => arg.startsWith('--batch-size=') || arg === '--batch-size');
   if (batchSizeArg) {
-    if (
-      batchSizeArg === "--batch-size" &&
-      args.length > args.indexOf(batchSizeArg) + 1
-    ) {
-      options.batchSize =
-        parseInt(args[args.indexOf(batchSizeArg) + 1], 10) || 5;
-    } else if (batchSizeArg.startsWith("--batch-size=")) {
-      options.batchSize = parseInt(batchSizeArg.split("=")[1], 10) || 5;
+    if (batchSizeArg === '--batch-size' && args.length > args.indexOf(batchSizeArg) + 1) {
+      options.batchSize = parseInt(args[args.indexOf(batchSizeArg) + 1], 10) || 5;
+    } else if (batchSizeArg.startsWith('--batch-size=')) {
+      options.batchSize = parseInt(batchSizeArg.split('=')[1], 10) || 5;
     }
   }
 
   // Add support for --delay flag
-  const delayArg = args.find(
-    (arg) => arg.startsWith("--delay=") || arg === "--delay"
-  );
+  const delayArg = args.find(arg => arg.startsWith('--delay=') || arg === '--delay');
   if (delayArg) {
-    if (delayArg === "--delay" && args.length > args.indexOf(delayArg) + 1) {
+    if (delayArg === '--delay' && args.length > args.indexOf(delayArg) + 1) {
       options.delayMs = parseInt(args[args.indexOf(delayArg) + 1], 10) || 400;
-    } else if (delayArg.startsWith("--delay=")) {
-      options.delayMs = parseInt(delayArg.split("=")[1], 10) || 400;
+    } else if (delayArg.startsWith('--delay=')) {
+      options.delayMs = parseInt(delayArg.split('=')[1], 10) || 400;
     }
   }
 
   // Add support for --delay-between-batches flag
   const delayBetweenBatchesArg = args.find(
-    (arg) =>
-      arg.startsWith("--delay-between-batches=") ||
-      arg === "--delay-between-batches"
+    arg => arg.startsWith('--delay-between-batches=') || arg === '--delay-between-batches'
   );
   if (delayBetweenBatchesArg) {
     if (
-      delayBetweenBatchesArg === "--delay-between-batches" &&
+      delayBetweenBatchesArg === '--delay-between-batches' &&
       args.length > args.indexOf(delayBetweenBatchesArg) + 1
     ) {
       options.delayBetweenBatches =
         parseInt(args[args.indexOf(delayBetweenBatchesArg) + 1], 10) || 3000;
-    } else if (delayBetweenBatchesArg.startsWith("--delay-between-batches=")) {
-      options.delayBetweenBatches =
-        parseInt(delayBetweenBatchesArg.split("=")[1], 10) || 3000;
+    } else if (delayBetweenBatchesArg.startsWith('--delay-between-batches=')) {
+      options.delayBetweenBatches = parseInt(delayBetweenBatchesArg.split('=')[1], 10) || 3000;
     }
   }
 
-  console.log("Notion Technical Notes Migration Tool (Two-Phase Approach)");
-  console.log("=====================================================");
-  console.log("Options:");
+  console.log('Notion Technical Notes Migration Tool (Two-Phase Approach)');
+  console.log('=====================================================');
+  console.log('Options:');
   console.log(`- Clear database: ${options.clearDatabase}`);
-  console.log(
-    `- Limit: ${options.limit !== undefined ? options.limit : "No limit"}`
-  );
+  console.log(`- Limit: ${options.limit !== undefined ? options.limit : 'No limit'}`);
   console.log(`- Batch size: ${options.batchSize || 5}`);
   console.log(`- Delay between requests: ${options.delayMs || 400}ms`);
-  console.log(
-    `- Delay between batches: ${options.delayBetweenBatches || 3000}ms`
-  );
-  console.log("- Rate limit: 3 requests per second average (Notion API limit)");
+  console.log(`- Delay between batches: ${options.delayBetweenBatches || 3000}ms`);
+  console.log('- Rate limit: 3 requests per second average (Notion API limit)');
 
   runImprovedMigration(options)
-    .then((success) => {
+    .then(success => {
       if (success) {
-        console.log("Migration completed successfully!");
+        console.log('Migration completed successfully!');
         process.exit(0);
       } else {
-        console.error("Migration failed.");
+        console.error('Migration failed.');
         process.exit(1);
       }
     })
-    .catch((error) => {
-      console.error("Migration failed with an unhandled error:", error);
+    .catch(error => {
+      console.error('Migration failed with an unhandled error:', error);
       process.exit(1);
     });
 }

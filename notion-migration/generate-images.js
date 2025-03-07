@@ -31,40 +31,32 @@
  */
 
 // Import required dependencies
-const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, ".env") });
-const { Client } = require("@notionhq/client");
-const axios = require("axios");
-const fs = require("fs");
-const { promisify } = require("util");
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+const { Client } = require('@notionhq/client');
+const axios = require('axios');
+const fs = require('fs');
+const { promisify } = require('util');
 
 // JSON mapping file to track generated images
-const MAPPING_FILE_PATH = path.join(__dirname, "image-mapping.json");
+const MAPPING_FILE_PATH = path.join(__dirname, 'image-mapping.json');
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
 
 // Get command line arguments
 const args = process.argv.slice(2);
-const isTestMode = args.includes("--test");
-const isSingleEntry = args.includes("--single-entry");
-const singleEntryId = isSingleEntry
-  ? args[args.indexOf("--single-entry") + 1]
-  : null;
-const batchSize = args.includes("--batch-size")
-  ? parseInt(args[args.indexOf("--batch-size") + 1], 10)
-  : 5;
-const delayBetweenBatches = args.includes("--delay")
-  ? parseInt(args[args.indexOf("--delay") + 1], 10)
-  : 3000;
-const showStats = args.includes("--stats");
-const resetPending = args.includes("--reset-pending");
-const cleanMapping = args.includes("--clean-mapping");
+const isTestMode = args.includes('--test');
+const isSingleEntry = args.includes('--single-entry');
+const singleEntryId = isSingleEntry ? args[args.indexOf('--single-entry') + 1] : null;
+const showStats = args.includes('--stats');
+const resetPending = args.includes('--reset-pending');
+const cleanMapping = args.includes('--clean-mapping');
 
 // Read environment variables directly from the file to avoid conflicts with parent .env
 let envConfig = {};
-if (fs.existsSync(path.resolve(__dirname, ".env"))) {
-  const envFile = fs.readFileSync(path.resolve(__dirname, ".env"), "utf8");
-  envFile.split("\n").forEach((line) => {
+if (fs.existsSync(path.resolve(__dirname, '.env'))) {
+  const envFile = fs.readFileSync(path.resolve(__dirname, '.env'), 'utf8');
+  envFile.split('\n').forEach(line => {
     const match = line.match(/^([^#=]+)=(.*)$/);
     if (match) {
       const key = match[1].trim();
@@ -76,32 +68,26 @@ if (fs.existsSync(path.resolve(__dirname, ".env"))) {
 
 // Get environment variables, preferring our direct parsing over process.env
 const NOTION_API_KEY = envConfig.NOTION_API_KEY || process.env.NOTION_API_KEY;
-const DATABASE_ID =
-  envConfig.NOTION_DATABASE_ID || process.env.NOTION_DATABASE_ID;
-const DASHSCOPE_API_KEY =
-  envConfig.DASHSCOPE_API_KEY || process.env.DASHSCOPE_API_KEY;
+const DATABASE_ID = envConfig.NOTION_DATABASE_ID || process.env.NOTION_DATABASE_ID;
+const DASHSCOPE_API_KEY = envConfig.DASHSCOPE_API_KEY || process.env.DASHSCOPE_API_KEY;
 
 // Log what we're using
-console.log("Using configuration:");
+console.log('Using configuration:');
 console.log(
   `NOTION_API_KEY: ${
     NOTION_API_KEY
-      ? NOTION_API_KEY.substring(0, 4) +
-        "..." +
-        NOTION_API_KEY.substring(NOTION_API_KEY.length - 4)
-      : "Missing"
+      ? NOTION_API_KEY.substring(0, 4) + '...' + NOTION_API_KEY.substring(NOTION_API_KEY.length - 4)
+      : 'Missing'
   }`
 );
-console.log(`DATABASE_ID: ${DATABASE_ID || "Missing"}`);
-console.log(
-  `DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY ? "Found (not shown)" : "Missing"}`
-);
+console.log(`DATABASE_ID: ${DATABASE_ID || 'Missing'}`);
+console.log(`DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY ? 'Found (not shown)' : 'Missing'}`);
 
 // Check for required environment variables
 if (!NOTION_API_KEY || !DATABASE_ID || !DASHSCOPE_API_KEY) {
-  console.error("Error: Required environment variables are missing.");
+  console.error('Error: Required environment variables are missing.');
   console.error(
-    "Please ensure NOTION_API_KEY, NOTION_DATABASE_ID, and DASHSCOPE_API_KEY are set in your .env file."
+    'Please ensure NOTION_API_KEY, NOTION_DATABASE_ID, and DASHSCOPE_API_KEY are set in your .env file.'
   );
   process.exit(1);
 }
@@ -115,7 +101,7 @@ const notion = new Client({ auth: NOTION_API_KEY });
  * @returns {Promise<void>}
  */
 function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -134,20 +120,15 @@ async function callWithRetry(apiCall, maxRetries = 5, baseDelay = 1500) {
       lastError = error;
 
       // Log the error
-      console.error(
-        `Error (attempt ${attempt + 1}/${maxRetries}):`,
-        error.message
-      );
+      console.error(`Error (attempt ${attempt + 1}/${maxRetries}):`, error.message);
 
       // Check if the error is a rate limit error
       if (error.status === 429) {
-        console.log("Rate limit exceeded. Waiting longer before retry...");
+        console.log('Rate limit exceeded. Waiting longer before retry...');
         await delay(baseDelay * Math.pow(2, attempt) + Math.random() * 1000);
       } else {
         // For other errors, use a smaller backoff
-        await delay(
-          (baseDelay / 2) * Math.pow(1.5, attempt) + Math.random() * 500
-        );
+        await delay((baseDelay / 2) * Math.pow(1.5, attempt) + Math.random() * 500);
       }
     }
   }
@@ -187,10 +168,8 @@ async function queryAllDatabaseEntries() {
  * @returns {string} Plain text content
  */
 function extractRichText(richTextArray) {
-  if (!richTextArray || richTextArray.length === 0) return "";
-  return richTextArray
-    .map((rt) => rt.plain_text || rt.text?.content || "")
-    .join("");
+  if (!richTextArray || richTextArray.length === 0) return '';
+  return richTextArray.map(rt => rt.plain_text || rt.text?.content || '').join('');
 }
 
 /**
@@ -202,7 +181,7 @@ function extractRichText(richTextArray) {
 async function createImageGenerationTask(title, summary) {
   try {
     // Clean and enhance the summary to create a better prompt
-    const cleanTitle = title.replace(/['"]/g, "").trim();
+    const cleanTitle = title.replace(/['"]/g, '').trim();
 
     // Create a structured prompt based on the advanced formula
     // 提示词 = 主体描述 + 场景描述 + 风格定义 + 镜头语言 + 光线设置 + 氛围词 + 细节修饰 + 技术参数
@@ -246,28 +225,28 @@ async function createImageGenerationTask(title, summary) {
 
     // Enhanced negative prompt to avoid unwanted elements
     const negative_prompt =
-      "text, words, writing, watermark, signature, blurry, low quality, ugly, distorted, photorealistic, photograph, human faces, hands, cluttered, chaotic layout, overly complex, childish, cartoon-like, unprofessional, Chinese characters, Chinese text, Asian characters, characters, text overlay, letters, numbers, any text, Asian text";
+      'text, words, writing, watermark, signature, blurry, low quality, ugly, distorted, photorealistic, photograph, human faces, hands, cluttered, chaotic layout, overly complex, childish, cartoon-like, unprofessional, Chinese characters, Chinese text, Asian characters, characters, text overlay, letters, numbers, any text, Asian text';
 
     console.log(`Creating image generation task for: ${cleanTitle}`);
 
     const response = await axios.post(
-      "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis",
+      'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis',
       {
-        model: "wanx2.1-t2i-turbo",
+        model: 'wanx2.1-t2i-turbo',
         input: {
           prompt: prompt,
           negative_prompt: negative_prompt,
         },
         parameters: {
-          size: "1024*1024",
+          size: '1024*1024',
           n: 1,
         },
       },
       {
         headers: {
-          "X-DashScope-Async": "enable",
+          'X-DashScope-Async': 'enable',
           Authorization: `Bearer ${DASHSCOPE_API_KEY}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       }
     );
@@ -278,15 +257,12 @@ async function createImageGenerationTask(title, summary) {
       console.log(`Task created successfully with ID: ${taskId}`);
       return taskId;
     } else {
-      throw new Error("No task ID returned from API");
+      throw new Error('No task ID returned from API');
     }
   } catch (error) {
-    console.error("Error creating image generation task:", error.message);
+    console.error('Error creating image generation task:', error.message);
     if (error.response) {
-      console.error(
-        "API Error Response:",
-        JSON.stringify(error.response.data, null, 2)
-      );
+      console.error('API Error Response:', JSON.stringify(error.response.data, null, 2));
     }
     throw error;
   }
@@ -299,11 +275,7 @@ async function createImageGenerationTask(title, summary) {
  * @param {number} checkInterval - Interval between status checks in milliseconds
  * @returns {Promise<string|null>} The URL of the generated image or null if generation failed
  */
-async function getImageGenerationResult(
-  taskId,
-  maxAttempts = 15,
-  checkInterval = 5000
-) {
+async function getImageGenerationResult(taskId, maxAttempts = 15, checkInterval = 5000) {
   try {
     console.log(`Checking status for task: ${taskId}`);
     let attempts = 0;
@@ -312,59 +284,48 @@ async function getImageGenerationResult(
       attempts++;
       console.log(`Attempt ${attempts}/${maxAttempts}...`);
 
-      const response = await axios.get(
-        `https://dashscope.aliyuncs.com/api/v1/tasks/${taskId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${DASHSCOPE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.get(`https://dashscope.aliyuncs.com/api/v1/tasks/${taskId}`, {
+        headers: {
+          Authorization: `Bearer ${DASHSCOPE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       // Extract status from the correct location in the response
       if (!response.data || !response.data.output) {
-        console.error("Unexpected response format:", response.data);
+        console.error('Unexpected response format:', response.data);
         return null;
       }
 
       const status = response.data.output.task_status;
       console.log(`Current status: ${status}`);
 
-      if (status === "SUCCEEDED") {
-        console.log("Task completed successfully!");
+      if (status === 'SUCCEEDED') {
+        console.log('Task completed successfully!');
         // Extract the image URL from the result
-        if (
-          response.data.output.results &&
-          response.data.output.results.length > 0
-        ) {
+        if (response.data.output.results && response.data.output.results.length > 0) {
           const imageUrl = response.data.output.results[0].url;
           console.log(`Generated image URL: ${imageUrl}`);
           return imageUrl;
         } else {
-          console.error("No image URL in successful response");
+          console.error('No image URL in successful response');
           return null;
         }
-      } else if (status === "FAILED") {
-        console.error("Task failed:", response.data.output.error);
+      } else if (status === 'FAILED') {
+        console.error('Task failed:', response.data.output.error);
         return null;
       }
 
-      console.log(
-        `Waiting ${checkInterval / 1000} seconds before next check...`
-      );
+      console.log(`Waiting ${checkInterval / 1000} seconds before next check...`);
       await delay(checkInterval);
     }
 
     console.error(`Max attempts (${maxAttempts}) reached without completion`);
     return null;
   } catch (error) {
-    console.error("Error checking task status:", error.message);
+    console.error('Error checking task status:', error.message);
     if (error.response) {
-      console.error(
-        "API Error Response:",
-        JSON.stringify(error.response.data, null, 2)
-      );
+      console.error('API Error Response:', JSON.stringify(error.response.data, null, 2));
     }
     return null;
   }
@@ -386,7 +347,7 @@ async function generateImage(title, summary) {
 
     return imageUrl;
   } catch (error) {
-    console.error("Error generating image:", error.message);
+    console.error('Error generating image:', error.message);
     return null;
   }
 }
@@ -402,32 +363,30 @@ async function updateEntryWithGeneratedImage(entry) {
 
     // Extract existing properties
     const properties = entry.properties;
-    const title = properties.Title?.title?.[0]?.text?.content || "Untitled";
+    const title = properties.Title?.title?.[0]?.text?.content || 'Untitled';
     const summary = properties.Summary?.rich_text
       ? extractRichText(properties.Summary.rich_text)
-      : "";
+      : '';
 
     console.log(`- Title: ${title}`);
 
     // Check if entry already has an image
     const existingImageUrl = properties.Image?.url || null;
     if (existingImageUrl) {
-      console.log("- Image already exists, skipping");
+      console.log('- Image already exists, skipping');
       // Update mapping to reflect existing image
-      await updateImageMapping(entry.id, title, existingImageUrl, "success");
+      await updateImageMapping(entry.id, title, existingImageUrl, 'success');
       return entry;
     }
 
     // Check if we already have an image in our mapping
     const mapping = await loadImageMapping();
     const existingMapping = mapping.entries.find(
-      (e) => e.id === entry.id && e.status === "success" && e.imageUrl
+      e => e.id === entry.id && e.status === 'success' && e.imageUrl
     );
 
     if (existingMapping && existingMapping.imageUrl) {
-      console.log(
-        `- Found existing image in mapping: ${existingMapping.imageUrl}`
-      );
+      console.log(`- Found existing image in mapping: ${existingMapping.imageUrl}`);
       // Update Notion with the image URL from our mapping
       await notion.pages.update({
         page_id: entry.id,
@@ -437,27 +396,27 @@ async function updateEntryWithGeneratedImage(entry) {
           },
         },
       });
-      console.log("- Updated Notion entry with existing image URL");
+      console.log('- Updated Notion entry with existing image URL');
       return entry;
     }
 
     // Generate image only if we have a summary
     if (!summary) {
-      console.log("- No summary available for image generation");
-      await updateImageMapping(entry.id, title, null, "skipped");
+      console.log('- No summary available for image generation');
+      await updateImageMapping(entry.id, title, null, 'skipped');
       return entry;
     }
 
     // Update mapping to show we're working on this entry
-    await updateImageMapping(entry.id, title, null, "pending");
+    await updateImageMapping(entry.id, title, null, 'pending');
 
     // Generate image using DashScope API
-    console.log("- Generating image...");
+    console.log('- Generating image...');
     const imageUrl = await callWithRetry(() => generateImage(title, summary));
 
     if (!imageUrl) {
-      console.log("- Failed to generate image");
-      await updateImageMapping(entry.id, title, null, "failed");
+      console.log('- Failed to generate image');
+      await updateImageMapping(entry.id, title, null, 'failed');
       return entry;
     }
 
@@ -472,7 +431,7 @@ async function updateEntryWithGeneratedImage(entry) {
     });
 
     // Update our mapping with the successful image generation
-    await updateImageMapping(entry.id, title, imageUrl, "success");
+    await updateImageMapping(entry.id, title, imageUrl, 'success');
 
     console.log(`- Image generated and added to Notion: ${imageUrl}`);
     return entry;
@@ -481,9 +440,8 @@ async function updateEntryWithGeneratedImage(entry) {
 
     // Record the failure in our mapping
     if (entry && entry.id) {
-      const title =
-        entry.properties?.Title?.title?.[0]?.text?.content || "Untitled";
-      await updateImageMapping(entry.id, title, null, "error");
+      const title = entry.properties?.Title?.title?.[0]?.text?.content || 'Untitled';
+      await updateImageMapping(entry.id, title, null, 'error');
     }
 
     return entry;
@@ -494,44 +452,44 @@ async function updateEntryWithGeneratedImage(entry) {
  * Run a test with the provided summary
  */
 async function runTest() {
-  console.log("Running test with sample data...");
+  console.log('Running test with sample data...');
 
-  const testId = "test-entry-id";
-  const testTitle = "AWS Key Management Service (KMS)";
+  const testId = 'test-entry-id';
+  const testTitle = 'AWS Key Management Service (KMS)';
   const testSummary =
-    "AWS Key Management Service (KMS) centralizes encryption key creation, storage, and management, enabling secure data protection across AWS services. It uses hardware security modules (HSMs) for key storage, supports FIPS 140-2 compliance, and integrates with services like S3 and EBS for automated encryption. KMS provides granular access controls, audit trails via AWS CloudTrail, and simplifies regulatory compliance while eliminating infrastructure management overhead.";
+    'AWS Key Management Service (KMS) centralizes encryption key creation, storage, and management, enabling secure data protection across AWS services. It uses hardware security modules (HSMs) for key storage, supports FIPS 140-2 compliance, and integrates with services like S3 and EBS for automated encryption. KMS provides granular access controls, audit trails via AWS CloudTrail, and simplifies regulatory compliance while eliminating infrastructure management overhead.';
 
-  console.log("Test data:");
+  console.log('Test data:');
   console.log(`- Title: ${testTitle}`);
   console.log(`- Summary: ${testSummary}`);
 
   try {
     // Update mapping to show we're working on this test entry
-    await updateImageMapping(testId, testTitle, null, "pending");
+    await updateImageMapping(testId, testTitle, null, 'pending');
 
-    console.log("Generating image...");
+    console.log('Generating image...');
     const imageUrl = await generateImage(testTitle, testSummary);
 
     if (imageUrl) {
       // Update mapping with successful generation
-      await updateImageMapping(testId, testTitle, imageUrl, "success");
+      await updateImageMapping(testId, testTitle, imageUrl, 'success');
 
-      console.log("✓ Test successful!");
+      console.log('✓ Test successful!');
       console.log(`Generated image URL: ${imageUrl}`);
 
       // Display mapping statistics
       await displayMappingStatistics();
     } else {
       // Update mapping with failed generation
-      await updateImageMapping(testId, testTitle, null, "failed");
+      await updateImageMapping(testId, testTitle, null, 'failed');
 
-      console.log("× Test failed - could not generate image");
+      console.log('× Test failed - could not generate image');
     }
   } catch (error) {
     // Update mapping with error
-    await updateImageMapping(testId, testTitle, null, "error");
+    await updateImageMapping(testId, testTitle, null, 'error');
 
-    console.error("× Test failed:", error.message);
+    console.error('× Test failed:', error.message);
   }
 }
 
@@ -543,33 +501,23 @@ async function displayMappingStatistics() {
   const mapping = await loadImageMapping();
 
   if (!mapping.entries || mapping.entries.length === 0) {
-    console.log("No image mapping data available yet.");
+    console.log('No image mapping data available yet.');
     return;
   }
 
   const total = mapping.entries.length;
-  const success = mapping.entries.filter((e) => e.status === "success").length;
-  const failed = mapping.entries.filter(
-    (e) => e.status === "failed" || e.status === "error"
-  ).length;
-  const pending = mapping.entries.filter((e) => e.status === "pending").length;
-  const skipped = mapping.entries.filter((e) => e.status === "skipped").length;
+  const success = mapping.entries.filter(e => e.status === 'success').length;
+  const failed = mapping.entries.filter(e => e.status === 'failed' || e.status === 'error').length;
+  const pending = mapping.entries.filter(e => e.status === 'pending').length;
+  const skipped = mapping.entries.filter(e => e.status === 'skipped').length;
 
-  console.log("\n=== Image Generation Statistics ===");
+  console.log('\n=== Image Generation Statistics ===');
   console.log(`Total entries: ${total}`);
-  console.log(
-    `Successfully generated: ${success} (${Math.round(
-      (success / total) * 100
-    )}%)`
-  );
+  console.log(`Successfully generated: ${success} (${Math.round((success / total) * 100)}%)`);
   console.log(`Failed: ${failed} (${Math.round((failed / total) * 100)}%)`);
-  console.log(
-    `Pending/Interrupted: ${pending} (${Math.round((pending / total) * 100)}%)`
-  );
-  console.log(
-    `Skipped (no summary): ${skipped} (${Math.round((skipped / total) * 100)}%)`
-  );
-  console.log("================================\n");
+  console.log(`Pending/Interrupted: ${pending} (${Math.round((pending / total) * 100)}%)`);
+  console.log(`Skipped (no summary): ${skipped} (${Math.round((skipped / total) * 100)}%)`);
+  console.log('================================\n');
 }
 
 /**
@@ -577,7 +525,7 @@ async function displayMappingStatistics() {
  */
 async function updateDatabaseEntriesWithImages() {
   try {
-    console.log("Starting Notion database image update...");
+    console.log('Starting Notion database image update...');
 
     // Handle test mode
     if (isTestMode) {
@@ -601,9 +549,7 @@ async function updateDatabaseEntriesWithImages() {
     const mapping = await loadImageMapping();
 
     // Prioritize entries that were in 'pending' state (interrupted during previous run)
-    const pendingEntryIds = mapping.entries
-      .filter((e) => e.status === "pending")
-      .map((e) => e.id);
+    const pendingEntryIds = mapping.entries.filter(e => e.status === 'pending').map(e => e.id);
 
     if (pendingEntryIds.length > 0) {
       console.log(
@@ -634,7 +580,7 @@ async function updateDatabaseEntriesWithImages() {
       }
     }
 
-    console.log("All entries processed successfully!");
+    console.log('All entries processed successfully!');
     await displayMappingStatistics();
   } catch (error) {
     console.error(`Error updating database entries: ${error.message}`);
@@ -648,7 +594,7 @@ async function updateDatabaseEntriesWithImages() {
 async function loadImageMapping() {
   try {
     if (fs.existsSync(MAPPING_FILE_PATH)) {
-      const data = await readFileAsync(MAPPING_FILE_PATH, "utf8");
+      const data = await readFileAsync(MAPPING_FILE_PATH, 'utf8');
       return JSON.parse(data);
     }
     // Create new mapping if file doesn't exist
@@ -667,11 +613,7 @@ async function loadImageMapping() {
  */
 async function saveImageMapping(mapping) {
   try {
-    await writeFileAsync(
-      MAPPING_FILE_PATH,
-      JSON.stringify(mapping, null, 2),
-      "utf8"
-    );
+    await writeFileAsync(MAPPING_FILE_PATH, JSON.stringify(mapping, null, 2), 'utf8');
     console.log(`Image mapping saved to ${MAPPING_FILE_PATH}`);
   } catch (error) {
     console.error(`Error saving image mapping file: ${error.message}`);
@@ -690,9 +632,7 @@ async function updateImageMapping(entryId, title, imageUrl, status) {
   const mapping = await loadImageMapping();
 
   // Check if entry already exists in the mapping
-  const existingEntryIndex = mapping.entries.findIndex(
-    (entry) => entry.id === entryId
-  );
+  const existingEntryIndex = mapping.entries.findIndex(entry => entry.id === entryId);
 
   const updatedEntry = {
     id: entryId,
@@ -725,8 +665,8 @@ async function resetPendingEntries() {
   let resetCount = 0;
 
   for (let i = 0; i < mapping.entries.length; i++) {
-    if (mapping.entries[i].status === "pending") {
-      mapping.entries[i].status = "reset";
+    if (mapping.entries[i].status === 'pending') {
+      mapping.entries[i].status = 'reset';
       resetCount++;
     }
   }
@@ -735,7 +675,7 @@ async function resetPendingEntries() {
     await saveImageMapping(mapping);
     console.log(`Reset ${resetCount} pending entries to be processed again.`);
   } else {
-    console.log("No pending entries found to reset.");
+    console.log('No pending entries found to reset.');
   }
 }
 
@@ -768,9 +708,7 @@ async function cleanMappingFile() {
   // Save the cleaned mapping
   await saveImageMapping(mapping);
   console.log(
-    `Cleaned mapping file: Removed ${
-      entriesCount - mapping.entries.length
-    } duplicate entries.`
+    `Cleaned mapping file: Removed ${entriesCount - mapping.entries.length} duplicate entries.`
   );
 }
 
@@ -779,16 +717,10 @@ async function cleanMappingFile() {
  */
 async function main() {
   try {
-    console.log("Using configuration:");
-    console.log(
-      `NOTION_API_KEY: ${NOTION_API_KEY ? "ntn_...x1zZ" : "Not found"}`
-    );
+    console.log('Using configuration:');
+    console.log(`NOTION_API_KEY: ${NOTION_API_KEY ? 'ntn_...x1zZ' : 'Not found'}`);
     console.log(`DATABASE_ID: ${DATABASE_ID}`);
-    console.log(
-      `DASHSCOPE_API_KEY: ${
-        DASHSCOPE_API_KEY ? "Found (not shown)" : "Not found"
-      }`
-    );
+    console.log(`DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY ? 'Found (not shown)' : 'Not found'}`);
 
     // Handle special command line options
     if (showStats) {

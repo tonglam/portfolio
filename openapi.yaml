@@ -62,7 +62,7 @@ components:
 
     BlogPostDetail:
       allOf:
-        - $ref: "#/components/schemas/BlogPost"
+        - $ref: '#/components/schemas/BlogPost'
         - type: object
           properties:
             blocks:
@@ -149,11 +149,11 @@ paths:
       summary: List blog posts
       description: Retrieves a paginated list of blog posts, optionally filtered by category
       parameters:
-        - $ref: "#/components/parameters/pageParam"
-        - $ref: "#/components/parameters/limitParam"
-        - $ref: "#/components/parameters/categoryParam"
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/categoryParam'
       responses:
-        "200":
+        '200':
           description: Successful response
           content:
             application/json:
@@ -163,7 +163,7 @@ paths:
                   posts:
                     type: array
                     items:
-                      $ref: "#/components/schemas/BlogPost"
+                      $ref: '#/components/schemas/BlogPost'
                   totalPages:
                     type: integer
                     description: Total number of pages
@@ -173,7 +173,7 @@ paths:
                   currentPage:
                     type: integer
                     description: Current page number
-        "500":
+        '500':
           description: Server error
           content:
             application/json:
@@ -188,9 +188,9 @@ paths:
       summary: Get blog post by slug
       description: Retrieves a single blog post by its slug
       parameters:
-        - $ref: "#/components/parameters/slugParam"
+        - $ref: '#/components/parameters/slugParam'
       responses:
-        "200":
+        '200':
           description: Successful response
           content:
             application/json:
@@ -198,8 +198,8 @@ paths:
                 type: object
                 properties:
                   post:
-                    $ref: "#/components/schemas/BlogPostDetail"
-        "404":
+                    $ref: '#/components/schemas/BlogPostDetail'
+        '404':
           description: Blog post not found
           content:
             application/json:
@@ -208,7 +208,7 @@ paths:
                 properties:
                   error:
                     type: string
-        "500":
+        '500':
           description: Server error
           content:
             application/json:
@@ -223,7 +223,7 @@ paths:
       summary: Get blog categories
       description: Retrieves all available blog categories
       responses:
-        "200":
+        '200':
           description: Successful response
           content:
             application/json:
@@ -233,8 +233,8 @@ paths:
                   categories:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Category"
-        "500":
+                      $ref: '#/components/schemas/Category'
+        '500':
           description: Server error
           content:
             application/json:
@@ -249,12 +249,12 @@ paths:
       summary: Search blog posts
       description: Searches blog posts by query string
       parameters:
-        - $ref: "#/components/parameters/searchQueryParam"
-        - $ref: "#/components/parameters/pageParam"
-        - $ref: "#/components/parameters/limitParam"
-        - $ref: "#/components/parameters/categoryParam"
+        - $ref: '#/components/parameters/searchQueryParam'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/categoryParam'
       responses:
-        "200":
+        '200':
           description: Successful response
           content:
             application/json:
@@ -264,7 +264,7 @@ paths:
                   posts:
                     type: array
                     items:
-                      $ref: "#/components/schemas/BlogPost"
+                      $ref: '#/components/schemas/BlogPost'
                   totalPages:
                     type: integer
                   totalPosts:
@@ -273,7 +273,7 @@ paths:
                     type: integer
                   query:
                     type: string
-        "400":
+        '400':
           description: Bad request
           content:
             application/json:
@@ -282,7 +282,7 @@ paths:
                 properties:
                   error:
                     type: string
-        "500":
+        '500':
           description: Server error
           content:
             application/json:
@@ -301,9 +301,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ContactMessage"
+              $ref: '#/components/schemas/ContactMessage'
       responses:
-        "200":
+        '200':
           description: Message sent successfully
           content:
             application/json:
@@ -314,7 +314,7 @@ paths:
                     type: boolean
                   message:
                     type: string
-        "400":
+        '400':
           description: Bad request
           content:
             application/json:
@@ -323,7 +323,7 @@ paths:
                 properties:
                   error:
                     type: string
-        "500":
+        '500':
           description: Server error
           content:
             application/json:

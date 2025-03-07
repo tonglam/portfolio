@@ -7,15 +7,15 @@
  * - Image (url)
  */
 
-const path = require("path");
-const fs = require("fs");
-const { Client } = require("@notionhq/client");
+const path = require('path');
+const fs = require('fs');
+const { Client } = require('@notionhq/client');
 
 // Read environment variables directly from the file to avoid conflicts with parent .env
 let envConfig = {};
-if (fs.existsSync(path.resolve(__dirname, ".env"))) {
-  const envFile = fs.readFileSync(path.resolve(__dirname, ".env"), "utf8");
-  envFile.split("\n").forEach((line) => {
+if (fs.existsSync(path.resolve(__dirname, '.env'))) {
+  const envFile = fs.readFileSync(path.resolve(__dirname, '.env'), 'utf8');
+  envFile.split('\n').forEach(line => {
     const match = line.match(/^([^#=]+)=(.*)$/);
     if (match) {
       const key = match[1].trim();
@@ -27,8 +27,7 @@ if (fs.existsSync(path.resolve(__dirname, ".env"))) {
 
 // Get environment variables, preferring our direct parsing over process.env
 const NOTION_API_KEY = envConfig.NOTION_API_KEY || process.env.NOTION_API_KEY;
-const DATABASE_ID =
-  envConfig.NOTION_DATABASE_ID || process.env.NOTION_DATABASE_ID;
+const DATABASE_ID = envConfig.NOTION_DATABASE_ID || process.env.NOTION_DATABASE_ID;
 
 // Initialize the Notion client
 const notion = new Client({ auth: NOTION_API_KEY });
@@ -39,7 +38,7 @@ const notion = new Client({ auth: NOTION_API_KEY });
  * @returns {Promise<void>}
  */
 function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -56,10 +55,7 @@ async function callWithRetry(apiCall, maxRetries = 5, baseDelay = 1500) {
       return await apiCall();
     } catch (error) {
       lastError = error;
-      console.error(
-        `Error (attempt ${attempt + 1}/${maxRetries}):`,
-        error.message
-      );
+      console.error(`Error (attempt ${attempt + 1}/${maxRetries}):`, error.message);
       await delay(baseDelay * Math.pow(1.5, attempt) + Math.random() * 500);
     }
   }
@@ -78,36 +74,34 @@ async function addPropertiesToDatabase() {
       notion.databases.retrieve({ database_id: DATABASE_ID })
     );
 
-    console.log(
-      `Retrieved database: ${database.title[0]?.plain_text || "Unnamed"}`
-    );
+    console.log(`Retrieved database: ${database.title[0]?.plain_text || 'Unnamed'}`);
 
     // Check which properties already exist
     const existingProps = Object.keys(database.properties);
-    console.log("Existing properties:", existingProps.join(", "));
+    console.log('Existing properties:', existingProps.join(', '));
 
     // Properties to add
     const newProperties = {};
 
     // Add Summary property if it doesn't exist
-    if (!existingProps.includes("Summary")) {
-      newProperties["Summary"] = {
+    if (!existingProps.includes('Summary')) {
+      newProperties['Summary'] = {
         rich_text: {},
       };
     }
 
     // Add Mins Read property if it doesn't exist
-    if (!existingProps.includes("Mins Read")) {
-      newProperties["Mins Read"] = {
+    if (!existingProps.includes('Mins Read')) {
+      newProperties['Mins Read'] = {
         number: {
-          format: "number",
+          format: 'number',
         },
       };
     }
 
     // Add Image property if it doesn't exist
-    if (!existingProps.includes("Image")) {
-      newProperties["Image"] = {
+    if (!existingProps.includes('Image')) {
+      newProperties['Image'] = {
         url: {},
       };
     }
@@ -115,11 +109,11 @@ async function addPropertiesToDatabase() {
     // Check if we have any properties to add
     const propsToAdd = Object.keys(newProperties);
     if (propsToAdd.length === 0) {
-      console.log("All required properties already exist!");
+      console.log('All required properties already exist!');
       return;
     }
 
-    console.log(`Adding properties: ${propsToAdd.join(", ")}`);
+    console.log(`Adding properties: ${propsToAdd.join(', ')}`);
 
     // Update the database
     const updatedDb = await callWithRetry(() =>
@@ -129,13 +123,13 @@ async function addPropertiesToDatabase() {
       })
     );
 
-    console.log("✅ Successfully added properties to the database!");
+    console.log('✅ Successfully added properties to the database!');
 
     // Verify the new properties
     const allProps = Object.keys(updatedDb.properties);
-    console.log("Updated properties:", allProps.join(", "));
+    console.log('Updated properties:', allProps.join(', '));
   } catch (error) {
-    console.error("❌ Failed to add properties:", error.message);
+    console.error('❌ Failed to add properties:', error.message);
     process.exit(1);
   }
 }

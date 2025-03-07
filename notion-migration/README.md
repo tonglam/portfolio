@@ -424,7 +424,7 @@ After processing your Notion database, you can integrate it with your portfolio 
 Example code for fetching database entries:
 
 ```javascript
-import { Client } from "@notionhq/client";
+import { Client } from '@notionhq/client';
 
 // Initialize the Notion client
 const notion = new Client({
@@ -438,32 +438,31 @@ export async function getNotionBlogPosts() {
   const response = await notion.databases.query({
     database_id: databaseId,
     filter: {
-      property: "Published",
+      property: 'Published',
       checkbox: {
         equals: true,
       },
     },
     sorts: [
       {
-        property: "Last Edited",
-        direction: "descending",
+        property: 'Last Edited',
+        direction: 'descending',
       },
     ],
   });
 
-  return response.results.map((page) => {
+  return response.results.map(page => {
     return {
       id: page.id,
-      title: page.properties.Title.title[0]?.plain_text || "Untitled",
-      excerpt: page.properties.Excerpt.rich_text[0]?.plain_text || "",
-      category: page.properties.Category.select?.name || "Uncategorized",
-      date: page.properties["Date"].date?.start,
-      lastEdited: page.properties["Last Edited"].date?.start,
-      tags: page.properties.Tags.multi_select.map((tag) => tag.name),
-      url: page.properties["Original Page"].url || "",
+      title: page.properties.Title.title[0]?.plain_text || 'Untitled',
+      excerpt: page.properties.Excerpt.rich_text[0]?.plain_text || '',
+      category: page.properties.Category.select?.name || 'Uncategorized',
+      date: page.properties['Date'].date?.start,
+      lastEdited: page.properties['Last Edited'].date?.start,
+      tags: page.properties.Tags.multi_select.map(tag => tag.name),
+      url: page.properties['Original Page'].url || '',
       slug: page.properties.Slug.rich_text[0]?.plain_text || page.id,
-      image:
-        page.properties.R2ImageUrl.url || page.properties.Image.url || null,
+      image: page.properties.R2ImageUrl.url || page.properties.Image.url || null,
     };
   });
 }

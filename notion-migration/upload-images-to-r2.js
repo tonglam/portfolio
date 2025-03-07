@@ -21,27 +21,23 @@
  * - R2_PUBLIC_URL: Public URL prefix for the R2 bucket
  */
 
-require("dotenv").config();
-const { Client } = require("@notionhq/client");
-const {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} = require("@aws-sdk/client-s3");
-const axios = require("axios");
-const path = require("path");
-const fs = require("fs").promises;
-const { v4: uuidv4 } = require("uuid");
-const mime = require("mime-types");
-const minimist = require("minimist");
+require('dotenv').config();
+const { Client } = require('@notionhq/client');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const axios = require('axios');
+const path = require('path');
+const fs = require('fs').promises;
+const { v4: uuidv4 } = require('uuid');
+const mime = require('mime-types');
+const minimist = require('minimist');
 
 // Parse command line arguments
 const args = minimist(process.argv.slice(2), {
-  boolean: ["dry-run"],
-  string: ["entry"],
+  boolean: ['dry-run'],
+  string: ['entry'],
   alias: {
-    d: "dry-run",
-    e: "entry",
+    d: 'dry-run',
+    e: 'entry',
   },
 });
 
@@ -52,7 +48,7 @@ const notion = new Client({
 
 // Initialize S3 client for R2
 const s3 = new S3Client({
-  region: "auto",
+  region: 'auto',
   endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
     accessKeyId: process.env.R2_ACCESS_KEY_ID,
@@ -66,7 +62,7 @@ const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
 
 // Temporary directory for downloaded images
-const TEMP_DIR = path.join(__dirname, "temp");
+const TEMP_DIR = path.join(__dirname, 'temp');
 
 /**
  * Ensure temporary directory exists
@@ -88,8 +84,8 @@ async function ensureTempDir() {
 async function downloadImage(url) {
   try {
     console.log(`Downloading image from ${url}`);
-    const response = await axios.get(url, { responseType: "arraybuffer" });
-    const contentType = response.headers["content-type"];
+    const response = await axios.get(url, { responseType: 'arraybuffer' });
+    const contentType = response.headers['content-type'];
     return {
       buffer: Buffer.from(response.data),
       contentType,
@@ -110,7 +106,7 @@ async function downloadImage(url) {
 async function uploadImageToR2(buffer, contentType, originalUrl) {
   try {
     // Generate a unique key for the image
-    const fileExtension = mime.extension(contentType) || "jpg";
+    const fileExtension = mime.extension(contentType) || 'jpg';
     const key = `images/${uuidv4()}.${fileExtension}`;
 
     console.log(`Uploading image to R2 with key: ${key}`);
@@ -125,7 +121,7 @@ async function uploadImageToR2(buffer, contentType, originalUrl) {
         Metadata: {
           originalUrl: originalUrl,
         },
-        CacheControl: "public, max-age=31536000", // Cache for 1 year
+        CacheControl: 'public, max-age=31536000', // Cache for 1 year
       })
     );
 
@@ -186,7 +182,7 @@ async function getDatabaseEntries() {
     let startCursor = undefined;
 
     while (hasMore) {
-      console.log("Fetching batch of entries...");
+      console.log('Fetching batch of entries...');
       const response = await notion.databases.query({
         database_id: NOTION_DATABASE_ID,
         start_cursor: startCursor,
@@ -202,7 +198,7 @@ async function getDatabaseEntries() {
       startCursor = response.next_cursor;
 
       if (hasMore) {
-        console.log("More entries available, continuing...");
+        console.log('More entries available, continuing...');
       }
     }
 
@@ -221,7 +217,7 @@ async function getDatabaseEntries() {
  */
 function getImageUrl(properties) {
   // Check if Image property exists as a URL type
-  if (properties.Image?.type === "url" && properties.Image?.url) {
+  if (properties.Image?.type === 'url' && properties.Image?.url) {
     return properties.Image.url;
   }
 
@@ -249,10 +245,8 @@ function getImageUrl(properties) {
  */
 async function updateNotionWithR2Url(pageId, publicUrl) {
   try {
-    if (args["dry-run"]) {
-      console.log(
-        `[DRY RUN] Would update Notion entry ${pageId} with R2 URL: ${publicUrl}`
-      );
+    if (args['dry-run']) {
+      console.log(`[DRY RUN] Would update Notion entry ${pageId} with R2 URL: ${publicUrl}`);
       return null;
     }
 
@@ -263,7 +257,7 @@ async function updateNotionWithR2Url(pageId, publicUrl) {
       page_id: pageId,
       properties: {
         R2ImageUrl: {
-          type: "url",
+          type: 'url',
           url: publicUrl,
         },
       },
@@ -294,16 +288,11 @@ async function processEntry(entry) {
       console.log(`Entry ${entry.id} already has an image in R2: ${imageUrl}`);
 
       // Make sure the R2ImageUrl property is set to the R2 URL
-      if (
-        !entry.properties.R2ImageUrl?.url ||
-        entry.properties.R2ImageUrl.url !== imageUrl
-      ) {
+      if (!entry.properties.R2ImageUrl?.url || entry.properties.R2ImageUrl.url !== imageUrl) {
         await updateNotionWithR2Url(entry.id, imageUrl);
         console.log(`Updated R2ImageUrl property for entry ${entry.id}`);
       } else {
-        console.log(
-          `R2ImageUrl property already set correctly for entry ${entry.id}`
-        );
+        console.log(`R2ImageUrl property already set correctly for entry ${entry.id}`);
       }
 
       return;
@@ -342,10 +331,10 @@ async function processEntry(entry) {
  */
 async function main() {
   try {
-    console.log("Starting image upload to R2...");
+    console.log('Starting image upload to R2...');
 
-    if (args["dry-run"]) {
-      console.log("Running in DRY RUN mode - no actual updates will be made");
+    if (args['dry-run']) {
+      console.log('Running in DRY RUN mode - no actual updates will be made');
     }
 
     // Ensure temp directory exists
@@ -360,7 +349,7 @@ async function main() {
       await processEntry(entry);
     }
 
-    console.log("Process completed successfully");
+    console.log('Process completed successfully');
   } catch (error) {
     console.error(`Error in main process: ${error.message}`);
     process.exit(1);
@@ -369,9 +358,7 @@ async function main() {
     try {
       await fs.rm(TEMP_DIR, { recursive: true, force: true });
     } catch (error) {
-      console.warn(
-        `Warning: Failed to clean up temp directory: ${error.message}`
-      );
+      console.warn(`Warning: Failed to clean up temp directory: ${error.message}`);
     }
   }
 }
