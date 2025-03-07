@@ -122,7 +122,14 @@ export const EXTERNAL_URLS: ExternalUrls = {
 
   // Notion URLs
   NOTION: {
-    PAGE: (id: string) => `https://www.notion.so/${id.replace(/-/g, '')}`,
+    PAGE: (id: string) => {
+      // Extract just the UUID part from the ID
+      // Notion IDs typically look like "1ac7ef86a5ad8193a873c8536a197bf3"
+      // We need to extract just this ID part, ignoring any title or prefix
+      const idMatch = id.match(/([a-f0-9]{32})/i);
+      const cleanId = idMatch ? idMatch[1] : id.replace(/-/g, '');
+      return `https://www.notion.so/${cleanId}`;
+    },
   },
 
   // Placeholder images

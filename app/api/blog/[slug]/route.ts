@@ -1,6 +1,6 @@
 import { CACHE_SETTINGS, ERRORS, EXTERNAL_URLS } from '@/config';
 import { logger } from '@/lib/logger';
-import type { NotionDate, NotionPost, RichTextItemResponse } from '@/types/api/blog';
+import type { ExtendedNotionPost, FallbackPost, RichTextItemResponse } from '@/types/api/blog';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -11,10 +11,7 @@ import { NextResponse } from 'next/server';
 // Route segment config for Next.js caching
 export const revalidate = 3600; // Revalidate every hour
 
-/**
- * Helper function to safely extract plain text from Notion rich text
- * Handles both single RichTextItemResponse and arrays
- */
+// Helper function to extract plain text from Notion rich text
 function extractPlainText(
   richText: RichTextItemResponse[] | RichTextItemResponse | undefined
 ): string {
@@ -30,21 +27,6 @@ function extractPlainText(
 
   // Handle single item case
   return richText.plain_text || '';
-}
-
-// Define a type for the fallback post
-interface FallbackPost {
-  id: string;
-  title: string;
-  summary: string;
-  r2ImageUrl: string;
-  date: string;
-  minRead: string;
-  category: string;
-  tags: string[];
-  originalPageUrl: string;
-  blocks: unknown[];
-  content: string;
 }
 
 // Fallback post for when a post cannot be found
@@ -83,17 +65,6 @@ You're seeing this fallback content because:
 * Try again later
 `,
 });
-
-// Type for a post as it comes from the external data source
-interface ExtendedNotionPost extends NotionPost {
-  blocks?: unknown[];
-  properties: NotionPost['properties'] & {
-    R2ImageUrl?: { url: string; type: string };
-    Image?: { url: string; type: string };
-    'Mins Read'?: { number: number };
-    'Date Created'?: NotionDate;
-  };
-}
 
 /**
  * Creates an error response with consistent format
@@ -178,25 +149,24 @@ export async function GET(
         return createSuccessResponse({ post: getFallbackPost(slug) }, cacheControl);
       }
 
-      // Extract post data
-      const id = post.id;
-      const title = extractPlainText(post.properties.Title.title);
+      // Extract post data with type safety
+      const id = post.id || '';
 
-      // Extract image URL
-      const r2ImageUrl =
-        post.properties.R2ImageUrl && post.properties.R2ImageUrl.url
-          ? post.properties.R2ImageUrl.url
-          : post.properties.Image && post.properties.Image.url
-            ? post.properties.Image.url
-            : EXTERNAL_URLS.PLACEHOLDERS.BLOG_IMAGE;
+      // Safe access to title with fallback
+      const title = post.properties?.Title?.title
+        ? extractPlainText(post.properties.Title.title)
+        : 'Untitled Post';
 
-      // Extract date
+      // Safe access to image URL with fallback
+      const r2ImageUrl = post.properties?.R2ImageUrl?.url
+        ? post.properties.R2ImageUrl.url
+        : post.properties?.Image?.url
+          ? post.properties.Image.url
+          : EXTERNAL_URLS.PLACEHOLDERS.BLOG_IMAGE;
+
+      // Safe access to date
       let date = 'Unknown date';
-      if (
-        post.properties['Date Created'] &&
-        post.properties['Date Created'].date &&
-        post.properties['Date Created'].date.start
-      ) {
+      if (post.properties?.['Date Created']?.date?.start) {
         const postDate = new Date(post.properties['Date Created'].date.start);
         date = postDate.toLocaleDateString('en-US', {
           year: 'numeric',
@@ -205,39 +175,35 @@ export async function GET(
         });
       }
 
-      // Extract minutes read
-      const minRead =
-        post.properties['Mins Read'] && post.properties['Mins Read'].number
-          ? `${post.properties['Mins Read'].number} Min Read`
-          : '3 Min Read';
+      // Safe access to min read
+      const minRead = post.properties?.['Mins Read']?.number
+        ? `${post.properties['Mins Read'].number} Min Read`
+        : '3 Min Read';
 
-      // Extract summary
-      const summary =
-        post.properties.Summary && post.properties.Summary.rich_text
-          ? extractPlainText(post.properties.Summary.rich_text)
-          : post.properties.Excerpt && post.properties.Excerpt.rich_text
-            ? extractPlainText(post.properties.Excerpt.rich_text)
-            : 'No summary available';
+      // Safe access to summary
+      const summary = post.properties?.Summary?.rich_text
+        ? extractPlainText(post.properties.Summary.rich_text)
+        : post.properties?.Excerpt?.rich_text
+          ? extractPlainText(post.properties.Excerpt.rich_text)
+          : 'No summary available';
 
-      // Extract category
-      const category =
-        post.properties.Category &&
-        post.properties.Category.select &&
-        post.properties.Category.select.name
-          ? post.properties.Category.select.name
-          : 'Uncategorized';
+      // Safe access to category
+      const category = post.properties?.Category?.select?.name
+        ? post.properties.Category.select.name
+        : 'Uncategorized';
 
-      // Extract tags
-      const tags =
-        post.properties.Tags && post.properties.Tags.multi_select
-          ? post.properties.Tags.multi_select.map(tag => tag.name)
-          : [category];
+      // Safe access to tags
+      const tags = post.properties?.Tags?.multi_select
+        ? post.properties.Tags.multi_select.map((tag: { name: string }) => tag.name)
+        : [category];
 
       // Extract content blocks
       const blocks = post.blocks || [];
 
-      // Create a link to the original Notion page
-      const originalPageUrl = EXTERNAL_URLS.NOTION.PAGE(id);
+      // Get the original page URL from the "Original Page" property if available
+      const originalPageUrl = post.properties?.['Original Page']?.url
+        ? post.properties['Original Page'].url
+        : EXTERNAL_URLS.NOTION.PAGE(id);
 
       logger.info({ slug }, 'Post found, returning data');
 

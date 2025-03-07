@@ -19,6 +19,7 @@ interface BlogPost extends Partial<ProcessedBlogPost> {
   category: string;
   summary: string;
   content?: string;
+  originalPageUrl?: string;
 }
 
 // API response interface
@@ -78,10 +79,22 @@ export default function BlogPost(): React.ReactNode {
         // Check for new API response format (with success and data properties)
         if (isNewApiResponse(rawResult)) {
           setPost(rawResult.data.post);
+
+          // Redirect to original page if available
+          if (rawResult.data.post.originalPageUrl) {
+            window.location.href = rawResult.data.post.originalPageUrl;
+            return;
+          }
         }
         // Legacy format fallback
         else if (isLegacyResponse(rawResult)) {
           setPost(rawResult.post);
+
+          // Redirect to original page if available
+          if (rawResult.post.originalPageUrl) {
+            window.location.href = rawResult.post.originalPageUrl;
+            return;
+          }
         } else {
           throw new Error('Invalid response format');
         }
@@ -119,6 +132,36 @@ export default function BlogPost(): React.ReactNode {
     );
   }
 
+  // If we have an originalPageUrl but the redirect didn't happen in useEffect,
+  // provide a button to visit the original page
+  if (post.originalPageUrl) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center justify-center text-center"
+        >
+          <h1 className="text-2xl md:text-3xl font-bold mb-6">{post.title}</h1>
+          <p className="mb-8 text-gray-600 dark:text-gray-300">{post.summary}</p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button onClick={() => router.push('/#blogs')} variant="outline">
+              Back to Blogs
+            </Button>
+            <Button
+              onClick={() => window.open(post.originalPageUrl, '_blank')}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Visit Original Page
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Fallback to displaying the post content if no originalPageUrl is available
   return (
     <div className="container mx-auto px-4 py-16">
       <motion.div

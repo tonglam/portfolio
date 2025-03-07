@@ -2,21 +2,45 @@ import { CACHE_SETTINGS, EXTERNAL_URLS } from '@/config/constants';
 import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 
-// Types
-import type { CategoriesResponse, NotionPost } from '@/types/api/blog';
-import type { ApiError } from '@/types/api/common';
+// Type definitions for blog data
+interface CategorySelect {
+  name: string;
+  color?: string;
+}
+
+interface PostProperties {
+  Category?: {
+    select?: CategorySelect;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+interface BlogPost {
+  id: string;
+  properties?: PostProperties;
+  [key: string]: unknown;
+}
+
+// Types for API responses
+interface ApiError {
+  success: false;
+  error: string;
+}
+
+interface CategoriesResponse {
+  success: true;
+  data: {
+    categories: string[];
+  };
+}
+
+// Fallback categories if API fails
+const FALLBACK_CATEGORIES = ['All', 'AWS', 'Development', 'Technology'];
 
 /**
- * GET endpoint for blog categories
- * Retrieves and returns a list of unique blog categories
- * Uses shared blog service for optimized data fetching
+ * GET endpoint for retrieving all blog categories
  */
-// Route segment config for Next.js caching
-export const revalidate = 3600; // Revalidate every hour
-
-// Default fallback categories if API fails
-const FALLBACK_CATEGORIES = ['All', 'Development', 'Design', 'Technology', 'Career'];
-
 export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>> {
   try {
     logger.info('Fetching categories from data source');
@@ -25,19 +49,25 @@ export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>
     const cacheControl = CACHE_SETTINGS.BLOG.CONTROL;
 
     // Fetch data from R2 storage
-    const response = await fetch(EXTERNAL_URLS.BLOG_DATA_SOURCE, {
-      next: { revalidate: CACHE_SETTINGS.BLOG.REVALIDATE },
+    const response = await fetch(`${EXTERNAL_URLS.BLOG_DATA_SOURCE}?cache=${Date.now()}`, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+      },
     });
 
     if (!response.ok) {
       logger.error(`Failed to fetch blog data: ${response.status}`);
       // Fall back to default categories
-      logger.info({ categories: FALLBACK_CATEGORIES }, 'Using fallback categories');
+      logger.info('Using fallback categories');
 
       return NextResponse.json(
         {
           success: true,
-          data: { categories: FALLBACK_CATEGORIES },
+          data: {
+            categories: FALLBACK_CATEGORIES,
+          },
         },
         {
           headers: {
@@ -47,29 +77,60 @@ export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>
       );
     }
 
-    const allPosts = (await response.json()) as NotionPost[];
+    // Enhanced error handling with timeout
+    let allPosts: BlogPost[] = [];
+    try {
+      // Parse with a timeout to avoid blocking
+      const responseText = await response.text();
+      const parsedData = JSON.parse(responseText) as unknown;
 
-    // Debug: Log the first post structure if available
-    if (allPosts.length > 0) {
-      logger.debug(
-        { properties: Object.keys(allPosts[0].properties || {}) },
-        'First post sample properties'
+      // Validate the parsed data is an array
+      if (Array.isArray(parsedData)) {
+        allPosts = parsedData as BlogPost[];
+      } else {
+        throw new Error('Invalid data format: expected an array');
+      }
+
+      logger.debug('Successfully parsed blog data');
+    } catch (parseError) {
+      // Use error message in log
+      const errorMessage =
+        parseError instanceof Error ? parseError.message : 'Unknown parsing error';
+      logger.error(`Error parsing blog data: ${errorMessage}`);
+
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            categories: FALLBACK_CATEGORIES,
+          },
+        },
+        {
+          headers: {
+            'Cache-Control': cacheControl,
+          },
+        }
       );
     }
 
-    // Extract categories from Notion API format
-    const categories = allPosts.reduce<string[]>((acc, post) => {
-      if (
-        post.properties?.Category?.select?.name &&
-        typeof post.properties.Category.select.name === 'string'
-      ) {
-        const category = post.properties.Category.select.name;
-        if (!acc.includes(category)) {
-          acc.push(category);
+    // Extract categories from all blog posts - safer approach
+    const categories: string[] = [];
+
+    // Process posts in batches to avoid memory issues
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < allPosts.length; i += BATCH_SIZE) {
+      const batch = allPosts.slice(i, i + BATCH_SIZE);
+
+      batch.forEach((post: BlogPost) => {
+        // Use optional chaining to safely access properties
+        const categoryName = post?.properties?.Category?.select?.name;
+        if (typeof categoryName === 'string' && categoryName.trim() !== '') {
+          if (!categories.includes(categoryName)) {
+            categories.push(categoryName);
+          }
         }
-      }
-      return acc;
-    }, []);
+      });
+    }
 
     // Sort categories alphabetically
     categories.sort();
@@ -77,13 +138,15 @@ export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>
     // Add "All" as the first category
     const finalCategories = ['All', ...categories];
 
-    logger.info({ categories: finalCategories }, 'Extracted categories');
+    logger.info('Extracted categories: ' + finalCategories.join(', '));
 
     // Return the categories with appropriate cache headers
     return NextResponse.json(
       {
         success: true,
-        data: { categories: finalCategories },
+        data: {
+          categories: finalCategories,
+        },
       },
       {
         headers: {
@@ -92,18 +155,21 @@ export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>
       }
     );
   } catch (error) {
-    logger.error({ error }, 'Error fetching blog categories');
+    // Convert error to string safely
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error(`Error fetching blog categories: ${errorMessage}`);
 
     // Fall back to default categories in case of any error
-    logger.info({ categories: FALLBACK_CATEGORIES }, 'Using fallback categories due to error');
+    logger.info('Using fallback categories due to error');
 
     return NextResponse.json(
       {
         success: true,
-        data: { categories: FALLBACK_CATEGORIES },
+        data: {
+          categories: FALLBACK_CATEGORIES,
+        },
       },
       {
-        status: 200, // Still return 200 with fallback data
         headers: {
           'Cache-Control': CACHE_SETTINGS.BLOG.CONTROL,
         },

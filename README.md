@@ -142,3 +142,23 @@ If you encounter issues not covered in this documentation, please:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
+
+## SEO Features
+
+### Sitemap
+
+This project includes a dynamically generated sitemap at `/sitemap.xml` that includes:
+
+- All static pages
+- All blog posts with proper lastmod dates
+- Appropriate change frequencies and priorities for different content types
+
+To access the sitemap, visit `/sitemap.xml` in your browser.
+
+### Robots.txt
+
+A robots.txt file is included to guide search engine crawlers:
+
+- Allows crawling of most content
+- Restricts crawling of admin and API routes
+- References the sitemap location

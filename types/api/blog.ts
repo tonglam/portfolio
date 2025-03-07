@@ -1,54 +1,39 @@
-import type {
-  CheckboxPropertyItemObjectResponse,
-  DatePropertyItemObjectResponse,
-  FilesPropertyItemObjectResponse,
-  MultiSelectPropertyItemObjectResponse,
-  NumberPropertyItemObjectResponse,
-  RichTextItemResponse,
-  RichTextPropertyItemObjectResponse,
-  SelectPropertyItemObjectResponse,
-  TitlePropertyItemObjectResponse,
-  UrlPropertyItemObjectResponse,
-} from '@notionhq/client/build/src/api-endpoints';
-import type { ApiResponse, Pagination } from '../common';
-
 /**
- * Notion-specific types
+ * Type definitions for blog API responses and processed blog posts
  */
-// Re-export Notion API types
-export type { RichTextItemResponse };
+import type { ApiResponse, Pagination } from '../common';
+import type {
+  ExtendedNotionPost,
+  extractPlainText,
+  NotionBlock,
+  NotionDate,
+  NotionPost,
+  NotionText,
+  RichTextItem,
+} from './notion';
 
-// Base Notion types
-export type NotionText = RichTextItemResponse;
+// Re-export Notion API types for backward compatibility
+export { extractPlainText };
 
-export interface NotionTitle extends TitlePropertyItemObjectResponse {}
+export type { ExtendedNotionPost, NotionBlock, NotionDate, NotionPost, NotionText, RichTextItem };
 
-export interface NotionRichText extends RichTextPropertyItemObjectResponse {}
+// Legacy type aliases for backward compatibility
+export type RichTextItemResponse = RichTextItem;
 
-export interface NotionMultiSelect extends MultiSelectPropertyItemObjectResponse {}
+// API Request Types
+export interface BlogPostParams {
+  slug: string;
+}
 
-export interface NotionCheckbox extends CheckboxPropertyItemObjectResponse {}
+export interface BlogListParams {
+  page?: number;
+  limit?: number;
+  category?: string;
+}
 
-export interface NotionNumber extends NumberPropertyItemObjectResponse {}
-
-export interface NotionFile extends FilesPropertyItemObjectResponse {}
-
-export interface NotionUrl extends UrlPropertyItemObjectResponse {}
-
-export interface NotionSelect extends SelectPropertyItemObjectResponse {}
-
-export interface NotionDate extends DatePropertyItemObjectResponse {}
-
-export type NotionProperty =
-  | NotionTitle
-  | NotionRichText
-  | NotionMultiSelect
-  | NotionCheckbox
-  | NotionNumber
-  | NotionUrl
-  | NotionFile
-  | NotionSelect
-  | NotionDate;
+export interface BlogSearchParams extends BlogListParams {
+  q: string;
+}
 
 // Blog post types
 export interface BlogPost {
@@ -72,33 +57,8 @@ export interface BlogPost {
   updatedAt: string;
 }
 
-export interface NotionProperties {
-  Title: NotionTitle;
-  Slug: NotionRichText;
-  Summary: NotionRichText;
-  Category: NotionSelect;
-  Tags: NotionMultiSelect;
-  Published: NotionCheckbox;
-  Featured: NotionCheckbox;
-  ReadingTime: NotionRichText;
-  CoverImage: NotionUrl | NotionFile;
-  OriginalCoverImage: NotionUrl | NotionFile;
-  DateCreated: NotionDate;
-  Content: NotionRichText;
-  Excerpt: NotionRichText;
-  [key: string]: NotionProperty;
-}
-
-export interface NotionPost {
-  id: string;
-  properties: NotionProperties;
-  url: string;
-  created_time: string;
-  last_edited_time: string;
-}
-
 /**
- * Blog post types
+ * Processed Blog Post Types
  */
 export interface ProcessedBlogPost {
   id: string;
@@ -108,20 +68,41 @@ export interface ProcessedBlogPost {
   slug: string;
   category: string;
   tags: string[];
-  coverImage: string;
-  originalCoverImage: string;
+  coverImage?: string;
+  originalCoverImage?: string;
   dateCreated: string;
-  noteCreated: string;
-  noteEdited: string;
-  published: boolean;
-  featured: boolean;
-  notionUrl: string;
-  readingTime: string;
+  published?: boolean;
+  featured?: boolean;
+  notionUrl?: string;
+  readingTime?: string;
+  content?: string | NotionBlock[];
+
+  // Additional fields used in the UI
+  r2ImageUrl?: string;
+  date?: string;
+  minRead?: string;
+  originalPageUrl?: string;
+  noteCreated?: string;
+  noteEdited?: string;
+}
+
+// Fallback post for when a post cannot be found
+export interface FallbackPost {
+  id: string;
+  title: string;
+  summary: string;
+  r2ImageUrl: string;
+  date: string;
+  minRead: string;
+  category: string;
+  tags: string[];
+  originalPageUrl: string;
+  blocks: unknown[];
   content: string;
 }
 
 /**
- * API response types
+ * API Response Types
  */
 export interface BlogPostsResponse
   extends ApiResponse<{
@@ -132,7 +113,7 @@ export interface BlogPostsResponse
 export interface SearchResult {
   post: ProcessedBlogPost;
   score: number;
-  matches: string[];
+  matches?: string[];
 }
 
 export interface SearchResponse
@@ -152,32 +133,34 @@ export interface BlogPostResponse
     post: ProcessedBlogPost;
   }> {}
 
-/**
- * Helper functions
- */
-export function extractPlainText(
-  richText: RichTextItemResponse | RichTextItemResponse[] | undefined
-): string {
-  if (!richText) return '';
-
-  const textArray = Array.isArray(richText) ? richText : [richText];
-  return textArray.map(text => text.plain_text || '').join('');
+// API Response Types with simplified structure for direct use
+export interface BlogApiResponse {
+  posts: ProcessedBlogPost[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalPosts: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
 }
 
-export interface NotionBlock {
-  id: string;
-  type: 'paragraph' | 'heading_1' | 'heading_2' | 'heading_3';
-  has_children: boolean;
-  paragraph?: {
-    rich_text: NotionText[];
+export interface SearchApiResponse {
+  results: SearchResult[];
+  query: string;
+  pagination: {
+    page: number;
+    limit: number;
+    totalResults: number;
+    totalPages: number;
+    hasMore: boolean;
   };
-  heading_1?: {
-    rich_text: NotionText[];
-  };
-  heading_2?: {
-    rich_text: NotionText[];
-  };
-  heading_3?: {
-    rich_text: NotionText[];
-  };
+}
+
+export interface CategoriesApiResponse {
+  categories: string[];
+}
+
+export interface BlogPostApiResponse {
+  post: ProcessedBlogPost;
 }

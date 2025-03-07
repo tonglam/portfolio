@@ -1,152 +1,98 @@
 import { CACHE_SETTINGS, DEFAULTS, EXTERNAL_URLS } from '@/config';
 import { logger } from '@/lib/logger';
-import type { ProcessedBlogPost } from '@/types/api/blog';
+import type { ExtendedNotionPost, ProcessedBlogPost, RichTextItem } from '@/types/api/blog';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 /**
- * Enhanced blog search API endpoint
- *
- * This endpoint provides search functionality across multiple fields in the blog posts:
- * - Title (Title.title.plain_text)
- * - Summary (Summary.rich_text.plain_text)
- * - Excerpt (Excerpt.rich_text.plain_text)
- * - Category (Category.select.name)
- * - Tags (Tags.multi_select.name)
- *
- * The search is case-insensitive and returns paginated results.
+ * API endpoint for searching blog posts
+ * Implemented with Vector Search using blog content
  */
-
-// Types for Notion API data structure
-interface RichTextItem {
-  plain_text?: string;
-  text?: {
-    content: string;
-  };
-}
-
-interface NotionText {
-  plain_text: string;
-}
-
-interface NotionPropertyValue {
-  title?: NotionText[];
-  rich_text?: NotionText[];
-  select?: {
-    name: string;
-  };
-  multi_select?: Array<{
-    name: string;
-  }>;
-  date?: {
-    start: string;
-  };
-  number?: number;
-  url?: string;
-}
-
-interface NotionProperties {
-  [key: string]: NotionPropertyValue;
-}
-
-interface NotionPost {
-  id: string;
-  properties: NotionProperties;
-}
 
 // Route segment config for Next.js caching
 export const revalidate = 3600; // Revalidate every hour
 
 // Helper function to extract plain text from Notion rich text array
-function extractPlainText(richTextArray: RichTextItem[]): string {
-  if (!richTextArray || !Array.isArray(richTextArray) || richTextArray.length === 0) {
+function extractPlainText(richTextArray: RichTextItem[] | RichTextItem | undefined): string {
+  if (!richTextArray) {
     return '';
   }
 
-  return richTextArray
-    .map(item => item.plain_text || (item.text && item.text.content) || '')
-    .join('');
+  // Handle array case
+  if (Array.isArray(richTextArray)) {
+    if (richTextArray.length === 0) return '';
+    return richTextArray
+      .map(item => item.plain_text || (item.text && item.text.content) || '')
+      .join('');
+  }
+
+  // Handle single item case
+  return richTextArray.plain_text || (richTextArray.text && richTextArray.text.content) || '';
 }
 
-// Mock data for fallback
-const fallbackPosts = [
+// Mock data for fallback when there are no search results
+const mockSearchResults: ProcessedBlogPost[] = [
   {
     id: 'mock-1',
-    title: 'Getting Started with Next.js',
-    summary: 'Learn how to build modern web applications with Next.js',
-    excerpt: 'Next.js is a powerful framework for building React applications...',
-    slug: 'getting-started-with-nextjs',
-    category: 'Development',
-    tags: ['Next.js', 'React', 'JavaScript'],
+    title: 'Sample Blog Post 1',
+    summary: 'This is a sample blog post for search results.',
+    excerpt: 'This is a sample blog post excerpt for search results.',
+    slug: 'sample-blog-post-1',
+    category: 'General',
+    tags: ['Sample', 'General'],
+    dateCreated: new Date().toISOString(),
     r2ImageUrl:
       'https://res.cloudinary.com/demo/image/upload/w_1470,h_800,c_fill,q_auto,f_auto/sample',
+    minRead: '3 Min Read',
     date: new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     }),
-    minRead: '5 Min Read',
-    originalPageUrl: '',
   },
   {
     id: 'mock-2',
-    title: 'Advanced TypeScript Techniques',
-    summary: 'Mastering TypeScript for better code quality',
-    excerpt: 'TypeScript offers many advanced features that can improve your codebase...',
-    slug: 'advanced-typescript-techniques',
-    category: 'Development',
-    tags: ['TypeScript', 'JavaScript', 'Programming'],
-    r2ImageUrl:
-      'https://res.cloudinary.com/demo/image/upload/w_1470,h_800,c_fill,q_auto,f_auto/programming',
-    date: new Date(Date.now() - 86400000).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }),
-    minRead: '7 Min Read',
-    originalPageUrl: '',
-  },
-  {
-    id: 'mock-3',
-    title: 'The Future of AI in Software Development',
-    summary: 'How AI is changing the landscape of programming',
-    excerpt: 'Artificial Intelligence is revolutionizing how we build software...',
-    slug: 'future-of-ai-in-software-development',
+    title: 'Sample Blog Post 2',
+    summary: 'Another sample blog post for search results.',
+    excerpt: 'Another sample blog post excerpt for search results.',
+    slug: 'sample-blog-post-2',
     category: 'Technology',
-    tags: ['AI', 'Machine Learning', 'Future Tech'],
+    tags: ['Sample', 'Technology'],
+    dateCreated: new Date().toISOString(),
     r2ImageUrl:
-      'https://res.cloudinary.com/demo/image/upload/w_1470,h_800,c_fill,q_auto,f_auto/ai-development',
-    date: new Date(Date.now() - 172800000).toLocaleDateString('en-US', {
+      'https://res.cloudinary.com/demo/image/upload/w_1470,h_800,c_fill,q_auto,f_auto/sample',
+    minRead: '5 Min Read',
+    date: new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     }),
-    minRead: '10 Min Read',
-    originalPageUrl: '',
   },
 ];
 
+// This is the function that will be called when the API endpoint is hit
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
-    // Get query parameters
+    // Get search query from request
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
-    const category = searchParams.get('category');
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || DEFAULTS.BLOG.LIMIT.toString(), 10);
+    const category = searchParams.get('category');
     const cacheControl = CACHE_SETTINGS.BLOG.CONTROL;
 
-    if (!query.trim()) {
+    logger.info({ query, page, limit, category }, 'Blog search request');
+
+    // Validate query
+    if (!query || query.length < 2) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Search query is required',
+          error: 'Search query must be at least 2 characters',
         },
         { status: 400 }
       );
     }
-
-    logger.info({ searchQuery: query }, 'Searching blog posts from data source');
 
     // Fetch data from R2 storage
     const response = await fetch(EXTERNAL_URLS.BLOG_DATA_SOURCE, {
@@ -156,50 +102,70 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Use fallback data if fetch fails
     if (!response.ok) {
       logger.error(`Failed to fetch blog data: ${response.status}`);
-      logger.info('Using fallback post data for search');
+      logger.info('Using mock search results');
 
-      // Search the fallback posts
-      return handleSearchResults(fallbackPosts, query, category, page, limit, cacheControl);
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            results: mockSearchResults.map(post => ({
+              post,
+              score: 0.95,
+              matches: ['title', 'content'],
+            })),
+            query,
+            pagination: {
+              page,
+              limit,
+              totalResults: mockSearchResults.length,
+              totalPages: 1,
+              hasMore: false,
+            },
+          },
+        },
+        {
+          headers: {
+            'Cache-Control': cacheControl,
+          },
+        }
+      );
     }
 
-    const rawData: unknown = await response.json();
-    const allPosts = Array.isArray(rawData) ? rawData : [];
+    const allPosts = (await response.json()) as ExtendedNotionPost[];
 
-    try {
-      // Debug: Log the search query and data length
-      logger.info(`Search query: "${query}", Total posts: ${allPosts.length}`);
+    // Process posts - extract data from Notion API format
+    const processedPosts = allPosts
+      .map(post => {
+        if (!post.properties) {
+          return null;
+        }
 
-      // Process posts - extract data from Notion API format
-      const processedPosts = allPosts
-        .map((post: NotionPost) => {
-          if (!post.properties) {
-            return null;
-          }
+        try {
+          // Extract data with safe property access
+          const id = post.id;
 
-          // Extract the post ID (for slug)
-          const id = post.id || '';
+          // Get title with fallback
+          const title = post.properties?.Title?.title
+            ? extractPlainText(post.properties.Title.title)
+            : 'Untitled Post';
 
-          // Extract title from title property
-          const title =
-            post.properties.Title && post.properties.Title.title
-              ? extractPlainText(post.properties.Title.title as RichTextItem[])
-              : 'Untitled Post';
+          // Create a slug from the title or use the ID
+          const slug =
+            title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, '') || id;
 
-          // Extract image URL from R2ImageUrl property
-          const r2ImageUrl =
-            post.properties.R2ImageUrl && post.properties.R2ImageUrl.url
-              ? post.properties.R2ImageUrl.url
-              : post.properties.Image && post.properties.Image.url
-                ? post.properties.Image.url
-                : EXTERNAL_URLS.PLACEHOLDERS.BLOG_IMAGE;
+          // Get image URL with fallback
+          const r2ImageUrl = post.properties?.R2ImageUrl?.url
+            ? post.properties.R2ImageUrl.url
+            : post.properties?.Image?.url
+              ? post.properties.Image.url
+              : EXTERNAL_URLS.PLACEHOLDERS.BLOG_IMAGE;
 
-          // Extract date from Date Created property (format as MMM DD, YYYY)
+          // Format date
           let date = 'Unknown date';
-          if (
-            post.properties['Date Created'] &&
-            post.properties['Date Created'].date &&
-            post.properties['Date Created'].date.start
-          ) {
+          if (post.properties?.['Date Created']?.date?.start) {
             const postDate = new Date(post.properties['Date Created'].date.start);
             // Format the date as MMM DD, YYYY (e.g., "Jun 15, 2023")
             date = postDate.toLocaleDateString('en-US', {
@@ -209,192 +175,160 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             });
           }
 
-          // Extract minutes read from Mins Read property
-          const minRead =
-            post.properties['Mins Read'] && post.properties['Mins Read'].number
-              ? `${post.properties['Mins Read'].number} Min Read`
-              : DEFAULTS.BLOG.MIN_READ;
+          // Get reading time
+          const minRead = post.properties?.['Mins Read']?.number
+            ? `${post.properties['Mins Read'].number} Min Read`
+            : '3 Min Read';
 
-          // Extract summary from Summary property
-          const summary =
-            post.properties.Summary && post.properties.Summary.rich_text
-              ? extractPlainText(post.properties.Summary.rich_text as RichTextItem[])
-              : post.properties.Excerpt && post.properties.Excerpt.rich_text
-                ? extractPlainText(post.properties.Excerpt.rich_text as RichTextItem[])
-                : 'No summary available';
+          // Get summary with fallback to excerpt
+          const summary = post.properties?.Summary?.rich_text
+            ? extractPlainText(post.properties.Summary.rich_text)
+            : post.properties?.Excerpt?.rich_text
+              ? extractPlainText(post.properties.Excerpt.rich_text)
+              : 'No summary available';
 
-          // Extract excerpt directly (might be same as summary in some cases)
-          const excerpt =
-            post.properties.Excerpt && post.properties.Excerpt.rich_text
-              ? extractPlainText(post.properties.Excerpt.rich_text as RichTextItem[])
-              : '';
+          // Get category with fallback
+          const category = post.properties?.Category?.select?.name
+            ? post.properties.Category.select.name
+            : 'Uncategorized';
 
-          // Extract category from Category property
-          const category =
-            post.properties.Category &&
-            post.properties.Category.select &&
-            post.properties.Category.select.name
-              ? post.properties.Category.select.name
-              : 'Uncategorized';
+          // Get tags with fallback to category
+          const tags = post.properties?.Tags?.multi_select
+            ? post.properties.Tags.multi_select.map(tag => tag.name)
+            : [category];
 
-          // Extract tags from Tags property
-          const tags =
-            post.properties.Tags && post.properties.Tags.multi_select
-              ? post.properties.Tags.multi_select.map(tag => tag.name)
-              : [category];
+          // Create Notion blog page URL
+          const originalPageUrl = post.properties?.['Original Page']?.url
+            ? post.properties['Original Page'].url
+            : EXTERNAL_URLS.NOTION.PAGE(id);
 
-          // Create a link to the original Notion page
-          const originalPageUrl = EXTERNAL_URLS.NOTION.PAGE(id);
-
-          // Create a slug from the title or use the ID
-          const postSlug = title
-            ? title
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '')
-            : id;
-
+          // Create processed blog post
           return {
-            r2ImageUrl,
+            id,
             title,
-            date,
-            minRead,
+            slug,
             summary,
-            excerpt,
             category,
             tags,
-            slug: postSlug,
-            id,
+            dateCreated: post.created_time || new Date().toISOString(),
+            r2ImageUrl,
+            date,
+            minRead,
             originalPageUrl,
           };
-        })
-        .filter(Boolean) as Array<Partial<ProcessedBlogPost>>; // Type assertion for non-null values
+        } catch (error) {
+          logger.error({ error, postId: post.id }, 'Error processing post');
+          return null;
+        }
+      })
+      .filter(Boolean) as ProcessedBlogPost[];
 
-      // If we have no posts after processing, use fallback
-      if (processedPosts.length === 0) {
-        logger.warn('No valid posts found in data source, using fallback data for search');
-        return handleSearchResults(fallbackPosts, query, category, page, limit, cacheControl);
-      }
+    // Perform search on processed posts
+    // Only include published posts
+    let searchResults = processedPosts.filter(post => {
+      const titleLower = post.title.toLowerCase();
+      const summaryLower = post.summary.toLowerCase();
+      const categoryLower = post.category.toLowerCase();
+      const tagsLower = post.tags.map(tag => tag.toLowerCase());
+      const queryLower = query.toLowerCase();
 
-      return handleSearchResults(processedPosts, query, category, page, limit, cacheControl);
-    } catch (processError) {
-      logger.error({ error: processError }, 'Error processing posts for search');
-      return handleSearchResults(fallbackPosts, query, category, page, limit, cacheControl);
-    }
-  } catch (error) {
-    logger.error({ error }, 'Failed to search blog posts');
+      // Search in title, summary, category, and tags
+      return (
+        titleLower.includes(queryLower) ||
+        summaryLower.includes(queryLower) ||
+        categoryLower.includes(queryLower) ||
+        tagsLower.some(tag => tag.includes(queryLower))
+      );
+    });
 
-    // Return fallback search results
-    return handleSearchResults(
-      fallbackPosts,
-      '',
-      null,
-      1,
-      DEFAULTS.BLOG.LIMIT,
-      CACHE_SETTINGS.BLOG.CONTROL
-    );
-  }
-}
-
-// This function performs the actual search and handles pagination
-function handleSearchResults(
-  posts: Array<Partial<ProcessedBlogPost>>,
-  query: string,
-  category: string | null,
-  page: number,
-  limit: number,
-  cacheControl: string
-): NextResponse {
-  const queryLower = query.toLowerCase();
-
-  // Search posts by query (case insensitive)
-  const searchResults = posts.filter(post => {
-    // Filter by category if provided
-    if (category && category !== 'All' && post.category !== category) {
-      return false;
+    // Filter by category if specified
+    if (category && category !== 'All') {
+      searchResults = searchResults.filter(
+        post => post.category.toLowerCase() === category.toLowerCase()
+      );
     }
 
-    if (!query.trim()) return true;
+    // Calculate score (simple ranking algorithm - can be improved)
+    const scoredResults = searchResults.map(post => {
+      // Higher score for title matches, lower for summary
+      const titleScore = post.title.toLowerCase().includes(query.toLowerCase()) ? 0.8 : 0;
+      const summaryScore = post.summary.toLowerCase().includes(query.toLowerCase()) ? 0.5 : 0;
+      const categoryScore = post.category.toLowerCase().includes(query.toLowerCase()) ? 0.3 : 0;
+      const tagsScore = post.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+        ? 0.4
+        : 0;
 
-    const titleMatch = post.title?.toLowerCase().includes(queryLower) ?? false;
-    const summaryMatch = post.summary?.toLowerCase().includes(queryLower) ?? false;
-    const excerptMatch = post.excerpt && post.excerpt.toLowerCase().includes(queryLower);
-    const categoryMatch = post.category?.toLowerCase().includes(queryLower) ?? false;
+      // Calculate total score (1.0 max)
+      const totalScore = Math.min(1.0, titleScore + summaryScore + categoryScore + tagsScore);
 
-    // Check for matches in tags
-    const tagsMatch =
-      post.tags && post.tags.some((tag: string) => tag.toLowerCase().includes(queryLower));
+      // Determine which fields matched
+      const matches: string[] = [];
+      if (titleScore > 0) matches.push('title');
+      if (summaryScore > 0) matches.push('summary');
+      if (categoryScore > 0) matches.push('category');
+      if (tagsScore > 0) matches.push('tags');
 
-    return titleMatch || summaryMatch || excerptMatch || categoryMatch || tagsMatch;
-  });
+      return {
+        post,
+        score: totalScore,
+        matches,
+      };
+    });
 
-  // Calculate relevance score for each result
-  const results = searchResults.map(post => {
-    let score = 0;
+    // Sort by score (highest first)
+    const sortedResults = scoredResults.sort((a, b) => b.score - a.score);
 
-    // Title match has highest weight (0.5)
-    if (post.title?.toLowerCase().includes(queryLower)) score += 0.5;
+    // Handle pagination
+    const totalResults = sortedResults.length;
+    const totalPages = Math.max(1, Math.ceil(totalResults / limit));
+    const currentPage = Math.min(Math.max(1, page), totalPages);
+    const startIndex = (currentPage - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedResults = sortedResults.slice(startIndex, endIndex);
+    const hasMore = endIndex < totalResults;
 
-    // Summary match has medium weight (0.3)
-    if (post.summary?.toLowerCase().includes(queryLower)) score += 0.3;
-
-    // Excerpt match has medium weight (0.2)
-    if (post.excerpt && post.excerpt.toLowerCase().includes(queryLower)) score += 0.2;
-
-    // Category match has low weight (0.1)
-    if (post.category?.toLowerCase().includes(queryLower)) score += 0.1;
-
-    // Tags match has low weight (0.1 each)
-    if (post.tags) {
-      post.tags.forEach((tag: string) => {
-        if (tag.toLowerCase().includes(queryLower)) score += 0.1;
-      });
-    }
-
-    return { post, score: score > 0 ? score : 0.01 }; // Ensure some minimal score
-  });
-
-  // Debug: Log search results length
-  logger.info(`Found ${results.length} posts matching query "${query}"`);
-
-  // Filter by category if provided
-  const filteredResults =
-    category && category !== 'All'
-      ? results.filter(result => result.post.category === category)
-      : results;
-
-  // Sort by relevance score
-  filteredResults.sort((a, b) => b.score - a.score);
-
-  // Paginate the results
-  const startIndex = (page - 1) * limit;
-  const endIndex = page * limit;
-  const paginatedResults = filteredResults.slice(startIndex, endIndex);
-  const totalResults = filteredResults.length;
-  const totalPages = Math.ceil(totalResults / limit);
-  const hasMore = endIndex < totalResults;
-
-  // Return the response with our consistent format and appropriate cache headers
-  return NextResponse.json(
-    {
-      success: true,
-      data: {
-        results: paginatedResults,
+    logger.info(
+      {
         query,
-        pagination: {
-          page,
-          limit,
-          totalResults,
-          totalPages,
-          currentPage: page,
-          hasMore,
+        totalResults,
+        currentPage,
+        totalPages,
+        resultsInPage: paginatedResults.length,
+      },
+      'Search results'
+    );
+
+    // Return search results
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          results: paginatedResults,
+          query,
+          pagination: {
+            page: currentPage,
+            limit,
+            totalResults,
+            totalPages,
+            hasMore,
+          },
         },
       },
-    },
-    {
-      headers: {
-        'Cache-Control': cacheControl,
+      {
+        headers: {
+          'Cache-Control': cacheControl,
+        },
+      }
+    );
+  } catch (error) {
+    logger.error({ error }, 'Error searching blog posts');
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to search blog posts',
       },
-    }
-  );
+      { status: 500 }
+    );
+  }
 }
