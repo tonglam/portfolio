@@ -1,6 +1,6 @@
 import { CACHE_SETTINGS, DEFAULTS, EXTERNAL_URLS } from '@/config';
 import { logger } from '@/lib/logger';
-import type { ProcessedBlogPost } from '@/types/api/blog';
+import type { NotionPost, ProcessedBlogPost, RichTextItem } from '@/types/api/blog';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -19,56 +19,8 @@ import { NextResponse } from 'next/server';
  * This data structure supports the enhanced search functionality.
  */
 
-// Types for Notion API data structure
-interface RichTextItem {
-  plain_text?: string;
-  text?: {
-    content: string;
-  };
-}
-
-interface NotionText {
-  plain_text: string;
-}
-
-interface NotionPropertyValue {
-  title?: NotionText[];
-  rich_text?: NotionText[];
-  select?: {
-    name: string;
-  };
-  multi_select?: Array<{
-    name: string;
-  }>;
-  date?: {
-    start: string;
-  };
-  number?: number;
-  url?: string;
-}
-
-interface NotionProperties {
-  [key: string]: NotionPropertyValue;
-}
-
-interface NotionPost {
-  id: string;
-  properties: NotionProperties;
-}
-
 // Route segment config for Next.js caching
 export const revalidate = 3600; // Revalidate every hour
-
-// Helper function to extract plain text from Notion rich text array
-function extractPlainText(richTextArray: RichTextItem[]): string {
-  if (!richTextArray || !Array.isArray(richTextArray) || richTextArray.length === 0) {
-    return '';
-  }
-
-  return richTextArray
-    .map(item => item.plain_text || (item.text && item.text.content) || '')
-    .join('');
-}
 
 // Mock data for fallback
 const fallbackPosts = [
@@ -127,6 +79,24 @@ const fallbackPosts = [
     originalPageUrl: '',
   },
 ];
+
+// Local implementation of extractPlainText
+function extractPlainText(richTextArray: RichTextItem[] | RichTextItem | undefined): string {
+  if (!richTextArray) {
+    return '';
+  }
+
+  // Handle array case
+  if (Array.isArray(richTextArray)) {
+    if (richTextArray.length === 0) return '';
+    return richTextArray
+      .map(item => item.plain_text || (item.text && item.text.content) || '')
+      .join('');
+  }
+
+  // Handle single item case
+  return richTextArray.plain_text || (richTextArray.text && richTextArray.text.content) || '';
+}
 
 // This is the function that will be called when the API endpoint is hit
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -248,8 +218,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                 .replace(/(^-|-$)/g, '')
             : id;
 
-          // Create a link to the original Notion page
-          const originalPageUrl = EXTERNAL_URLS.NOTION.PAGE(id);
+          // Get original page URL from the "Original Page" property if available
+          const originalPageUrl =
+            post.properties['Original Page'] && post.properties['Original Page'].url
+              ? post.properties['Original Page'].url
+              : EXTERNAL_URLS.NOTION.PAGE(id);
 
           return {
             r2ImageUrl,

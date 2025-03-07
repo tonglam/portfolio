@@ -1,0 +1,10 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin paths
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://qitonglan.com/sitemap.xml 
