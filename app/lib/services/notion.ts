@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger';
-import type { NotionBlock, NotionPost, NotionProperties } from '@/types/api/blog';
+import type { NotionBlock, NotionPost } from '@/types/api/blog';
+import type { NotionProperties } from '@/types/api/notion';
 import { Client } from '@notionhq/client';
 import type {
   BlockObjectResponse,
@@ -120,18 +121,50 @@ export async function extractBlockContent(blocks: NotionBlock[], maxDepth = 3): 
       return richText.map(text => text.plain_text || '').join('');
     };
 
+    // Type guard for paragraph block
+    const isParagraphBlock = (
+      b: NotionBlock
+    ): b is NotionBlock & { paragraph: { rich_text: RichTextItemResponse[] } } =>
+      b.type === 'paragraph' && typeof b.paragraph === 'object' && b.paragraph !== null;
+
+    // Type guard for heading_1 block
+    const isHeading1Block = (
+      b: NotionBlock
+    ): b is NotionBlock & { heading_1: { rich_text: RichTextItemResponse[] } } =>
+      b.type === 'heading_1' && typeof b.heading_1 === 'object' && b.heading_1 !== null;
+
+    // Type guard for heading_2 block
+    const isHeading2Block = (
+      b: NotionBlock
+    ): b is NotionBlock & { heading_2: { rich_text: RichTextItemResponse[] } } =>
+      b.type === 'heading_2' && typeof b.heading_2 === 'object' && b.heading_2 !== null;
+
+    // Type guard for heading_3 block
+    const isHeading3Block = (
+      b: NotionBlock
+    ): b is NotionBlock & { heading_3: { rich_text: RichTextItemResponse[] } } =>
+      b.type === 'heading_3' && typeof b.heading_3 === 'object' && b.heading_3 !== null;
+
     switch (block.type) {
       case 'paragraph':
-        content += extractRichText(block.paragraph?.rich_text) + '\n\n';
+        if (isParagraphBlock(block) && block.paragraph.rich_text) {
+          content += extractRichText(block.paragraph.rich_text) + '\n\n';
+        }
         break;
       case 'heading_1':
-        content += '# ' + extractRichText(block.heading_1?.rich_text) + '\n\n';
+        if (isHeading1Block(block) && block.heading_1.rich_text) {
+          content += '# ' + extractRichText(block.heading_1.rich_text) + '\n\n';
+        }
         break;
       case 'heading_2':
-        content += '## ' + extractRichText(block.heading_2?.rich_text) + '\n\n';
+        if (isHeading2Block(block) && block.heading_2.rich_text) {
+          content += '## ' + extractRichText(block.heading_2.rich_text) + '\n\n';
+        }
         break;
       case 'heading_3':
-        content += '### ' + extractRichText(block.heading_3?.rich_text) + '\n\n';
+        if (isHeading3Block(block) && block.heading_3.rich_text) {
+          content += '### ' + extractRichText(block.heading_3.rich_text) + '\n\n';
+        }
         break;
     }
 

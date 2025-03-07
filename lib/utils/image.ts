@@ -1,4 +1,4 @@
-import type { NotionProperty } from '@/types/api/blog';
+import type { NotionPropertyValue } from '@/types/api/notion';
 import type {
   FilesPropertyItemObjectResponse,
   UrlPropertyItemObjectResponse,
@@ -7,7 +7,7 @@ import type {
 /**
  * Gets the image URL from Notion properties
  */
-export function getNotionImageUrl(properties: Record<string, NotionProperty>): string | null {
+export function getNotionImageUrl(properties: Record<string, NotionPropertyValue>): string | null {
   if (!properties.Image) {
     return null;
   }
