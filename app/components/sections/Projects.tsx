@@ -9,7 +9,7 @@ import { useState } from 'react';
 
 export default function Projects(): JSX.Element {
   const [activeCategory, setActiveCategory] = useState('All');
-  const [visibleProjects, setVisibleProjects] = useState(3);
+  const [visibleProjects, setVisibleProjects] = useState(6);
   const [isLoading, setIsLoading] = useState(false);
 
   // Extract unique categories from projects
@@ -91,12 +91,12 @@ export default function Projects(): JSX.Element {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center md:text-left"
+          className="text-center"
         >
           <h2 className="text-2xl md:text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#2563EB] to-[#4F46E5] dark:from-[#38BDF8] dark:to-[#818CF8]">
             PROJECTS
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto md:mx-0 text-sm md:text-base">
+          <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto text-sm md:text-base">
             Explore my portfolio of projects showcasing my skills in web development, from
             responsive front-end designs to complex back-end systems.
           </p>
@@ -127,7 +127,7 @@ export default function Projects(): JSX.Element {
                   }`}
                   onClick={() => {
                     setActiveCategory(category);
-                    setVisibleProjects(3);
+                    setVisibleProjects(6);
                   }}
                 >
                   {category}

@@ -6,20 +6,11 @@
 export interface AboutData {
   title: string;
   content: string;
-  image: string;
-  imageAlt: string;
 }
 
 export const aboutData: AboutData = {
-  title: 'WHO I AM?',
-  content: `My name is Qitong Lan. I am a professional and enthusiastic programmer in my daily life. 
-  I am a quick learner with a self-learning attitude. I love to learn and explore new 
-  technologies and am passionate about problem-solving. I love almost all the stacks of 
-  web application development and love to make the web more open to the world. My core 
-  skill is based on JavaScript and I love to do most of the things using JavaScript. I am 
-  available for any kind of job opportunity that suits my skills and interests.`,
-  image: '/moonlight-coding.jpg',
-  imageAlt: 'About Me',
+  title: 'Who am I',
+  content: `I'm Qitong Lan (Tong), a professional Full-Stack Engineer with 9+ years of experience at leading tech firms in China like <a href="https://www.ctyun.cn/" target="_blank" rel="noopener noreferrer">eSurfing Cloud</a>, <a href="https://www.netease.com/" target="_blank" rel="noopener noreferrer">NetEase</a>, and <a href="https://www.chinatelecom-h.com/" target="_blank" rel="noopener noreferrer">China Telecom</a>. I architect and deliver complete cloud-native solutions that power mission-critical systems processing millions of daily transactions. My expertise spans the entire development lifecycle - from designing scalable cloud infrastructures and optimizing DevOps pipelines to crafting modern frontend interfaces and high-performance backend services. Passionate about the AI revolution in software development, I leverage cutting-edge technologies to build intelligent, adaptive systems while maintaining enterprise-grade reliability. I specialize in transforming complex business requirements into scalable technical solutions that drive measurable impact across various domains.`,
 };
 
 export default aboutData;

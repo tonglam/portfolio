@@ -9,31 +9,22 @@ export function highlightCodeSyntax(line: string): string {
   // Keywords
   line = line.replace(
     /\b(const|function|return|this)\b/g,
-    '<span class="text-[#ff79c6] dark:text-[#ff79c6]">$1</span>'
+    '<span class="text-[#ff79c6]">$1</span>'
   );
 
   // Values
-  line = line.replace(
-    /\b(true|false)\b/g,
-    '<span class="text-[#bd93f9] dark:text-[#bd93f9]">$1</span>'
-  );
+  line = line.replace(/\b(true|false)\b/g, '<span class="text-[#bd93f9]">$1</span>');
 
   // Strings
-  line = line.replace(
-    /'([^']*)'/g,
-    '<span class="text-[#f1fa8c] dark:text-[#f1fa8c]">\'$1\'</span>'
-  );
+  line = line.replace(/'([^']*)'/g, '<span class="text-[#f1fa8c]">\'$1\'</span>');
 
   // Operators
-  line = line.replace(
-    /(&amp;&amp;|>=)/g,
-    '<span class="text-[#ff79c6] dark:text-[#ff79c6]">$1</span>'
-  );
+  line = line.replace(/(&amp;&amp;|>=)/g, '<span class="text-[#ff79c6]">$1</span>');
 
   // Properties
   line = line.replace(
     /\b(name|skills|hardWorker|quickLearner|problemSolver|hireable|length)\b(?!['"])/g,
-    '<span class="text-[#8be9fd] dark:text-[#8be9fd]">$1</span>'
+    '<span class="text-[#8be9fd]">$1</span>'
   );
 
   return line;
