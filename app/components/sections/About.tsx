@@ -1,6 +1,6 @@
 'use client';
 
-import { aboutData } from '@/data/about';
+import { aboutData } from '@/app/data/about.data';
 import { motion } from 'framer-motion';
 
 export default function About(): JSX.Element {

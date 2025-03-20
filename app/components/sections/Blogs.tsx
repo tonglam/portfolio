@@ -7,70 +7,18 @@ import { fixDarkAnimation } from '@/components/ui/theme-fix';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { UI } from '@/config/constants';
 import { useDebounce } from '@/hooks/use-debounce';
+import type {
+  BlogPost,
+  LocalBlogApiResponse,
+  LocalCategoriesApiResponse,
+  LocalSearchApiResponse,
+} from '@/types/data/blog.type';
 import type { HTMLMotionProps } from 'framer-motion';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
 import type { ChangeEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
-
-// Blog post interface
-interface BlogPost {
-  id?: string;
-  slug: string;
-  title: string;
-  summary: string;
-  date: string;
-  minRead: string | number;
-  r2ImageUrl: string;
-  originalPageUrl: string;
-  category?: string;
-  tags?: string[];
-}
-
-// Local search result interface
-interface LocalSearchResult {
-  post: BlogPost;
-  score: number;
-  matches?: string[];
-}
-
-// API response types - using properly named interfaces
-interface LocalBlogApiResponse {
-  success: boolean;
-  data: {
-    posts: BlogPost[];
-    pagination: {
-      page: number;
-      limit: number;
-      totalPosts: number;
-      totalPages: number;
-      hasMore: boolean;
-    };
-  };
-}
-
-interface LocalCategoriesApiResponse {
-  success: boolean;
-  data: {
-    categories: string[];
-  };
-}
-
-// Search API response
-interface LocalSearchApiResponse {
-  success: boolean;
-  data: {
-    results: LocalSearchResult[];
-    pagination: {
-      page: number;
-      limit: number;
-      totalPosts: number;
-      totalPages: number;
-      hasMore: boolean;
-    };
-  };
-}
 
 // Create fixed motion components
 const MotionH2 = (props: HTMLMotionProps<'h2'>): JSX.Element => (
@@ -95,7 +43,7 @@ export default function Blogs(): JSX.Element {
   const [_isCategoryLoading, _setIsCategoryLoading] = useState<boolean>(false);
   const [_isSearching, setIsSearching] = useState<boolean>(false);
   const [_error, setError] = useState<string | null>(null);
-  const debouncedSearchQuery = useDebounce(searchQuery, UI.ANIMATION_TIMING.DEBOUNCE_MS);
+  const debouncedSearchQuery = useDebounce(searchQuery, { delay: UI.ANIMATION_TIMING.DEBOUNCE_MS });
   const postsPerPage = UI.PAGINATION.DEFAULT_POSTS_PER_PAGE;
 
   // Type guard functions

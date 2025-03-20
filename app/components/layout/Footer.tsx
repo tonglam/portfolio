@@ -1,14 +1,14 @@
 'use client';
 
+import { contactData } from '@/app/data/contact.data';
+import { navigationItems as navigationLinks } from '@/app/data/navigation.data';
+import socialProfiles from '@/app/data/socialLinks.data';
 import { EmailIcon, GithubIcon, LinkedinIcon, LocationIcon, XIcon } from '@/components/icons';
-import { contactData } from '@/data/contact';
-import { navigationItems as navigationLinks } from '@/data/navigation';
-import socialProfiles from '@/data/socialLinks';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 // Map of icon components for easy reference - consistent with other components
-const socialIcons: Record<string, React.FC<{ size?: number; className?: string }>> = {
+const socialIcons: Record<string, React.FC<{ size?: string | number; className?: string }>> = {
   GithubIcon,
   LinkedinIcon,
   XIcon,

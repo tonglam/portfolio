@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 
+import { navigationItems as navigationLinks } from '@/app/data/navigation.data';
 import { CloseIcon, MenuIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { navigationItems as navigationLinks } from '@/data/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 

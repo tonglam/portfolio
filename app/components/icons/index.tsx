@@ -309,9 +309,16 @@ export const ExternalLinkIcon = ({ size = 24, ...props }: LucideProps): JSX.Elem
   </svg>
 );
 
-/**
- * Generic icon component factory
- */
+// Re-export all icons
+export * from './ai-tools';
+export * from './contact';
+export * from './external-link';
+export * from './social';
+export * from './tech';
+export type { IconProps } from './types';
+export * from './ui';
+
+// Export utility functions
 export const createIconComponent = (Icon: React.ElementType): React.FC<IconProps> => {
   const IconComponent: React.FC<IconProps> = ({ size = 24, className }) => (
     <Icon size={size} className={className} />

@@ -1,20 +1,14 @@
-import { EXTERNAL_URLS } from '@/config';
-import { logger } from '@/lib/logger';
-import type { ExtendedNotionPost } from '@/types/api/blog';
+import { CACHE_SETTINGS, EXTERNAL_URLS } from '@/config';
+import { logger } from '@/lib/core/logger.util';
+import type { ExtendedNotionPost } from '@/types/api/blog.type';
+import type { RichTextItem } from '@/types/api/notion.type';
+import { SitemapError } from '@/types/config/errors.type';
 import type { MetadataRoute } from 'next';
-
-// Define an interface for Notion text items
-interface NotionTextItem {
-  plain_text?: string;
-  text?: {
-    content: string;
-  };
-}
 
 /**
  * Helper function to extract plain text from Notion rich text
  */
-function extractPlainText(richText: NotionTextItem[] | NotionTextItem | undefined): string {
+function extractPlainText(richText: RichTextItem[] | RichTextItem | undefined): string {
   if (!richText) {
     return '';
   }
@@ -31,7 +25,6 @@ function extractPlainText(richText: NotionTextItem[] | NotionTextItem | undefine
 
 /**
  * Generates a dynamic sitemap for the website including all blog posts
- * @see https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Base URL of the website
@@ -54,51 +47,56 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Add any other static routes here
   ];
 
-  // Fetch blog posts from the R2 storage
+  // Fetch blog posts from the R2 storage with caching
   try {
     const response = await fetch(EXTERNAL_URLS.BLOG_DATA_SOURCE, {
-      next: { revalidate: 3600 },
+      next: {
+        revalidate: CACHE_SETTINGS.BLOG.REVALIDATE,
+        tags: ['blog-posts'],
+      },
+      headers: {
+        'Cache-Control': CACHE_SETTINGS.BLOG.CONTROL,
+      },
     });
 
-    if (response.ok) {
-      const allPosts = (await response.json()) as ExtendedNotionPost[];
-
-      // Create sitemap entries for blog posts
-      const blogPosts = allPosts
-        .filter(post => post.properties && post.properties.Title)
-        .map(post => {
-          const title = post.properties?.Title?.title
-            ? extractPlainText(post.properties.Title.title)
-            : '';
-
-          // Create slug from title
-          const slug = title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)/g, '');
-
-          const lastModified = post.last_edited_time ? new Date(post.last_edited_time) : new Date();
-
-          return {
-            url: `${baseUrl}/blog/${slug}`,
-            lastModified,
-            changeFrequency: 'monthly' as const,
-            priority: 0.7,
-          };
-        });
-
-      // Return combined static routes and blog posts
-      return [...staticRoutes, ...blogPosts];
+    if (!response.ok) {
+      throw new SitemapError(`Failed to fetch blog posts: ${response.statusText}`, response.status);
     }
 
-    // Return static routes if response is not OK
-    logger.warn(
-      'Failed to fetch blog posts for sitemap, using static routes only',
-      'Sitemap Generation'
-    );
-    return staticRoutes;
-  } catch (err: unknown) {
-    logger.error(err, 'Sitemap Generation');
+    const allPosts = (await response.json()) as ExtendedNotionPost[];
+
+    // Create sitemap entries for blog posts
+    const blogPosts = allPosts
+      .filter(post => post.properties?.Title && post.properties?.Published?.checkbox !== false)
+      .map(post => {
+        const title = post.properties?.Title?.title
+          ? extractPlainText(post.properties.Title.title)
+          : '';
+
+        // Create slug from title
+        const slug = title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+
+        const lastModified = post.last_edited_time ? new Date(post.last_edited_time) : new Date();
+
+        return {
+          url: `${baseUrl}/blog/${slug}`,
+          lastModified,
+          changeFrequency: 'monthly' as const,
+          priority: 0.7,
+        };
+      });
+
+    // Return combined static routes and blog posts
+    return [...staticRoutes, ...blogPosts];
+  } catch (error) {
+    const errorMessage =
+      error instanceof SitemapError ? error.message : 'Failed to generate sitemap';
+
+    logger.error({ error, message: errorMessage }, 'Sitemap Generation Error');
+
     // Fallback to static routes only if blog post fetching fails
     return staticRoutes;
   }

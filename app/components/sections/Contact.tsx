@@ -1,9 +1,9 @@
 'use client';
 
 import { sendEmail } from '@/app/actions/email';
+import { contactData } from '@/app/data/contact.data';
 import { EmailIcon, GithubIcon, LinkedinIcon, LocationIcon, XIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { contactData } from '@/data/contact';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import type { LucideProps } from 'lucide-react';
@@ -93,7 +93,7 @@ export default function Contact(): JSX.Element {
       const result = await sendEmail(contactData);
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to send email');
+        throw new Error(result.error.message || 'Failed to send email');
       }
 
       // Show success message

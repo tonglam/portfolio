@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckIcon } from '@/components/icons';
-import type { CompanyDetail } from '@/data/experience';
+import type { CompanyDetail } from '@/types/data/data.type';
 import Image from 'next/image';
 import Link from 'next/link';
 

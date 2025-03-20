@@ -1,6 +1,7 @@
 'use client';
 
-import { flattenedSkillsData, type Skill, skillsData } from '@/data/skills';
+import { flattenedSkillsData, skillsData } from '@/app/data/skills.data';
+import type { Skill } from '@/types/data/data.type';
 import { motion, useAnimation, useInView } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 
@@ -116,20 +117,23 @@ function SkillCategory({
       <h3 className="text-lg md:text-xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#2563EB] to-[#4F46E5] dark:from-[#38BDF8] dark:to-[#818CF8]">
         {title}
       </h3>
-      <ul className="space-y-2">
-        {skills.map((skill, index) => (
-          <motion.li
-            key={index}
-            className="flex items-center gap-2"
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3, delay: delay + index * 0.1 }}
-          >
-            <span className="w-2 h-2 bg-gradient-to-r from-[#3B82F6] to-[#6366F1] dark:from-[#F472B6] dark:to-[#EC4899] rounded-full"></span>
-            <span className="text-gray-700 dark:text-gray-300">{skill.name}</span>
-          </motion.li>
-        ))}
+      <ul className="space-y-3">
+        {skills.map((skill, index) => {
+          const IconComponent = skill.icon;
+          return (
+            <motion.li
+              key={index}
+              className="flex items-center gap-3"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.3, delay: delay + index * 0.1 }}
+            >
+              <IconComponent size={20} className={skill.color} />
+              <span className="text-gray-700 dark:text-gray-300">{skill.name}</span>
+            </motion.li>
+          );
+        })}
       </ul>
     </motion.div>
   );

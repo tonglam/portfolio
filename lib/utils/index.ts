@@ -3,11 +3,12 @@
  */
 
 // Export all utilities
-export * from './constants';
-export * from './date';
-export * from './format';
-export * from './image';
-export * from './memoize';
-export * from './string';
-export * from './type-guards';
-export * from './validation';
+export * from './constants.util';
+export * from './date.util';
+export * from './format.util';
+export * from './image.util';
+export * from './memoize.util';
+export * from './string.util';
+export * from './tailwind.util';
+export * from './type-guards.util';
+export * from './validation.util';

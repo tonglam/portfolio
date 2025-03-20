@@ -2,7 +2,8 @@
 
 import { ExternalLinkIcon, GithubIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { ProjectCategory, projectsData } from '@/data/projects';
+import { projectsData } from '@/app/data/projects.data';
+import { ProjectCategory } from '@/types/data/data.type';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useState } from 'react';

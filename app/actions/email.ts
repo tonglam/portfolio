@@ -1,29 +1,44 @@
 'use server';
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/core/logger.util';
+import type {
+  ContactFormData,
+  EmailErrorCode,
+  EmailResponse,
+  ResendEmailData,
+} from '@/types/api/email.type';
 import { Resend } from 'resend';
 
-// Define the form data interface
-interface ContactFormData {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
-
-// Define the response interface
-interface EmailResponse {
-  success: boolean;
-  data?: unknown;
-  error?: string;
-}
-
+/**
+ * Sends an email using the Resend API based on contact form data
+ * @param formData - Contact form submission data
+ * @returns EmailResponse with success status and optional error details
+ */
 export async function sendEmail(formData: ContactFormData): Promise<EmailResponse> {
   // Validate input
   if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+    const error: EmailErrorCode = 'MISSING_FIELDS';
+    logger.warn({ formData }, 'Missing required fields in contact form');
     return {
       success: false,
-      error: 'Missing required fields',
+      error: {
+        code: error,
+        message: 'All fields are required',
+      },
+    };
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(formData.email)) {
+    const error: EmailErrorCode = 'INVALID_EMAIL';
+    logger.warn({ email: formData.email }, 'Invalid email format');
+    return {
+      success: false,
+      error: {
+        code: error,
+        message: 'Invalid email format',
+      },
     };
   }
 
@@ -33,6 +48,7 @@ export async function sendEmail(formData: ContactFormData): Promise<EmailRespons
 
   // Validate environment variables are set
   if (!process.env.RESEND_API_KEY || !fromEmail || !toEmail) {
+    const error: EmailErrorCode = 'CONFIG_ERROR';
     logger.error(
       {
         RESEND_API_KEY: !!process.env.RESEND_API_KEY,
@@ -43,7 +59,10 @@ export async function sendEmail(formData: ContactFormData): Promise<EmailRespons
     );
     return {
       success: false,
-      error: 'Email service configuration error',
+      error: {
+        code: error,
+        message: 'Email service configuration error',
+      },
     };
   }
 
@@ -70,11 +89,19 @@ export async function sendEmail(formData: ContactFormData): Promise<EmailRespons
       `,
     });
 
-    return { success: true, data: response.data };
+    return {
+      success: true,
+      data: response.data as ResendEmailData,
+    };
   } catch (error: unknown) {
+    const errorCode: EmailErrorCode = 'SEND_ERROR';
+    logger.error({ error }, 'Error sending email');
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      error: {
+        code: errorCode,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+      },
     };
   }
 }

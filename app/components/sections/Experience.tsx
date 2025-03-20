@@ -1,7 +1,12 @@
 'use client';
 
 import { CheckIcon } from '@/components/icons';
-import { companyDetails, experienceData, gainedSkills, skillsData } from '@/data/experience';
+import {
+  companyDetails,
+  experienceData,
+  gainedSkills,
+  skillsData,
+} from '@/app/data/experience.data';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';

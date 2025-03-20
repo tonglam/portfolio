@@ -2,112 +2,58 @@
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { logger } from '@/lib/logger';
-import type { ProcessedBlogPost } from '@/types/api/blog';
+import { logger } from '@/lib/core/logger.util';
+import type { BlogPostResponse, PageBlogPost } from '@/types/api/blog.type';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-// Local interface extending the API BlogPost type
-interface BlogPost extends Partial<ProcessedBlogPost> {
-  title: string;
-  date: string;
-  minRead: string;
-  r2ImageUrl: string;
-  category: string;
-  summary: string;
-  content?: string;
-  originalPageUrl?: string;
-}
-
-// API response interface
-interface BlogPostResponse {
-  success: boolean;
-  data: {
-    post: BlogPost;
-  };
-}
-
-// Legacy format interface (for backward compatibility)
-interface LegacyBlogPostResponse {
-  post: BlogPost;
-}
-
 export default function BlogPost(): React.ReactNode {
   const { slug } = useParams();
   const router = useRouter();
-  const [post, setPost] = useState<BlogPost | null>(null);
+  const [post, setPost] = useState<PageBlogPost | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchBlogPost(): Promise<void> {
+    const fetchPost = async (): Promise<void> => {
       try {
-        setIsLoading(true);
-        // Fetch the specific blog post by slug
-        const slugString = typeof slug === 'string' ? slug : String(slug);
+        const slugString = Array.isArray(slug) ? slug[0] : String(slug);
         const response = await fetch(`/api/blog/${slugString}`);
+        const data = (await response.json()) as BlogPostResponse;
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error('Blog post not found');
-          }
-          throw new Error('Failed to fetch blog post');
+        if (!data.success || !data.data?.post) {
+          throw new Error('Post not found');
         }
 
-        const rawResult: unknown = await response.json();
+        const post = data.data.post;
 
-        // Create type guard functions
-        const isNewApiResponse = (data: unknown): data is BlogPostResponse =>
-          typeof data === 'object' &&
-          data !== null &&
-          'success' in data &&
-          data.success === true &&
-          'data' in data &&
-          typeof data.data === 'object' &&
-          data.data !== null &&
-          'post' in data.data;
+        // Transform the post to ensure all required fields are present
+        const transformedPost: PageBlogPost = {
+          ...post,
+          title: post.title || '',
+          date: post.date || '',
+          minRead: post.minRead || '5 min read',
+          r2ImageUrl: post.r2ImageUrl || '',
+          category: post.category || 'Uncategorized',
+          summary: post.summary || '',
+          content: typeof post.content === 'string' ? post.content : '',
+          originalPageUrl: post.originalPageUrl || '',
+        };
 
-        const isLegacyResponse = (data: unknown): data is LegacyBlogPostResponse =>
-          typeof data === 'object' &&
-          data !== null &&
-          'post' in data &&
-          typeof data.post === 'object';
-
-        // Check for new API response format (with success and data properties)
-        if (isNewApiResponse(rawResult)) {
-          setPost(rawResult.data.post);
-
-          // Redirect to original page if available
-          if (rawResult.data.post.originalPageUrl) {
-            window.location.href = rawResult.data.post.originalPageUrl;
-            return;
-          }
-        }
-        // Legacy format fallback
-        else if (isLegacyResponse(rawResult)) {
-          setPost(rawResult.post);
-
-          // Redirect to original page if available
-          if (rawResult.post.originalPageUrl) {
-            window.location.href = rawResult.post.originalPageUrl;
-            return;
-          }
-        } else {
-          throw new Error('Invalid response format');
-        }
-      } catch (error: unknown) {
-        logger.error({ error }, 'Error fetching blog post');
-        setError(error instanceof Error ? error.message : 'Unknown error occurred');
-      } finally {
+        setPost(transformedPost);
+        setIsLoading(false);
+      } catch (error) {
+        logger.error('Error fetching blog post:', error as string);
+        setError('Failed to load blog post');
         setIsLoading(false);
       }
-    }
+    };
 
     if (slug) {
-      void fetchBlogPost();
+      void fetchPost();
     }
   }, [slug]);
 
