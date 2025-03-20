@@ -10,8 +10,6 @@
     "lint": "eslint --config eslint.config.js .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "find:magic": "node scripts/find-magic-numbers.js",
-    "update:imports": "node scripts/update-imports.js",
     "type-check": "tsc --noEmit",
     "audit": "npm audit",
     "audit:fix": "npm audit fix",

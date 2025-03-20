@@ -22,64 +22,6 @@ import { NextResponse } from 'next/server';
 // Route segment config for Next.js caching
 export const revalidate = 3600; // Revalidate every hour
 
-// Mock data for fallback
-const fallbackPosts = [
-  {
-    id: 'mock-1',
-    title: 'Getting Started with Next.js',
-    summary: 'Learn how to build modern web applications with Next.js',
-    excerpt: 'Next.js is a powerful framework for building React applications...',
-    slug: 'getting-started-with-nextjs',
-    category: 'Development',
-    tags: ['Next.js', 'React', 'JavaScript'],
-    r2ImageUrl:
-      'https://res.cloudinary.com/demo/image/upload/w_1470,h_800,c_fill,q_auto,f_auto/sample',
-    date: new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }),
-    minRead: '5 Min Read',
-    originalPageUrl: '',
-  },
-  {
-    id: 'mock-2',
-    title: 'Advanced TypeScript Techniques',
-    summary: 'Mastering TypeScript for better code quality',
-    excerpt: 'TypeScript offers many advanced features that can improve your codebase...',
-    slug: 'advanced-typescript-techniques',
-    category: 'Development',
-    tags: ['TypeScript', 'JavaScript', 'Programming'],
-    r2ImageUrl:
-      'https://res.cloudinary.com/demo/image/upload/w_1470,h_800,c_fill,q_auto,f_auto/programming',
-    date: new Date(Date.now() - 86400000).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }),
-    minRead: '7 Min Read',
-    originalPageUrl: '',
-  },
-  {
-    id: 'mock-3',
-    title: 'The Future of AI in Software Development',
-    summary: 'How AI is changing the landscape of programming',
-    excerpt: 'Artificial Intelligence is revolutionizing how we build software...',
-    slug: 'future-of-ai-in-software-development',
-    category: 'Technology',
-    tags: ['AI', 'Machine Learning', 'Future Tech'],
-    r2ImageUrl:
-      'https://res.cloudinary.com/demo/image/upload/w_1470,h_800,c_fill,q_auto,f_auto/ai-development',
-    date: new Date(Date.now() - 172800000).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }),
-    minRead: '10 Min Read',
-    originalPageUrl: '',
-  },
-];
-
 // Local implementation of extractPlainText
 function extractPlainText(richTextArray: RichTextItem[] | RichTextItem | undefined): string {
   if (!richTextArray) {
@@ -114,28 +56,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       next: { revalidate: CACHE_SETTINGS.BLOG.REVALIDATE },
     });
 
-    // Use fallback data if fetch fails
+    // Return error if fetch fails
     if (!response.ok) {
       logger.error(`Failed to fetch blog data: ${response.status}`);
-      logger.info('Using fallback post data');
-
-      return handlePaginationAndResponse(fallbackPosts, category, page, limit, cacheControl);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to fetch blog posts',
+        },
+        {
+          status: response.status,
+          headers: {
+            'Cache-Control': cacheControl,
+          },
+        }
+      );
     }
 
     const rawData: unknown = await response.json();
     const allPosts = Array.isArray(rawData) ? rawData : [];
 
     try {
-      // Debug: Log the structure
-      if (allPosts.length > 0) {
-        logger.info(`Number of posts: ${allPosts.length}`);
-
-        const firstPost = allPosts[0] as NotionPost;
-        if (firstPost && firstPost.properties) {
-          logger.info('First post properties keys:', Object.keys(firstPost.properties));
-        }
-      }
-
       // Process posts - extract data from Notion API format
       const processedPosts = allPosts
         .map((post: NotionPost) => {
@@ -168,7 +109,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             post.properties['Date Created'].date.start
           ) {
             const postDate = new Date(post.properties['Date Created'].date.start);
-            // Format the date as MMM DD, YYYY (e.g., "Jun 15, 2023")
             date = postDate.toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'short',
@@ -240,38 +180,57 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         })
         .filter(Boolean) as Array<Partial<ProcessedBlogPost>>; // Type assertion for non-null values
 
-      // If we have no posts after processing, use fallback
+      // If we have no posts after processing, return empty response
       if (processedPosts.length === 0) {
-        logger.warn('No valid posts found in data source, using fallback data');
-        return handlePaginationAndResponse(fallbackPosts, category, page, limit, cacheControl);
+        logger.warn('No valid posts found in data source');
+        return NextResponse.json(
+          {
+            success: true,
+            data: {
+              posts: [],
+              pagination: {
+                totalPosts: 0,
+                totalPages: 0,
+                currentPage: page,
+                page,
+                limit,
+                hasMore: false,
+              },
+            },
+          },
+          {
+            headers: {
+              'Cache-Control': cacheControl,
+            },
+          }
+        );
       }
 
       return handlePaginationAndResponse(processedPosts, category, page, limit, cacheControl);
     } catch (processError) {
       logger.error({ error: processError }, 'Error processing posts');
-      return handlePaginationAndResponse(fallbackPosts, category, page, limit, cacheControl);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Error processing blog posts',
+        },
+        {
+          status: 500,
+          headers: {
+            'Cache-Control': cacheControl,
+          },
+        }
+      );
     }
   } catch (error) {
     logger.error({ error }, 'Failed to fetch blog posts');
-
-    // Return fallback data even on critical errors
     return NextResponse.json(
       {
-        success: true,
-        data: {
-          posts: fallbackPosts,
-          pagination: {
-            page: 1,
-            limit: DEFAULTS.BLOG.LIMIT,
-            totalPosts: fallbackPosts.length,
-            totalPages: 1,
-            currentPage: 1,
-            hasMore: false,
-          },
-        },
+        success: false,
+        error: 'Failed to fetch blog posts',
       },
       {
-        status: 200,
+        status: 500,
         headers: {
           'Cache-Control': CACHE_SETTINGS.BLOG.CONTROL,
         },
@@ -298,11 +257,6 @@ function handlePaginationAndResponse(
   const endIndex = startIndex + limit;
   const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
   const hasMore = endIndex < totalPosts;
-
-  // Debug log
-  logger.info(
-    `Category filter: ${category}, Total: ${filteredPosts.length}, Paginated: ${paginatedPosts.length}`
-  );
 
   // Return with our consistent format
   return NextResponse.json(

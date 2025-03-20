@@ -1,39 +1,15 @@
-import type { DnsRecord } from '@/lib/cloudflare';
+import type {
+  CreateDnsRecordRequest,
+  CreateRecordResponse,
+  DnsRecordsResponse,
+} from '@/app/api/cloudflare/types';
 import { createDnsRecord, getCloudflareClient, getDnsRecords } from '@/lib/cloudflare';
 import { logger } from '@/lib/logger';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 /**
- * Request body interface for creating DNS records
- */
-interface CreateDnsRecordRequest {
-  type: string;
-  name: string;
-  content: string;
-  [key: string]: unknown;
-}
-
-/**
- * API response interfaces
- */
-interface DnsRecordsResponse {
-  success: boolean;
-  dnsRecords?: DnsRecord[];
-  error?: string;
-  details?: Record<string, unknown>;
-}
-
-interface CreateRecordResponse {
-  success: boolean;
-  message?: string;
-  record?: DnsRecord;
-  error?: string;
-  details?: Record<string, unknown>;
-}
-
-/**
- * Add revalidation time for Next.js caching
+ * GET endpoint to retrieve DNS records for a specific Cloudflare zone
  */
 export const revalidate = 300; // 5 minutes
 

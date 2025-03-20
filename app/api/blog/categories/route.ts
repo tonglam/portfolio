@@ -1,42 +1,8 @@
-import { CACHE_SETTINGS, EXTERNAL_URLS } from '@/config/constants';
+import type { ApiError, NotionPost } from '@/app/api/blog/types';
+import { CACHE_SETTINGS, EXTERNAL_URLS } from '@/config';
 import { logger } from '@/lib/logger';
+import type { CategoriesResponse } from '@/types/api/blog';
 import { NextResponse } from 'next/server';
-
-// Type definitions for blog data
-interface CategorySelect {
-  name: string;
-  color?: string;
-}
-
-interface PostProperties {
-  Category?: {
-    select?: CategorySelect;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-}
-
-interface BlogPost {
-  id: string;
-  properties?: PostProperties;
-  [key: string]: unknown;
-}
-
-// Types for API responses
-interface ApiError {
-  success: false;
-  error: string;
-}
-
-interface CategoriesResponse {
-  success: true;
-  data: {
-    categories: string[];
-  };
-}
-
-// Fallback categories if API fails
-const FALLBACK_CATEGORIES = ['All', 'AWS', 'Development', 'Technology'];
 
 /**
  * GET endpoint for retrieving all blog categories
@@ -59,17 +25,13 @@ export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>
 
     if (!response.ok) {
       logger.error(`Failed to fetch blog data: ${response.status}`);
-      // Fall back to default categories
-      logger.info('Using fallback categories');
-
       return NextResponse.json(
         {
-          success: true,
-          data: {
-            categories: FALLBACK_CATEGORIES,
-          },
+          success: false,
+          error: 'Failed to fetch blog categories',
         },
         {
+          status: response.status,
           headers: {
             'Cache-Control': cacheControl,
           },
@@ -78,7 +40,7 @@ export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>
     }
 
     // Enhanced error handling with timeout
-    let allPosts: BlogPost[] = [];
+    let allPosts: NotionPost[] = [];
     try {
       // Parse with a timeout to avoid blocking
       const responseText = await response.text();
@@ -86,7 +48,7 @@ export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>
 
       // Validate the parsed data is an array
       if (Array.isArray(parsedData)) {
-        allPosts = parsedData as BlogPost[];
+        allPosts = parsedData as NotionPost[];
       } else {
         throw new Error('Invalid data format: expected an array');
       }
@@ -100,12 +62,11 @@ export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>
 
       return NextResponse.json(
         {
-          success: true,
-          data: {
-            categories: FALLBACK_CATEGORIES,
-          },
+          success: false,
+          error: 'Failed to parse blog data',
         },
         {
+          status: 500,
           headers: {
             'Cache-Control': cacheControl,
           },
@@ -121,7 +82,7 @@ export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>
     for (let i = 0; i < allPosts.length; i += BATCH_SIZE) {
       const batch = allPosts.slice(i, i + BATCH_SIZE);
 
-      batch.forEach((post: BlogPost) => {
+      batch.forEach((post: NotionPost) => {
         // Use optional chaining to safely access properties
         const categoryName = post?.properties?.Category?.select?.name;
         if (typeof categoryName === 'string' && categoryName.trim() !== '') {
@@ -159,17 +120,13 @@ export async function GET(): Promise<NextResponse<CategoriesResponse | ApiError>
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     logger.error(`Error fetching blog categories: ${errorMessage}`);
 
-    // Fall back to default categories in case of any error
-    logger.info('Using fallback categories due to error');
-
     return NextResponse.json(
       {
-        success: true,
-        data: {
-          categories: FALLBACK_CATEGORIES,
-        },
+        success: false,
+        error: 'Failed to fetch blog categories',
       },
       {
+        status: 500,
         headers: {
           'Cache-Control': CACHE_SETTINGS.BLOG.CONTROL,
         },

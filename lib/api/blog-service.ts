@@ -1,104 +1,41 @@
-import { DEFAULTS, EXTERNAL_URLS } from '@/config';
-import type { NotionPost, ProcessedBlogPost } from '@/types/api/blog';
-import type { NotionPropertyValue } from '@/types/api/notion';
 import type {
-  FilesPropertyItemObjectResponse,
-  RichTextItemResponse,
-  RichTextPropertyItemObjectResponse,
-  TitlePropertyItemObjectResponse,
-  UrlPropertyItemObjectResponse,
-} from '@notionhq/client/build/src/api-endpoints';
-import { logger } from '../logger';
+  NotionFile,
+  NotionPost,
+  NotionRichTextProperty,
+  NotionTitle,
+  ProcessedBlogPost,
+} from '@/app/api/blog/types';
+import { EXTERNAL_URLS } from '@/config';
+import { logger } from '@/lib/logger';
 
-/**
- * Cached blog data
- */
+// Cache for blog posts
 let cachedPosts: ProcessedBlogPost[] | null = null;
 let lastFetchTime = 0;
-const CACHE_DURATION = 60 * 1000; // 1 minute in milliseconds
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Helper functions for logging
 const warn = (message: string): void => {
-  logger.warn(message, 'Blog Service');
+  logger.warn(message);
 };
 
 const logError = (message: string, err: unknown): void => {
-  const errorDetail = err instanceof Error ? err.message : String(err);
-  logger.error(`${message}: ${errorDetail}`, 'Blog Service');
+  logger.error({ error: err }, message);
 };
 
 /**
- * Helper function to extract text from title property
- */
-function extractTitleText(title: TitlePropertyItemObjectResponse): string {
-  let result = '';
-  if (Array.isArray(title.title)) {
-    for (const richText of title.title) {
-      if (isRichTextItem(richText)) {
-        result += richText.plain_text;
-      }
-    }
-  }
-  return result;
-}
-
-/**
- * Helper function to extract text from rich text property
- */
-function extractRichText(richText: RichTextPropertyItemObjectResponse): string {
-  let result = '';
-  if (Array.isArray(richText.rich_text)) {
-    for (const text of richText.rich_text) {
-      if (isRichTextItem(text)) {
-        result += text.plain_text;
-      }
-    }
-  }
-  return result;
-}
-
-/**
- * Type guard for RichTextItemResponse
- */
-function isRichTextItem(text: unknown): text is RichTextItemResponse {
-  return (
-    typeof text === 'object' &&
-    text !== null &&
-    'plain_text' in text &&
-    typeof (text as RichTextItemResponse).plain_text === 'string'
-  );
-}
-
-/**
- * Type guard for NotionPost array
- */
-function isNotionPostArray(data: unknown): data is NotionPost[] {
-  return (
-    Array.isArray(data) &&
-    data.every(
-      item => typeof item === 'object' && item !== null && 'id' in item && 'properties' in item
-    )
-  );
-}
-
-/**
- * Fetches blog posts from the data source and processes them
- * Uses in-memory caching to avoid redundant fetches
+ * Fetches and processes blog posts from the data source
  */
 export async function fetchAndProcessBlogPosts(bypassCache = false): Promise<ProcessedBlogPost[]> {
   // Use cache if available and fresh
   const now = Date.now();
-  if (!bypassCache && cachedPosts && now - lastFetchTime < CACHE_DURATION) {
+  if (!bypassCache && cachedPosts && now - lastFetchTime < CACHE_TTL) {
     warn('Using cached blog posts');
     return cachedPosts;
   }
 
-  warn('Fetching fresh blog posts');
-
   try {
     // Fetch data from R2 storage
-    const response = await fetch(EXTERNAL_URLS.BLOG_DATA_SOURCE, {
-      cache: 'no-store', // Ensure we get fresh data when requested
-    });
+    const response = await fetch(EXTERNAL_URLS.BLOG_DATA_SOURCE);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch blog data: ${response.status}`);
@@ -106,90 +43,86 @@ export async function fetchAndProcessBlogPosts(bypassCache = false): Promise<Pro
 
     const data: unknown = await response.json();
 
-    if (!isNotionPostArray(data)) {
-      throw new Error('Invalid blog data format');
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid data format: expected an array');
     }
 
-    // Process posts: extract required fields with safe extraction
-    const processedPosts = data.map((post): ProcessedBlogPost => {
+    // Process posts
+    const processedPosts = data.map((post: NotionPost): ProcessedBlogPost => {
       // Safer property extraction with defaults
-      const getFileUrl = (
-        file:
-          | FilesPropertyItemObjectResponse
-          | UrlPropertyItemObjectResponse
-          | NotionPropertyValue
-          | undefined
-      ): string => {
-        if (!file) return '';
-
-        // Handle Notion API types
-        if (typeof file === 'object' && 'type' in file) {
-          if (file.type === 'url' && 'url' in file) {
-            return file.url || '';
-          }
-          if (
-            file.type === 'files' &&
-            'files' in file &&
-            Array.isArray(file.files) &&
-            file.files.length > 0
-          ) {
-            const firstFile = file.files[0];
-            if ('file' in firstFile) {
-              return firstFile.file.url;
-            }
-            if ('external' in firstFile) {
-              return firstFile.external.url;
-            }
-          }
+      const safeExtractTitle = (titleProp: unknown): string => {
+        if (
+          titleProp &&
+          typeof titleProp === 'object' &&
+          'title' in titleProp &&
+          Array.isArray((titleProp as NotionTitle).title) &&
+          (titleProp as NotionTitle).title.length > 0 &&
+          typeof (titleProp as NotionTitle).title[0] === 'object' &&
+          (titleProp as NotionTitle).title[0] &&
+          'plain_text' in (titleProp as NotionTitle).title[0]
+        ) {
+          return (titleProp as NotionTitle).title[0].plain_text;
         }
+        return 'Untitled Post';
+      };
 
-        // Handle custom NotionPropertyValue with url
-        if (typeof file === 'object' && 'url' in file && typeof file.url === 'string') {
-          return file.url;
+      const safeExtractRichText = (textProp: unknown): string => {
+        if (
+          textProp &&
+          typeof textProp === 'object' &&
+          'rich_text' in textProp &&
+          Array.isArray((textProp as NotionRichTextProperty).rich_text) &&
+          (textProp as NotionRichTextProperty).rich_text.length > 0 &&
+          typeof (textProp as NotionRichTextProperty).rich_text[0] === 'object' &&
+          (textProp as NotionRichTextProperty).rich_text[0] &&
+          'plain_text' in (textProp as NotionRichTextProperty).rich_text[0]
+        ) {
+          return (textProp as NotionRichTextProperty).rich_text[0].plain_text;
         }
-
         return '';
       };
 
-      // Safe extraction helpers
-      const safeExtractTitle = (prop: unknown): string => {
-        try {
-          if (!prop || typeof prop !== 'object' || !('title' in prop)) return '';
-          return extractTitleText(prop as TitlePropertyItemObjectResponse);
-        } catch {
-          return '';
+      const getFileUrl = (fileProp: unknown): string => {
+        if (
+          fileProp &&
+          typeof fileProp === 'object' &&
+          'url' in fileProp &&
+          typeof (fileProp as NotionFile).url === 'string'
+        ) {
+          return (fileProp as NotionFile).url;
         }
+        return '';
       };
 
-      const safeExtractRichText = (prop: unknown): string => {
-        try {
-          if (!prop || typeof prop !== 'object' || !('rich_text' in prop)) return '';
-          return extractRichText(prop as RichTextPropertyItemObjectResponse);
-        } catch {
-          return '';
-        }
-      };
+      const properties = post.properties || {};
 
       return {
-        id: post.id || `mock-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        title: safeExtractTitle(post.properties?.Title) || 'Untitled Post',
-        summary: safeExtractRichText(post.properties?.Summary) || '',
-        excerpt: safeExtractRichText(post.properties?.Excerpt) || 'No excerpt available',
-        slug: safeExtractRichText(post.properties?.Slug) || `post-${Date.now()}`,
-        category: post.properties?.Category?.select?.name || 'Uncategorized',
-        tags: post.properties?.Tags?.multi_select?.map(tag => tag.name) || [],
-        coverImage:
-          getFileUrl(post.properties?.CoverImage) || EXTERNAL_URLS.PLACEHOLDERS.BLOG_IMAGE,
-        originalCoverImage: getFileUrl(post.properties?.OriginalCoverImage) || '',
-        dateCreated:
-          post.properties?.DateCreated?.date?.start || new Date().toISOString().split('T')[0],
-        noteCreated: post.created_time || new Date().toISOString(),
-        noteEdited: post.last_edited_time || new Date().toISOString(),
-        published: post.properties?.Published?.checkbox || true,
-        featured: post.properties?.Featured?.checkbox || false,
-        notionUrl: post.url || '',
-        readingTime: safeExtractRichText(post.properties?.ReadingTime) || DEFAULTS.BLOG.MIN_READ,
-        content: safeExtractRichText(post.properties?.Content) || 'No content available',
+        id:
+          post.id && typeof post.id === 'string'
+            ? post.id
+            : `post-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        title: safeExtractTitle(properties.Title) || 'Untitled Post',
+        summary: safeExtractRichText(properties.Summary) || '',
+        excerpt: safeExtractRichText(properties.Excerpt) || 'No excerpt available',
+        slug: safeExtractRichText(properties.Slug) || `post-${Date.now()}`,
+        category: properties.Category?.select?.name || 'Uncategorized',
+        tags: properties.Tags?.multi_select?.map(tag => tag.name) || [],
+        coverImage: getFileUrl(properties.CoverImage) || EXTERNAL_URLS.PLACEHOLDERS.BLOG_IMAGE,
+        originalCoverImage: getFileUrl(properties.OriginalCoverImage) || '',
+        dateCreated: properties.DateCreated?.date?.start || new Date().toISOString().split('T')[0],
+        noteCreated:
+          post.created_time && typeof post.created_time === 'string'
+            ? post.created_time
+            : new Date().toISOString(),
+        noteEdited:
+          post.last_edited_time && typeof post.last_edited_time === 'string'
+            ? post.last_edited_time
+            : new Date().toISOString(),
+        published: properties.Published?.checkbox ?? true,
+        featured: properties.Featured?.checkbox ?? false,
+        notionUrl: post.url && typeof post.url === 'string' ? post.url : '',
+        readingTime: safeExtractRichText(properties.ReadingTime) || '5 Min Read',
+        content: safeExtractRichText(properties.Content) || 'No content available',
       };
     });
 
@@ -198,76 +131,9 @@ export async function fetchAndProcessBlogPosts(bypassCache = false): Promise<Pro
     lastFetchTime = now;
 
     return processedPosts;
-  } catch (err: unknown) {
+  } catch (err) {
     logError('Failed to fetch and process blog posts', err);
-
-    // If we have cached data, return it even if it's stale
-    if (cachedPosts) {
-      warn('Using stale cached data as fallback');
-      return cachedPosts;
-    }
-
-    // If we have no cache, return mock data
-    warn('No cache available, returning mock blog data');
-    return [
-      {
-        id: 'mock-1',
-        title: 'Getting Started with Next.js',
-        summary: 'Learn how to build modern web applications with Next.js',
-        excerpt: 'Next.js is a powerful framework for building React applications...',
-        slug: 'getting-started-with-nextjs',
-        category: 'Development',
-        tags: ['Next.js', 'React', 'JavaScript'],
-        coverImage: 'https://via.placeholder.com/1470x800',
-        originalCoverImage: '',
-        dateCreated: new Date().toISOString().split('T')[0],
-        noteCreated: new Date().toISOString(),
-        noteEdited: new Date().toISOString(),
-        published: true,
-        featured: true,
-        notionUrl: '',
-        readingTime: '5 Min Read',
-        content: 'This is a mock article about Next.js...',
-      },
-      {
-        id: 'mock-2',
-        title: 'Advanced TypeScript Techniques',
-        summary: 'Mastering TypeScript for better code quality',
-        excerpt: 'TypeScript offers many advanced features that can improve your codebase...',
-        slug: 'advanced-typescript-techniques',
-        category: 'Development',
-        tags: ['TypeScript', 'JavaScript', 'Programming'],
-        coverImage: 'https://via.placeholder.com/1470x800',
-        originalCoverImage: '',
-        dateCreated: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-        noteCreated: new Date(Date.now() - 86400000).toISOString(),
-        noteEdited: new Date(Date.now() - 86400000).toISOString(),
-        published: true,
-        featured: false,
-        notionUrl: '',
-        readingTime: '7 Min Read',
-        content: 'This is a mock article about TypeScript...',
-      },
-      {
-        id: 'mock-3',
-        title: 'The Future of AI in Software Development',
-        summary: 'How AI is changing the landscape of programming',
-        excerpt: 'Artificial Intelligence is revolutionizing how we build software...',
-        slug: 'future-of-ai-in-software-development',
-        category: 'Technology',
-        tags: ['AI', 'Machine Learning', 'Future Tech'],
-        coverImage: 'https://via.placeholder.com/1470x800',
-        originalCoverImage: '',
-        dateCreated: new Date(Date.now() - 172800000).toISOString().split('T')[0],
-        noteCreated: new Date(Date.now() - 172800000).toISOString(),
-        noteEdited: new Date(Date.now() - 172800000).toISOString(),
-        published: true,
-        featured: true,
-        notionUrl: '',
-        readingTime: '10 Min Read',
-        content: 'This is a mock article about AI in software development...',
-      },
-    ];
+    throw err;
   }
 }
 
@@ -296,14 +162,6 @@ export async function getPublishedPosts(category?: string | null): Promise<Proce
 }
 
 /**
- * Gets a single blog post by slug
- */
-export async function getPostBySlug(slug: string): Promise<ProcessedBlogPost | null> {
-  const allPosts = await fetchAndProcessBlogPosts();
-  return allPosts.find(post => post.slug === slug && post.published) || null;
-}
-
-/**
  * Gets unique categories from published posts
  */
 export async function getCategories(): Promise<string[]> {
@@ -323,11 +181,16 @@ export async function getCategories(): Promise<string[]> {
     return ['All', ...categories];
   } catch (err: unknown) {
     logError('Failed to fetch categories from posts', err);
-    warn('Using fallback categories');
-
-    // Return fallback categories if we can't fetch real data
-    return ['All', 'Development', 'Design', 'Career', 'Technology'];
+    throw err;
   }
+}
+
+/**
+ * Gets a single blog post by slug
+ */
+export async function getPostBySlug(slug: string): Promise<ProcessedBlogPost | null> {
+  const allPosts = await fetchAndProcessBlogPosts();
+  return allPosts.find(post => post.slug === slug && post.published) || null;
 }
 
 /**

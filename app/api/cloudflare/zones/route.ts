@@ -1,18 +1,8 @@
-import type { CloudflareZone } from '@/lib/cloudflare';
+import type { ZonesApiResponse } from '@/app/api/cloudflare/types';
 import { getCloudflareClient, getZones } from '@/lib/cloudflare';
 import { logger } from '@/lib/logger';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-
-/**
- * Interface for API response
- */
-interface ZonesApiResponse {
-  success: boolean;
-  zones?: CloudflareZone[];
-  error?: string;
-  details?: Record<string, unknown>;
-}
 
 /**
  * Add revalidation time for Next.js caching
