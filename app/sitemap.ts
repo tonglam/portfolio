@@ -1,4 +1,5 @@
 import { EXTERNAL_URLS } from '@/config';
+import { logger } from '@/lib/logger';
 import type { ExtendedNotionPost } from '@/types/api/blog';
 import type { MetadataRoute } from 'next';
 
@@ -89,10 +90,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // Return combined static routes and blog posts
       return [...staticRoutes, ...blogPosts];
     }
-  } catch (error) {
-    console.error('Error generating sitemap:', error);
-  }
 
-  // Fallback to static routes only if blog post fetching fails
-  return staticRoutes;
+    // Return static routes if response is not OK
+    logger.warn(
+      'Failed to fetch blog posts for sitemap, using static routes only',
+      'Sitemap Generation'
+    );
+    return staticRoutes;
+  } catch (err: unknown) {
+    logger.error(err, 'Sitemap Generation');
+    // Fallback to static routes only if blog post fetching fails
+    return staticRoutes;
+  }
 }

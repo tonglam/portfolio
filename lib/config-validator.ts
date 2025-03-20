@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { logger } from './logger';
 
 // Schema for required environment variables
 const envSchema = z.object({
@@ -53,8 +54,9 @@ const result = validateEnv();
 
 // Log validation errors in development
 if (!result.isValid && process.env.NODE_ENV === 'development') {
-  console.error('Environment configuration is invalid:');
-  result.errors.forEach(error => console.error(`- ${error}`));
+  logger.error('Environment configuration is invalid', 'Config Validator');
+  result.errors.forEach(error => logger.error(error, 'Config Validator'));
+  throw new Error('Invalid environment configuration');
 }
 
 export const env = result.env;

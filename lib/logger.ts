@@ -1,31 +1,44 @@
 /**
- * Safe logger for Next.js
- * Avoids worker thread issues and handles errors gracefully
+ * Production-ready logger for Next.js
+ * Supports log levels and handles errors gracefully
  */
 
-// Simple logger that won't crash
+export enum LogLevel {
+  ERROR = 'ERROR',
+  WARN = 'WARN',
+  INFO = 'INFO',
+  DEBUG = 'DEBUG',
+}
+
+type LogMessage = string | Error | unknown;
+
+// Production-ready logger
 export const logger = {
-  info: (message: string): void => {
+  error: (error: LogMessage, context?: string): void => {
+    // Always log errors in any environment
+    const prefix = context ? `[ERROR][${context}]` : '[ERROR]';
+    console.error(prefix, error);
+  },
+
+  warn: (message: LogMessage, context?: string): void => {
+    // Log warnings in development and production
+    const prefix = context ? `[WARN][${context}]` : '[WARN]';
+    console.warn(prefix, message);
+  },
+
+  info: (message: string, context?: string): void => {
+    // Only log info in development
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[INFO] ${message}`);
+      const prefix = context ? `[INFO][${context}]` : '[INFO]';
+      console.warn(prefix, message);
     }
   },
 
-  error: (error: unknown): void => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('[ERROR]', error);
-    }
-  },
-
-  warn: (message: string): void => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn(`[WARN] ${message}`);
-    }
-  },
-
-  debug: (message: string): void => {
+  debug: (message: string, context?: string): void => {
+    // Only log debug in development
     if (process.env.NODE_ENV === 'development') {
-      console.debug(`[DEBUG] ${message}`);
+      const prefix = context ? `[DEBUG][${context}]` : '[DEBUG]';
+      console.warn(prefix, message);
     }
   },
 };

@@ -8,6 +8,7 @@ import type {
   TitlePropertyItemObjectResponse,
   UrlPropertyItemObjectResponse,
 } from '@notionhq/client/build/src/api-endpoints';
+import { logger } from '../logger';
 
 /**
  * Cached blog data
@@ -16,23 +17,13 @@ let cachedPosts: ProcessedBlogPost[] | null = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 60 * 1000; // 1 minute in milliseconds
 
-/**
- * Logger utility for development environment
- */
-interface Logger {
-  info: (message: string, ...args: (string | number | boolean | object)[]) => void;
-  error: (message: string, error?: Error | string) => void;
-}
+const warn = (message: string): void => {
+  logger.warn(message, 'Blog Service');
+};
 
-const logger: Logger = {
-  info: (message: string, ...args: (string | number | boolean | object)[]): void => {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`[Blog Service] ${message}`, ...args);
-    }
-  },
-  error: (message: string, error?: Error | string): void => {
-    console.error(`[Blog Service Error] ${message}`, error);
-  },
+const logError = (message: string, err: unknown): void => {
+  const errorDetail = err instanceof Error ? err.message : String(err);
+  logger.error(`${message}: ${errorDetail}`, 'Blog Service');
 };
 
 /**
@@ -97,11 +88,11 @@ export async function fetchAndProcessBlogPosts(bypassCache = false): Promise<Pro
   // Use cache if available and fresh
   const now = Date.now();
   if (!bypassCache && cachedPosts && now - lastFetchTime < CACHE_DURATION) {
-    logger.info('Using cached blog posts');
+    warn('Using cached blog posts');
     return cachedPosts;
   }
 
-  logger.info('Fetching fresh blog posts');
+  warn('Fetching fresh blog posts');
 
   try {
     // Fetch data from R2 storage
@@ -207,18 +198,17 @@ export async function fetchAndProcessBlogPosts(bypassCache = false): Promise<Pro
     lastFetchTime = now;
 
     return processedPosts;
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Failed to fetch and process blog posts', errorMessage);
+  } catch (err: unknown) {
+    logError('Failed to fetch and process blog posts', err);
 
     // If we have cached data, return it even if it's stale
     if (cachedPosts) {
-      logger.info('Using stale cached data as fallback');
+      warn('Using stale cached data as fallback');
       return cachedPosts;
     }
 
     // If we have no cache, return mock data
-    logger.info('No cache available, returning mock blog data');
+    warn('No cache available, returning mock blog data');
     return [
       {
         id: 'mock-1',
@@ -318,7 +308,7 @@ export async function getPostBySlug(slug: string): Promise<ProcessedBlogPost | n
  */
 export async function getCategories(): Promise<string[]> {
   try {
-    logger.info('Fetching categories from posts');
+    warn('Fetching categories from posts');
     const publishedPosts = await getPublishedPosts();
 
     // Extract and deduplicate categories
@@ -331,11 +321,9 @@ export async function getCategories(): Promise<string[]> {
 
     // Add "All" as the first category
     return ['All', ...categories];
-  } catch (error: unknown) {
-    // Log the error
-    const errorMessage = error instanceof Error ? error : String(error);
-    logger.error('Failed to fetch categories from posts', errorMessage);
-    logger.info('Using fallback categories');
+  } catch (err: unknown) {
+    logError('Failed to fetch categories from posts', err);
+    warn('Using fallback categories');
 
     // Return fallback categories if we can't fetch real data
     return ['All', 'Development', 'Design', 'Career', 'Technology'];

@@ -1,11 +1,11 @@
 import type {
-  CloudflareApiError,
   CloudflareApiResponse,
   CloudflareZone,
   DnsRecord,
   DnsRecordData,
 } from '@/types/api/cloudflare';
 import { default as CloudflareClient } from 'cloudflare';
+import { logger } from '../logger';
 
 interface CloudflareResponse<T> {
   result: T;
@@ -42,8 +42,9 @@ export async function getZones(): Promise<CloudflareZone[]> {
   try {
     const response = await client.zones.browse();
     return response.result;
-  } catch (error) {
-    throw handleCloudflareError(error);
+  } catch (err: unknown) {
+    logger.error(err, 'Cloudflare API');
+    throw err;
   }
 }
 
@@ -54,8 +55,9 @@ export async function getDnsRecords(zoneId: string): Promise<DnsRecord[]> {
   try {
     const response = await client.dnsRecords.browse(zoneId);
     return response.result;
-  } catch (error) {
-    throw handleCloudflareError(error);
+  } catch (err: unknown) {
+    logger.error(err, 'Cloudflare API');
+    throw err;
   }
 }
 
@@ -72,8 +74,9 @@ export async function createDnsRecord(
       success: true,
       data: response.result,
     };
-  } catch (error) {
-    throw handleCloudflareError(error);
+  } catch (err: unknown) {
+    logger.error(err, 'Cloudflare API');
+    throw err;
   }
 }
 
@@ -91,8 +94,9 @@ export async function updateDnsRecord(
       success: true,
       data: response.result,
     };
-  } catch (error) {
-    throw handleCloudflareError(error);
+  } catch (err: unknown) {
+    logger.error(err, 'Cloudflare API');
+    throw err;
   }
 }
 
@@ -109,49 +113,8 @@ export async function deleteDnsRecord(
       success: true,
       data: undefined,
     };
-  } catch (error) {
-    throw handleCloudflareError(error);
+  } catch (err: unknown) {
+    logger.error(err, 'Cloudflare API');
+    throw err;
   }
-}
-
-/**
- * Handles Cloudflare API errors
- */
-function handleCloudflareError(error: unknown): CloudflareApiError {
-  console.error('Cloudflare API error:', error);
-
-  if (error instanceof Error) {
-    interface CloudflareErrorResponse {
-      response?: {
-        status: number;
-        statusText: string;
-        body: unknown;
-      };
-      message: string;
-    }
-
-    const cfError = error as CloudflareErrorResponse;
-
-    if (cfError.response) {
-      return {
-        message: cfError.message || 'Cloudflare API error',
-        code: cfError.response.status,
-        details: {
-          status: cfError.response.status,
-          statusText: cfError.response.statusText,
-          body: cfError.response.body,
-        },
-      };
-    }
-
-    return {
-      message: cfError.message,
-      details: error,
-    };
-  }
-
-  return {
-    message: 'Unknown Cloudflare API error',
-    details: error,
-  };
 }
