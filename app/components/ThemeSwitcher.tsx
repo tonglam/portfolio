@@ -15,13 +15,12 @@ export default function ThemeSwitcher(): JSX.Element {
   const { setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
-  // Avoid hydration mismatch
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!mounted) {
-    return <div className="w-9 h-9" />; // Placeholder with same size
+    return <div className="w-9 h-9" />;
   }
 
   return (

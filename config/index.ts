@@ -9,7 +9,7 @@ export * from './constants';
 export * from './cors.config';
 export * from './defaults.config';
 export * from './errors.config';
-export * from './ui.config';
+export { BREAKPOINTS, TOAST, default as ui } from './ui.config';
 export * from './urls.config';
 export * from './validator.config';
 

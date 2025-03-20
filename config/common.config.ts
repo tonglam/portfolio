@@ -57,12 +57,8 @@ export const REGEX = {
   SLUG: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
 } as const;
 
-export const BREAKPOINTS = {
-  MOBILE: 640,
-  TABLET: 768,
-  LAPTOP: 1024,
-  DESKTOP: 1280,
-  WIDE: 1536,
+export const SITE = {
+  URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://qitonglan.com',
 } as const;
 
 export const DIMENSIONS = {
@@ -86,16 +82,15 @@ export type TimeConstants = typeof TIME;
 export type HttpConstants = typeof HTTP;
 export type LocaleConstants = typeof LOCALE;
 export type RegexConstants = typeof REGEX;
-export type BreakpointConstants = typeof BREAKPOINTS;
 export type DimensionConstants = typeof DIMENSIONS;
 export type LimitConstants = typeof LIMITS;
 
-const common = {
+export const common = {
   TIME,
   HTTP,
   LOCALE,
   REGEX,
-  BREAKPOINTS,
+  SITE,
   DIMENSIONS,
   LIMITS,
 } as const;

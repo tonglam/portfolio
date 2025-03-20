@@ -1,127 +1,109 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { logger } from '@/lib/core/logger.util';
-import type { BlogPostResponse, PageBlogPost } from '@/types/api/blog.type';
-import { motion } from 'framer-motion';
+import { CACHE_SETTINGS } from '@/config';
+import type { BlogPostResponse, PageBlogPost } from '@/types';
+import type { Metadata } from 'next';
 import Image from 'next/image';
-import { useParams, useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
+import { ExternalBlogRedirect } from './ExternalBlogRedirect';
 
-export default function BlogPost(): React.ReactNode {
-  const { slug } = useParams();
-  const router = useRouter();
-  const [post, setPost] = useState<PageBlogPost | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+// Shared data fetching function
+async function getBlogPost(slug: string): Promise<PageBlogPost> {
+  try {
+    const response = await fetch(`/api/blog/${slug}`, {
+      next: { revalidate: CACHE_SETTINGS.BLOG.REVALIDATE },
+    });
 
-  useEffect(() => {
-    const fetchPost = async (): Promise<void> => {
-      try {
-        const slugString = Array.isArray(slug) ? slug[0] : String(slug);
-        const response = await fetch(`/api/blog/${slugString}`);
-        const data = (await response.json()) as BlogPostResponse;
-
-        if (!data.success || !data.data?.post) {
-          throw new Error('Post not found');
-        }
-
-        const post = data.data.post;
-
-        // Transform the post to ensure all required fields are present
-        const transformedPost: PageBlogPost = {
-          ...post,
-          title: post.title || '',
-          date: post.date || '',
-          minRead: post.minRead || '5 min read',
-          r2ImageUrl: post.r2ImageUrl || '',
-          category: post.category || 'Uncategorized',
-          summary: post.summary || '',
-          content: typeof post.content === 'string' ? post.content : '',
-          originalPageUrl: post.originalPageUrl || '',
-        };
-
-        setPost(transformedPost);
-        setIsLoading(false);
-      } catch (error) {
-        logger.error('Error fetching blog post:', error as string);
-        setError('Failed to load blog post');
-        setIsLoading(false);
-      }
-    };
-
-    if (slug) {
-      void fetchPost();
+    if (!response.ok) {
+      return notFound();
     }
-  }, [slug]);
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-16">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
+    const data = (await response.json()) as BlogPostResponse;
+
+    if (!data.success || !data.data?.post) {
+      return notFound();
+    }
+
+    const post = data.data.post;
+
+    if (!post.r2ImageUrl || !post.content) {
+      return notFound();
+    }
+
+    return post;
+  } catch (error) {
+    console.error('Error fetching blog post:', error);
+    return notFound();
   }
+}
 
-  if (error || !post) {
-    return (
-      <div className="container mx-auto px-4 py-16">
-        <div className="flex flex-col justify-center items-center h-64">
-          <p className="text-red-500 mb-4">{error || 'Blog post not found'}</p>
-          <Button onClick={() => router.push('/#blogs')}>Return to Blogs</Button>
-        </div>
-      </div>
-    );
+// Generate metadata for the blog post
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  try {
+    const post = await getBlogPost(params.slug);
+
+    return {
+      title: post.title,
+      description: post.summary,
+      openGraph: {
+        title: post.title,
+        description: post.summary,
+        images: [{ url: post.r2ImageUrl }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: post.title,
+        description: post.summary,
+        images: [{ url: post.r2ImageUrl }],
+      },
+    };
+  } catch {
+    return {};
   }
+}
 
-  // If we have an originalPageUrl but the redirect didn't happen in useEffect,
-  // provide a button to visit the original page
+export default async function BlogPost({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<JSX.Element> {
+  const post = await getBlogPost(params.slug);
+
+  // If we have an originalPageUrl, show the external blog redirect
   if (post.originalPageUrl) {
     return (
       <div className="container mx-auto px-4 py-16">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col items-center justify-center text-center"
-        >
-          <h1 className="text-2xl md:text-3xl font-bold mb-6">{post.title}</h1>
-          <p className="mb-8 text-gray-600 dark:text-gray-300">{post.summary}</p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button onClick={() => router.push('/#blogs')} variant="outline">
-              Back to Blogs
-            </Button>
-            <Button
-              onClick={() => window.open(post.originalPageUrl, '_blank')}
-              className="bg-primary hover:bg-primary/90"
-            >
-              Visit Original Page
-            </Button>
-          </div>
-        </motion.div>
+        <ExternalBlogRedirect
+          post={{
+            ...post,
+            id: params.slug,
+            slug: params.slug,
+            originalPageUrl: post.originalPageUrl,
+          }}
+        />
       </div>
     );
   }
 
-  // Fallback to displaying the post content if no originalPageUrl is available
+  // Render the blog post content
   return (
     <div className="container mx-auto px-4 py-16">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Button variant="outline" className="mb-6" onClick={() => router.push('/#blogs')}>
-          &larr; Back to Blogs
-        </Button>
+      <div>
+        <Link href="/#blogs" className="inline-block">
+          <Button variant="outline" className="mb-6">
+            &larr; Back to Blogs
+          </Button>
+        </Link>
 
         <Card className="overflow-hidden bg-white dark:bg-gray-800 shadow-lg">
           <div className="relative h-64 md:h-96 w-full">
-            <Image src={post.r2ImageUrl} alt={post.title} fill className="object-cover" />
+            <Image src={post.r2ImageUrl} alt={post.title} fill className="object-cover" priority />
           </div>
 
           <div className="p-6 md:p-8">
@@ -140,11 +122,11 @@ export default function BlogPost(): React.ReactNode {
 
             <div className="prose dark:prose-invert max-w-none prose-img:rounded-lg prose-headings:text-gray-900 dark:prose-headings:text-white prose-a:text-blue-600 dark:prose-a:text-blue-400">
               <p className="text-gray-600 dark:text-gray-300">{post.summary}</p>
-              {post.content && <ReactMarkdown>{post.content}</ReactMarkdown>}
+              <ReactMarkdown>{post.content}</ReactMarkdown>
             </div>
           </div>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }

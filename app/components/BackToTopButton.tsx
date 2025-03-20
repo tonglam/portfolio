@@ -1,15 +1,16 @@
 'use client';
 
-import { UI } from '@/config/constants';
+import { useIcons } from '@/components/providers/IconProvider';
+import UI from '@/config/ui.config';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowUpIcon } from './icons';
 
 /**
  * A button that appears when scrolling down and allows users to quickly return to the top of the page
- * @returns JSX.Element The rendered BackToTopButton component
+ * @returns JSX.Element | null The rendered BackToTopButton component or null if icon is not found
  */
-export default function BackToTopButton(): JSX.Element {
+export default function BackToTopButton(): JSX.Element | null {
+  const { getIcon } = useIcons();
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
   const toggleVisibility = useCallback(() => {
@@ -40,6 +41,9 @@ export default function BackToTopButton(): JSX.Element {
       behavior: 'smooth',
     });
   };
+
+  const ArrowUpIcon = getIcon('ArrowUpIcon');
+  if (!ArrowUpIcon) return null;
 
   return (
     <AnimatePresence>

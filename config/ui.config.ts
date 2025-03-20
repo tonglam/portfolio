@@ -1,11 +1,26 @@
-import type { UI } from '@/types/config/ui.type';
+import type {
+  AnimationConstants,
+  AnimationTimingConstants,
+  BreakpointConstants,
+  LayoutConstants,
+  MotionConstants,
+  PaginationConstants,
+  RetryConstants,
+  ScrollConstants,
+  SpacingConstants,
+  ThemeConstants,
+  ThemeModeConstants,
+  ToastConstants,
+  TransitionConstants,
+  ZIndexConstants,
+} from '@/types/config/ui.type';
 import { TIME } from './common.config';
 
 /**
  * UI-related constants
  */
 
-export const THEME = {
+export const THEME: ThemeConstants = {
   COLORS: {
     PRIMARY: 'hsl(var(--primary))',
     SECONDARY: 'hsl(var(--secondary))',
@@ -29,7 +44,7 @@ export const THEME = {
   },
 } as const;
 
-export const ANIMATION = {
+export const ANIMATION: AnimationConstants = {
   DURATION: {
     FAST: TIME.SECOND * 0.15, // 150ms
     DEFAULT: TIME.SECOND * 0.2, // 200ms
@@ -45,7 +60,7 @@ export const ANIMATION = {
   },
 } as const;
 
-export const TRANSITIONS = {
+export const TRANSITIONS: TransitionConstants = {
   DEFAULT: {
     duration: ANIMATION.DURATION.DEFAULT,
     easing: ANIMATION.EASING.DEFAULT,
@@ -60,7 +75,7 @@ export const TRANSITIONS = {
   },
 } as const;
 
-export const Z_INDEX = {
+export const Z_INDEX: ZIndexConstants = {
   MODAL: 1000,
   DROPDOWN: 900,
   STICKY: 800,
@@ -71,7 +86,7 @@ export const Z_INDEX = {
   FOOTER: 300,
 } as const;
 
-export const SPACING = {
+export const SPACING: SpacingConstants = {
   0: '0',
   1: '0.25rem',
   2: '0.5rem',
@@ -92,21 +107,68 @@ export const SPACING = {
   64: '16rem',
 } as const;
 
-export const PAGINATION = {
-  DEFAULT_PAGE: 1,
-  DEFAULT_POSTS_PER_PAGE: 9,
-} as const;
-
-export const ANIMATION_TIMING = {
+export const ANIMATION_TIMING: AnimationTimingConstants = {
   DEBOUNCE_MS: 300,
+  FADE_IN_MS: 200,
+  SLIDE_IN_MS: 300,
+  STAGGER_CHILDREN_MS: 100,
 } as const;
 
-export const RETRY = {
+export const RETRY: RetryConstants = {
   MAX_ATTEMPTS: 3,
   BASE_DELAY_MS: 1000,
 } as const;
 
 export const SCROLL_THRESHOLD = 200;
+
+export const BREAKPOINTS: BreakpointConstants = {
+  MOBILE: 640,
+  TABLET: 768,
+  DESKTOP: 1024,
+  LARGE: 1280,
+} as const;
+
+export const SCROLL: ScrollConstants = {
+  THRESHOLD: 0.1,
+  OFFSET: 100,
+} as const;
+
+export const TOAST: ToastConstants = {
+  DURATION: 5000,
+  MAX_VISIBLE: 3,
+} as const;
+
+export const THEME_MODE: ThemeModeConstants = {
+  LIGHT: 'light',
+  DARK: 'dark',
+  SYSTEM: 'system',
+} as const;
+
+export const LAYOUT: LayoutConstants = {
+  MAX_WIDTH: '1440px',
+  CONTENT_WIDTH: '1200px',
+  SIDEBAR_WIDTH: '280px',
+  HEADER_HEIGHT: '64px',
+  FOOTER_HEIGHT: '80px',
+} as const;
+
+export const MOTION: MotionConstants = {
+  SPRING: {
+    STIFF: 100,
+    DAMP: 12,
+    MASS: 1,
+  },
+  TRANSITION: {
+    EASE: [0.6, 0.01, -0.05, 0.95],
+    DURATION: 0.6,
+  },
+} as const;
+
+export const PAGINATION: PaginationConstants = {
+  DEFAULT_PAGE: 1,
+  DEFAULT_POSTS_PER_PAGE: 9,
+  MAX_PAGES_TO_SHOW: 5,
+} as const;
 
 const ui = {
   THEME,
@@ -118,6 +180,14 @@ const ui = {
   ANIMATION_TIMING,
   RETRY,
   SCROLL_THRESHOLD,
-} as const satisfies UI;
+  BREAKPOINTS,
+  SCROLL,
+  TOAST,
+  THEME_MODE,
+  LAYOUT,
+  MOTION,
+} as const;
 
 export default ui;
+
+export type UI = typeof ui;

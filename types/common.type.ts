@@ -33,6 +33,16 @@ export interface Metadata {
   updatedAt?: string;
 }
 
+export interface Image {
+  url: string;
+  alt?: string;
+}
+
+export interface Link {
+  url: string;
+  label: string;
+}
+
 export const createApiError = (
   code: ApiErrorCode,
   message: string,

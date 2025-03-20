@@ -1,20 +1,15 @@
 'use client';
 
-import { contactData } from '@/app/data/contact.data';
-import { navigationItems as navigationLinks } from '@/app/data/navigation.data';
-import socialProfiles from '@/app/data/socialLinks.data';
-import { EmailIcon, GithubIcon, LinkedinIcon, LocationIcon, XIcon } from '@/components/icons';
+import { useIcons } from '@/components/providers/IconProvider';
+import { contactData } from '@/data/contact.data';
+import { navigationItems as navigationLinks } from '@/data/navigation.data';
+import socialProfiles from '@/data/socialLinks.data';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-// Map of icon components for easy reference - consistent with other components
-const socialIcons: Record<string, React.FC<{ size?: string | number; className?: string }>> = {
-  GithubIcon,
-  LinkedinIcon,
-  XIcon,
-};
-
 export default function Footer(): JSX.Element {
+  const { getIcon } = useIcons();
+
   return (
     <footer className="pt-16 pb-8 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gradient-to-r dark:from-[#0F172A] dark:to-[#1E293B]">
       <div className="container mx-auto px-4">
@@ -38,8 +33,7 @@ export default function Footer(): JSX.Element {
               </p>
               <div className="flex space-x-3">
                 {socialProfiles.map(profile => {
-                  // Ensure icon exists in our map before rendering
-                  const IconComponent = socialIcons[profile.icon];
+                  const IconComponent = getIcon(profile.icon);
                   if (!IconComponent) return null;
 
                   return (
@@ -100,7 +94,10 @@ export default function Footer(): JSX.Element {
               </h3>
               <ul className="space-y-3">
                 <li className="flex items-start space-x-3">
-                  <EmailIcon size={18} className="text-[#2563EB] dark:text-[#38BDF8] mt-0.5" />
+                  {getIcon('EmailIcon')?.({
+                    size: 18,
+                    className: 'text-[#2563EB] dark:text-[#38BDF8] mt-0.5',
+                  })}
                   <a
                     href={`mailto:${contactData.email}`}
                     className="text-gray-600 dark:text-gray-400 text-sm hover:text-[#2563EB] dark:hover:text-[#38BDF8] transition-colors duration-300"
@@ -109,7 +106,10 @@ export default function Footer(): JSX.Element {
                   </a>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <LocationIcon size={18} className="text-[#2563EB] dark:text-[#38BDF8] mt-0.5" />
+                  {getIcon('LocationIcon')?.({
+                    size: 18,
+                    className: 'text-[#2563EB] dark:text-[#38BDF8] mt-0.5',
+                  })}
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                       contactData.address

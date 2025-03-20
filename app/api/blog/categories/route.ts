@@ -1,6 +1,6 @@
 import { CACHE_SETTINGS, DEFAULTS, EXTERNAL_URLS } from '@/config';
 import { ApiErrors, handleRouteError } from '@/lib/core/error-handler.util';
-import type { CategoriesResponse, NotionPost } from '@/types/api/blog.type';
+import type { CategoriesApiResponse, NotionPost } from '@/types/api/blog.type';
 import type { ApiError } from '@/types/common.type';
 import { NextResponse } from 'next/server';
 
@@ -10,7 +10,7 @@ import { NextResponse } from 'next/server';
  */
 export const revalidate = CACHE_SETTINGS.BLOG.CATEGORIES.REVALIDATE;
 
-export async function get(): Promise<NextResponse<CategoriesResponse | ApiError>> {
+export async function get(): Promise<NextResponse<CategoriesApiResponse | ApiError>> {
   const cacheControl = CACHE_SETTINGS.BLOG.CATEGORIES.CONTROL;
 
   // Fetch data from R2 storage
@@ -78,5 +78,5 @@ export async function get(): Promise<NextResponse<CategoriesResponse | ApiError>
         'Cache-Control': cacheControl,
       },
     }
-  ) as NextResponse<CategoriesResponse>;
+  ) as NextResponse<CategoriesApiResponse>;
 }

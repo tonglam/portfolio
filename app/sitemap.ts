@@ -1,34 +1,17 @@
 import { CACHE_SETTINGS, EXTERNAL_URLS } from '@/config';
+import { SITE } from '@/config/common.config';
 import { logger } from '@/lib/core/logger.util';
+import { extractPlainText } from '@/lib/utils/string.util';
 import type { ExtendedNotionPost } from '@/types/api/blog.type';
-import type { RichTextItem } from '@/types/api/notion.type';
 import { SitemapError } from '@/types/config/errors.type';
 import type { MetadataRoute } from 'next';
-
-/**
- * Helper function to extract plain text from Notion rich text
- */
-function extractPlainText(richText: RichTextItem[] | RichTextItem | undefined): string {
-  if (!richText) {
-    return '';
-  }
-
-  // Handle array case
-  if (Array.isArray(richText)) {
-    if (richText.length === 0) return '';
-    return richText.map(item => item.plain_text || '').join('');
-  }
-
-  // Handle single item case
-  return richText.plain_text || '';
-}
 
 /**
  * Generates a dynamic sitemap for the website including all blog posts
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Base URL of the website
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yourportfolio.com';
+  const baseUrl = SITE.URL;
 
   // Static routes with their update frequency
   const staticRoutes = [

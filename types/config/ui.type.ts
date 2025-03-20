@@ -71,15 +71,62 @@ export type SpacingConstants = {
 export type PaginationConstants = {
   readonly DEFAULT_PAGE: number;
   readonly DEFAULT_POSTS_PER_PAGE: number;
+  readonly MAX_PAGES_TO_SHOW: number;
 };
 
 export type AnimationTimingConstants = {
   readonly DEBOUNCE_MS: number;
+  readonly FADE_IN_MS: number;
+  readonly SLIDE_IN_MS: number;
+  readonly STAGGER_CHILDREN_MS: number;
 };
 
 export type RetryConstants = {
   readonly MAX_ATTEMPTS: number;
   readonly BASE_DELAY_MS: number;
+};
+
+export type BreakpointConstants = {
+  readonly MOBILE: number;
+  readonly TABLET: number;
+  readonly DESKTOP: number;
+  readonly LARGE: number;
+};
+
+export type ScrollConstants = {
+  readonly THRESHOLD: number;
+  readonly OFFSET: number;
+};
+
+export type ToastConstants = {
+  readonly DURATION: number;
+  readonly MAX_VISIBLE: number;
+};
+
+export type ThemeModeConstants = {
+  readonly LIGHT: string;
+  readonly DARK: string;
+  readonly SYSTEM: string;
+};
+
+export type LayoutConstants = {
+  readonly MAX_WIDTH: string;
+  readonly CONTENT_WIDTH: string;
+  readonly SIDEBAR_WIDTH: string;
+  readonly HEADER_HEIGHT: string;
+  readonly FOOTER_HEIGHT: string;
+};
+
+export type MotionConstants = {
+  readonly SPRING: {
+    readonly STIFF: number;
+    readonly DAMP: number;
+    readonly MASS: number;
+  };
+  readonly TRANSITION: {
+    readonly EASE: [number, number, number, number];
+    readonly DURATION: number;
+  };
 };
 
 export type UI = {
@@ -92,4 +139,10 @@ export type UI = {
   readonly ANIMATION_TIMING: AnimationTimingConstants;
   readonly RETRY: RetryConstants;
   readonly SCROLL_THRESHOLD: number;
+  readonly BREAKPOINTS: BreakpointConstants;
+  readonly SCROLL: ScrollConstants;
+  readonly TOAST: ToastConstants;
+  readonly THEME_MODE: ThemeModeConstants;
+  readonly LAYOUT: LayoutConstants;
+  readonly MOTION: MotionConstants;
 };

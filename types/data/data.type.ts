@@ -1,5 +1,4 @@
 import type { Metadata } from '@/types/common.type';
-import type { FC } from 'react';
 
 /**
  * Project types
@@ -141,7 +140,7 @@ export interface CompanyDetails {
  */
 export interface Skill {
   name: string;
-  icon: FC<{ size?: string | number; className?: string }>;
+  icon: string;
   color: string;
 }
 

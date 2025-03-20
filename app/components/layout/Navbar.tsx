@@ -1,17 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-import { navigationItems as navigationLinks } from '@/app/data/navigation.data';
-import { CloseIcon, MenuIcon } from '@/components/icons';
+import { navigationItems as navigationLinks } from '@/data/navigation.data';
+import { useIcons } from '@/components/providers/IconProvider';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
-export default function Navbar(): JSX.Element {
+export default function Navbar(): JSX.Element | null {
+  const { getIcon } = useIcons();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('');
+
+  const MenuIcon = getIcon('MenuIcon');
+  const CloseIcon = getIcon('CloseIcon');
+
+  if (!MenuIcon || !CloseIcon) return null;
 
   const toggleMenu = (): void => {
     setIsMenuOpen(!isMenuOpen);
@@ -110,7 +115,7 @@ export default function Navbar(): JSX.Element {
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
             <Button variant="ghost" size="icon" className="text-white" onClick={toggleMenu}>
-              {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
+              {isMenuOpen ? <CloseIcon size={24} /> : <MenuIcon size={24} />}
             </Button>
           </div>
         </div>

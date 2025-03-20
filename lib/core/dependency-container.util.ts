@@ -20,7 +20,6 @@ export function register<T>(key: string, instance: T): void {
   }
 
   container[key] = instance;
-  logger.debug(`Service '${key}' has been registered.`);
 }
 
 /**
@@ -50,7 +49,6 @@ export function has(key: string): boolean {
 export function remove(key: string): void {
   if (container[key]) {
     delete container[key];
-    logger.debug(`Service '${key}' has been removed.`);
   }
 }
 
@@ -61,8 +59,6 @@ export function clear(): void {
   Object.keys(container).forEach(key => {
     delete container[key];
   });
-
-  logger.debug('All services have been cleared from the container.');
 }
 
 // Register core services

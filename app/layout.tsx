@@ -1,5 +1,7 @@
-import ErrorBoundary from '@/app/components/ErrorBoundary';
+import { IconProvider } from '@/components/providers/IconProvider';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
+import { SITE } from '@/config/common.config';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Inter } from 'next/font/google';
@@ -8,14 +10,16 @@ import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
+const description =
+  'Professional portfolio of Qitong Lan, a full-stack engineer evolving for the new era of tech.';
+
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://yourportfolio.com'),
+  metadataBase: new URL(SITE.URL),
   title: {
     default: 'Qitong Lan - Portfolio',
     template: '%s | Qitong Lan',
   },
-  description:
-    'Professional portfolio of Qitong Lan, a full-stack engineer evolving for the new era of tech.',
+  description: description,
   keywords: [
     'Full Stack Developer',
     'Software Engineer',
@@ -26,22 +30,6 @@ export const metadata = {
   ],
   authors: [{ name: 'Qitong Lan' }],
   creator: 'Qitong Lan',
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: '/',
-    title: 'Qitong Lan - Portfolio',
-    description:
-      'Professional portfolio of Qitong Lan, a full-stack engineer evolving for the new era of tech.',
-    siteName: 'Qitong Lan Portfolio',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Qitong Lan - Portfolio',
-    description:
-      'Professional portfolio of Qitong Lan, a full-stack engineer evolving for the new era of tech.',
-    creator: '@tonglam',
-  },
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
@@ -61,11 +49,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
         <link rel="apple-touch-icon" href="/favicon.ico" />
       </head>
       <body className={inter.className}>
-        <ErrorBoundary>
-          {children}
-          <Analytics />
-          <SpeedInsights />
-          <Toaster />
+        <ErrorBoundary fullScreen>
+          <IconProvider>
+            {children}
+            <Analytics />
+            <SpeedInsights />
+            <Toaster />
+          </IconProvider>
         </ErrorBoundary>
       </body>
     </html>

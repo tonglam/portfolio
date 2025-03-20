@@ -78,22 +78,15 @@ export async function get(
 
   const processedPost: ProcessedBlogPost = {
     id,
+    slug,
     title,
     summary,
-    excerpt: summary,
-    slug,
+    date,
+    minRead,
+    r2ImageUrl,
+    originalPageUrl,
     category,
     tags,
-    coverImage: r2ImageUrl,
-    dateCreated: post.created_time || new Date().toISOString(),
-    published: post.properties?.Published?.checkbox ?? true,
-    featured: post.properties?.Featured?.checkbox ?? false,
-    notionUrl: post.url || '',
-    readingTime: minRead,
-    date,
-    originalPageUrl,
-    noteCreated: post.created_time || new Date().toISOString(),
-    noteEdited: post.last_edited_time || new Date().toISOString(),
   };
 
   return NextResponse.json(

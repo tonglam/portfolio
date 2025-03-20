@@ -13,6 +13,7 @@ const envSchema = z.object({
 
   // Optional environment variables with defaults
   NEXT_PUBLIC_API_URL: z.string().optional().default('/api'),
+  NEXT_PUBLIC_SITE_URL: z.string().url().optional().default('https://qitonglan.com'),
 });
 
 // Type for validation result
@@ -29,6 +30,7 @@ export function validateEnv(): ValidationResult {
       NODE_ENV: process.env.NODE_ENV,
       RESEND_API_KEY: process.env.RESEND_API_KEY,
       NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+      NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     });
 
     return { isValid: true, env, errors: [] };

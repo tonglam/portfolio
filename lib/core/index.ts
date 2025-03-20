@@ -4,12 +4,13 @@
  */
 
 // Logger exports
-export { logger, LogLevel } from './logger.util';
+export { LogLevel } from '@/types/config/log.type';
+export { logger } from './logger.util';
 export type { Logger } from './logger.util';
 
 // Error handler exports
-export { ApiErrors, AppError, handleApiError, safeJsonParse } from './error-handler.util';
+export { ApiErrors, AppError, safeJsonParse } from './error-handler.util';
 
 // Dependency container exports
 export { DependencyContainer } from './dependency-container.util';
-export type { Container } from './dependency-container.util';
+export type { DependencyContainer as Container } from './dependency-container.util';

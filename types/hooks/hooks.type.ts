@@ -4,6 +4,7 @@
 
 import type { ToastActionElement, ToastProps } from '@/components/ui/toast';
 import type { ReactNode } from 'react';
+import type { ToastReturn } from './toast.type';
 
 /**
  * TypeWriter hook types
@@ -39,18 +40,10 @@ export type ToasterToast = ToastProps & {
   action?: ToastActionElement;
 };
 
-export interface ToastReturn {
-  id: string;
-  dismiss: () => void;
-  update: (props: ToasterToast) => void;
-}
-
 export interface UseToastReturn {
   toasts: ToasterToast[];
   toast: (props: Omit<ToasterToast, 'id'>) => ToastReturn;
   dismiss: (toastId?: string) => void;
 }
 
-export interface ToastState {
-  toasts: ToasterToast[];
-}
+// Note: ToastState and ToastReturn are now imported from toast.type.ts

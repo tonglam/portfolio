@@ -1,35 +1,21 @@
-import * as Icons from '@/components/icons';
+import type { IconProps } from '@/types/components/common.type';
+import type { ElementType } from 'react';
 import React from 'react';
 
-export interface IconProps {
-  size?: number;
-  className?: string;
+/**
+ * Creates a new icon component from a React element type
+ */
+export function createIconComponent<T extends ElementType>(Icon: T): React.FC<IconProps> {
+  return function IconComponent({ size = 24, className }: IconProps): JSX.Element {
+    return React.createElement(Icon, { size, className });
+  };
 }
 
-// Exclude utility functions and add index signature
-type IconsModule = Omit<typeof Icons, 'createIconComponent'> & {
-  [key: string]: React.FC<IconProps> | undefined;
-};
-
 /**
- * Safely looks up an icon component by name
- * @param iconName The name of the icon to look up
- * @returns The icon component or a fallback component
+ * Creates a fallback icon component
  */
-export function getIconByName(iconName: string): React.FC<IconProps> {
-  // Create a safe way to look up icons without type errors
-  const getIcon = (name: string): React.FC<IconProps> | undefined => {
-    return (Icons as unknown as IconsModule)[name];
-  };
-
-  // Check if the icon exists
-  const icon = getIcon(iconName);
-  if (icon) {
-    return icon;
-  }
-
-  // Return a fallback icon or empty component
-  return ({ className }: IconProps) => {
-    return React.createElement('span', { className }, 'Icon not found');
+export function createFallbackIcon(message = 'Icon not found'): React.FC<IconProps> {
+  return function FallbackIcon({ className }: IconProps): JSX.Element {
+    return React.createElement('span', { className }, message);
   };
 }
