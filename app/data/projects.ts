@@ -3,8 +3,6 @@
  * Contains information about personal and professional projects
  */
 
-import { EXTERNAL_URLS } from '@/config/constants';
-
 export interface ProjectImage {
   src: string;
   alt: string;
@@ -18,6 +16,13 @@ export interface ProjectLink {
   label: string;
 }
 
+export enum ProjectCategory {
+  FRONTEND = 'Frontend',
+  BACKEND = 'Backend',
+  FULLSTACK = 'Full Stack',
+  OTHER = 'Other',
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -28,160 +33,226 @@ export interface Project {
   technologies: string[];
   links?: ProjectLink[];
   featured?: boolean;
+  displayOnHome?: boolean;
   date?: string;
-  category: 'Frontend' | 'Backend' | 'Full Stack' | 'Mobile' | 'Other';
+  categories: ProjectCategory[];
   code?: string;
+  order?: number;
 }
 
-// Helper function to convert githubUrl and demoUrl to links array
-const createLinks = (githubUrl?: string, demoUrl?: string): ProjectLink[] => {
-  const links: ProjectLink[] = [];
-
-  if (githubUrl) {
-    links.push({
-      type: 'github',
-      url: githubUrl,
-      label: 'GitHub Repository',
-    });
-  }
-
-  if (demoUrl) {
-    links.push({
-      type: 'demo',
-      url: demoUrl,
-      label: 'Live Demo',
-    });
-  }
-
-  return links;
+// Helper function to create links with multiple types
+const createProjectLinks = (
+  links: { type: ProjectLink['type']; url: string; label?: string }[]
+): ProjectLink[] => {
+  return links.map(link => ({
+    type: link.type,
+    url: link.url,
+    label: link.label || `${link.type.charAt(0).toUpperCase()}${link.type.slice(1)}`,
+  }));
 };
 
 export const projectsData: Project[] = [
   {
-    id: 'financial-app',
-    title: 'AI Powered Financial App',
-    description:
-      'An AI-powered financial mobile application that helps users manage their finances and make informed decisions.',
-    technologies: [
-      'Express',
-      'MongoDB',
-      'OpenAI API',
-      'AWS SES',
-      'AWS S3',
-      'Node Mailer',
-      'Joi',
-      'Puppeteer',
-      'EC2',
-      'PM2',
-      'Nginx',
-    ],
-    category: 'Backend',
-    links: createLinks(EXTERNAL_URLS.PROJECT.GITHUB, EXTERNAL_URLS.PROJECT.DEMO),
-    code: `const project = {
-  name: 'AI Powered Financial App',
-  tools: ['Express', 'MongoDB', 'OpenAI API', 'AWS SES',
-          'AWS S3', 'Node Mailer', 'Joi', 'Puppeteer', 'EC2', 'PM2',
-          'Nginx'],
-  myRole: 'Backend Developer',
-  Description: 'Me and my team built an AI-powered financial mobile application. I have developed API using Express, Typescript, OpenAI, AWS, and MongoDB. Used OTP via AWS SES, Google, and Facebook for the authentication system. Built AI assistants using OpenAI's latest model and trained using our dataset. Voice messages are converted to text using AWS Transcribe. The app fetches data from Google Sheets and generates a PDF term sheet, sent via AWS SES.',
-};`,
-    featured: true,
-  },
-  {
-    id: 'travel-agency',
-    title: 'Travel Agency App',
-    description:
-      'A comprehensive travel agency application that allows users to book trips, explore destinations, and manage their travel plans.',
-    technologies: [
-      'NextJS',
-      'Tailwind CSS',
-      'Google Maps',
-      'NestJS',
-      'TypeScript',
-      'MySQL',
-      'AWS S3',
-      'Sun-Editor',
-      'Gmail Passkey',
-    ],
-    category: 'Full Stack',
-    links: createLinks(EXTERNAL_URLS.PROJECT.GITHUB, EXTERNAL_URLS.PROJECT.DEMO),
-    code: `const project = {
-  name: 'Travel Agency App',
-  tools: ['NextJS', 'Tailwind CSS', 'Google Maps', 'NestJS',
-          'TypeScript', 'MySQL', 'AWS S3', 'Sun-Editor', 'Gmail Passkey'],
-};`,
-    featured: true,
-  },
-  {
-    id: 'ecommerce-platform',
-    title: 'E-commerce Platform',
-    description:
-      'A feature-rich e-commerce platform with product management, cart functionality, payment processing, and order tracking.',
-    technologies: ['React', 'Redux', 'Node.js', 'Express', 'MongoDB', 'Stripe', 'AWS S3', 'JWT'],
-    category: 'Full Stack',
-    links: createLinks(EXTERNAL_URLS.PROJECT.GITHUB, EXTERNAL_URLS.PROJECT.DEMO),
-  },
-  {
-    id: 'chat-app',
-    title: 'Real-time Chat Application',
-    description:
-      'A real-time chat application with private messaging, group chats, and file sharing capabilities.',
-    technologies: ['React', 'Socket.io', 'Express', 'MongoDB', 'JWT', 'Redis'],
-    category: 'Full Stack',
-    links: createLinks(EXTERNAL_URLS.PROJECT.GITHUB),
-  },
-  {
     id: 'portfolio',
-    title: 'Portfolio Website',
+    title: 'Portfolio',
     description:
-      'A responsive portfolio website showcasing projects, skills, and contact information.',
-    technologies: ['Next.js', 'Tailwind CSS', 'Framer Motion', 'TypeScript'],
-    category: 'Frontend',
-    links: createLinks(EXTERNAL_URLS.PROJECT.GITHUB, EXTERNAL_URLS.PROJECT.DEMO),
+      'Personal portfolio website built with Next.js, TypeScript, and Tailwind CSS, featuring project showcases and responsive design.',
+    technologies: ['TypeScript', 'Next.js', 'Tailwind CSS', 'React', 'Framer Motion'],
+    categories: [ProjectCategory.FRONTEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/portfolio' },
+      { type: 'demo', url: 'https://www.qitonglan.com' },
+    ]),
+    featured: true,
+    displayOnHome: true,
+    order: 1,
   },
   {
-    id: 'task-management',
-    title: 'Task Management System',
+    id: 'askify',
+    title: 'Askify',
     description:
-      'A comprehensive task management system with project tracking, task assignment, and progress monitoring.',
-    technologies: ['React', 'Redux', 'Node.js', 'Express', 'MongoDB', 'JWT'],
-    category: 'Full Stack',
-    links: createLinks(EXTERNAL_URLS.PROJECT.GITHUB),
+      'A modern request forum platform built with Flask, featuring user authentication, real-time updates, and interactive discussion threads.',
+    technologies: ['Python', 'Flask', 'SQLite', 'Bootstrap'],
+    categories: [ProjectCategory.FULLSTACK],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/Askify' },
+      { type: 'demo', url: 'https://askify-q4k0.onrender.com' },
+    ]),
+    order: 2,
   },
   {
-    id: 'weather-dashboard',
-    title: 'Weather Dashboard',
+    id: 'letletme-api',
+    title: 'LetLetMe API',
     description:
-      'A weather dashboard that displays current weather conditions and forecasts for multiple locations.',
-    technologies: ['React', 'OpenWeather API', 'Chart.js', 'Tailwind CSS'],
-    category: 'Frontend',
-    links: createLinks(EXTERNAL_URLS.PROJECT.GITHUB, EXTERNAL_URLS.PROJECT.DEMO),
+      'High-performance RESTful API service built with Bun and Elysia.js, powering the LetLetMe Fantasy Premier League analytics platform with ultra-fast data processing.',
+    technologies: ['TypeScript', 'Bun', 'Elysia.js', 'MySQL', 'Redis'],
+    categories: [ProjectCategory.BACKEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/letletme-api' },
+      { type: 'demo', url: 'https://api.letletme.top' },
+    ]),
+    featured: true,
+    order: 6,
   },
   {
-    id: 'blog-platform',
-    title: 'Blog Platform',
+    id: 'letletme-web',
+    title: 'LetLetMe Web',
     description:
-      'A blog platform with content management, user authentication, and commenting functionality.',
-    technologies: ['Next.js', 'Prisma', 'PostgreSQL', 'NextAuth.js', 'Tailwind CSS'],
-    category: 'Full Stack',
-    links: createLinks(EXTERNAL_URLS.PROJECT.GITHUB, EXTERNAL_URLS.PROJECT.DEMO),
+      'Frontend application for letletme.top, providing a comprehensive user interface for Fantasy Premier League data analytics and team management.',
+    technologies: ['TypeScript', 'React', 'Next.js', 'Tailwind CSS', 'Ant Design'],
+    categories: [ProjectCategory.FRONTEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/letletme-web' },
+      { type: 'demo', url: 'https://letletme.top' },
+    ]),
+    featured: true,
+    displayOnHome: true,
+    order: 4,
   },
   {
-    id: 'recipe-app',
-    title: 'Recipe Sharing App',
-    description: 'A recipe sharing application where users can discover, share, and save recipes.',
-    technologies: ['React Native', 'Firebase', 'Redux', 'Expo'],
-    category: 'Mobile',
-    links: createLinks(EXTERNAL_URLS.PROJECT.GITHUB),
+    id: 'letletme-data',
+    title: 'LetLetMe Data',
+    description:
+      'Advanced data analytics tool for Fantasy Premier League (FPL) managers, providing statistical insights, team optimization, and performance analysis.',
+    technologies: ['TypeScript', 'Node.js', 'Data Analysis', 'API Integration', 'MySQL'],
+    categories: [ProjectCategory.BACKEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/letletme_data' },
+    ]),
+    featured: true,
+    order: 5,
   },
   {
-    id: 'inventory-system',
-    title: 'Inventory Management System',
-    description: 'An inventory management system for tracking products, orders, and stock levels.',
-    technologies: ['React', 'Node.js', 'Express', 'MySQL', 'Docker'],
-    category: 'Full Stack',
-    links: createLinks(EXTERNAL_URLS.PROJECT.GITHUB, EXTERNAL_URLS.PROJECT.DEMO),
+    id: 'notion-page-db',
+    title: 'Notion Page DB',
+    description:
+      'Tool for managing and synchronizing Notion pages and databases, with automated content organization.',
+    technologies: ['TypeScript', 'Notion API', 'Cloudflare Workers'],
+    categories: [ProjectCategory.BACKEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/notion-page-db' },
+    ]),
+  },
+  {
+    id: 'notion2worker',
+    title: 'Notion2Worker',
+    description:
+      'Cloudflare Worker that retrieves Notion database content and efficiently stores it in Cloudflare R2 storage.',
+    technologies: ['JavaScript', 'Cloudflare Workers', 'Notion API', 'R2 Storage'],
+    categories: [ProjectCategory.BACKEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/notion2Worker' },
+    ]),
+  },
+  {
+    id: 'miniprogram-letletme',
+    title: 'MiniProgram LetLetMe',
+    description:
+      'WeChat Mini Program offering FPL tools including team information, deadline countdown, live scores, and mini-league rankings.',
+    technologies: ['JavaScript', 'WeChat Mini Program', 'Mobile Development', 'WeChat API'],
+    categories: [ProjectCategory.FRONTEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/miniprogram-letletme' },
+      { type: 'demo', url: 'https://qitonglan.com/miniprogram.webp' },
+    ]),
+    featured: true,
+    order: 3,
+  },
+  {
+    id: 'fpl-data-public',
+    title: 'FPL Data Public',
+    description:
+      'Public version of the FPL data processing system, providing core functionality for fantasy league data analysis.',
+    technologies: ['Java', 'Spring Boot', 'MySQL', 'Redis'],
+    categories: [ProjectCategory.BACKEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/fpl-data-public' },
+    ]),
+  },
+  {
+    id: 'fpl-public',
+    title: 'FPL Public',
+    description:
+      'Public version of the letletme.top backend service, handling core fantasy league functionalities.',
+    technologies: ['JavaScript', 'Java', 'Spring Boot', 'MySQL', 'Redis'],
+    categories: [ProjectCategory.FULLSTACK],
+    links: createProjectLinks([{ type: 'github', url: 'https://github.com/tonglam/fpl-public' }]),
+  },
+  {
+    id: 'fpldle-python',
+    title: 'FPLdle Python',
+    description:
+      'Python implementation of an FPL-themed word game, similar to Wordle but focused on fantasy league content.',
+    technologies: ['Python', 'Game Development'],
+    categories: [ProjectCategory.BACKEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/fpldle-python' },
+    ]),
+  },
+  {
+    id: 'fpl-analysis-2223',
+    title: 'FPL Analysis 22/23',
+    description:
+      'Comprehensive analysis of the Fantasy Premier League 2022-2023 season data using R statistical computing.',
+    technologies: ['R', 'Data Analysis', 'Statistical Computing'],
+    categories: [ProjectCategory.OTHER],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/fpl_analysis_2223' },
+      { type: 'article', url: 'https://rpubs.com/tonglam/1077811' },
+    ]),
+  },
+  {
+    id: 'telegrambot-public',
+    title: 'Telegram Bot Public',
+    description:
+      'Spring Boot-based Telegram bot for the LetLetMe platform, providing automated FPL updates and notifications.',
+    technologies: ['Java', 'Spring Boot', 'Telegram API'],
+    categories: [ProjectCategory.BACKEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/telegramBot-public' },
+    ]),
+  },
+  {
+    id: 'letletme-apikey',
+    title: 'LetLetMe APIKey',
+    description:
+      'API key management system for LetLetMe services, handling authentication and access control.',
+    technologies: ['JavaScript', 'Shell', 'Cloudflare Workers'],
+    categories: [ProjectCategory.BACKEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/letletme-apikey' },
+    ]),
   },
 ];
+
+// Enhanced helper functions for better filtering
+export const getHomePageProjects = (): Project[] => {
+  return projectsData.filter(project => project.displayOnHome);
+};
+
+export const getProjectsByCategory = (category: ProjectCategory): Project[] => {
+  return projectsData.filter(project => project.categories.includes(category));
+};
+
+export const getProjectsByCategories = (categories: ProjectCategory[]): Project[] => {
+  return projectsData.filter(project =>
+    categories.some(category => project.categories.includes(category))
+  );
+};
+
+export const getProjectsByAllCategories = (categories: ProjectCategory[]): Project[] => {
+  return projectsData.filter(project =>
+    categories.every(category => project.categories.includes(category))
+  );
+};
+
+export const getFeaturedProjects = (): Project[] => {
+  return projectsData.filter(project => project.featured);
+};
+
+export const getCategoriesForProject = (projectId: string): ProjectCategory[] => {
+  const project = projectsData.find(p => p.id === projectId);
+  return project ? project.categories : [];
+};
 
 export default projectsData;

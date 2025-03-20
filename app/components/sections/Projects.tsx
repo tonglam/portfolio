@@ -1,28 +1,27 @@
 'use client';
 
-import { GithubIcon } from '@/components/icons';
+import { ExternalLinkIcon, GithubIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { projectsData } from '@/data/projects';
+import { ProjectCategory, projectsData } from '@/data/projects';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useState } from 'react';
 
 export default function Projects(): JSX.Element {
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState<'All' | ProjectCategory>('All');
   const [visibleProjects, setVisibleProjects] = useState(6);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Extract unique categories from projects
-  const categories = [
-    'All',
-    ...Array.from(new Set(projectsData.map(project => project.category || 'Other'))),
-  ];
+  // Get all categories from the ProjectCategory enum plus 'All'
+  const categories = ['All', ...Object.values(ProjectCategory)];
 
-  // Filter projects based on active category
+  // Filter projects based on active category and sort by order
   const filteredProjects =
     activeCategory === 'All'
-      ? projectsData
-      : projectsData.filter(project => project.category === activeCategory);
+      ? [...projectsData].sort((a, b) => (a.order || 999) - (b.order || 999))
+      : [...projectsData]
+          .filter(project => project.categories[0] === activeCategory)
+          .sort((a, b) => (a.order || 999) - (b.order || 999));
 
   const handleLoadMore = (): void => {
     setIsLoading(true);
@@ -126,7 +125,7 @@ export default function Projects(): JSX.Element {
                       : 'border-[#3B82F6] dark:border-[#F472B6] text-gray-700 dark:text-gray-300'
                   }`}
                   onClick={() => {
-                    setActiveCategory(category);
+                    setActiveCategory(category as 'All' | ProjectCategory);
                     setVisibleProjects(6);
                   }}
                 >
@@ -155,6 +154,17 @@ export default function Projects(): JSX.Element {
                 className="bg-gray-50 dark:bg-gradient-to-br dark:from-[#1E293B] dark:to-[#2D3748] rounded-lg overflow-hidden shadow-md transition-all duration-300 h-full"
               >
                 <div className="p-5 md:p-6 flex flex-col h-full">
+                  <motion.div
+                    className="mb-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                      {project.categories[0]}
+                    </span>
+                  </motion.div>
+
                   <div className="flex items-center justify-between mb-4">
                     <motion.h3
                       className="text-lg md:text-xl font-bold text-gray-900 dark:text-white line-clamp-1"
@@ -202,9 +212,6 @@ export default function Projects(): JSX.Element {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                   >
-                    <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-400 mb-2">
-                      Technologies:
-                    </h4>
                     <div className="flex flex-wrap gap-2">
                       {project.technologies.slice(0, 6).map((tech, techIndex) => (
                         <motion.span
@@ -249,9 +256,16 @@ export default function Projects(): JSX.Element {
                         <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
                           <Button
                             variant="outline"
-                            className="text-xs sm:text-sm border-[#3B82F6] dark:border-[#F472B6] text-[#3B82F6] dark:text-[#F472B6]"
+                            size="icon"
+                            className="rounded-full border-[#3B82F6] dark:border-[#F472B6] flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 cursor-pointer group relative"
                           >
-                            Live Demo
+                            <ExternalLinkIcon
+                              className="text-[#3B82F6] dark:text-[#F472B6]"
+                              size={18}
+                            />
+                            <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Live Demo
+                            </span>
                           </Button>
                         </motion.div>
                       </Link>
@@ -266,9 +280,12 @@ export default function Projects(): JSX.Element {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="rounded-full border-[#3B82F6] dark:border-[#F472B6] flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10"
+                            className="rounded-full border-[#3B82F6] dark:border-[#F472B6] flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 cursor-pointer group relative"
                           >
                             <GithubIcon className="text-[#3B82F6] dark:text-[#F472B6]" size={18} />
+                            <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Source Code
+                            </span>
                           </Button>
                         </motion.div>
                       </Link>

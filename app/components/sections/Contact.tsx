@@ -6,18 +6,21 @@ import { Button } from '@/components/ui/button';
 import { contactData } from '@/data/contact';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import type { LucideProps } from 'lucide-react';
 import Link from 'next/link';
 import type { ChangeEvent } from 'react';
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 // Define allowed social icon types
 type SocialIconType = 'GithubIcon' | 'LinkedinIcon' | 'XIcon';
 
 // Define a type for the icon components
-type IconComponent = typeof GithubIcon;
+type IconComponent =
+  | React.FC<{ size?: string | number; className?: string }>
+  | (({ size, ...props }: LucideProps) => JSX.Element);
 
-// Map of icon components for easy reference - consistent with Hero component
+// Map of icon components for easy reference
 const socialIcons: Record<SocialIconType, IconComponent> = {
   GithubIcon,
   LinkedinIcon,
