@@ -8,7 +8,17 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-    domains: ['res.cloudinary.com', 'media.licdn.com', 'images.credly.com'],
+    minimumCacheTTL: 60,
+    domains: [
+      'res.cloudinary.com',
+      'media.licdn.com',
+      'images.credly.com',
+      'v0.dev',
+      'bolt.new',
+      'cursor.com',
+      'codeium.com',
+      'claudemcp.com',
+    ],
     formats: ['image/webp'],
   },
   // Custom headers cannot be used with output: 'export'
@@ -19,6 +29,7 @@ const nextConfig = {
   // Add performance optimizations
   poweredByHeader: false,
   reactStrictMode: true,
+  swcMinify: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },

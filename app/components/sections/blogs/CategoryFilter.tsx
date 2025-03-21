@@ -40,7 +40,8 @@ export function CategoryFilter({
       });
 
       if (result.success && result.data?.categories) {
-        setCategories(['All', ...result.data.categories]);
+        // Don't add 'All' here since it's already included in the API response
+        setCategories(result.data.categories);
       } else {
         throw new Error(result.error?.message || 'Failed to fetch categories');
       }
@@ -128,7 +129,7 @@ export function CategoryFilter({
           })
           .map((category, index) => (
             <motion.div
-              key={category}
+              key={`${category}-${index}`}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 * index, duration: 0.3 }}

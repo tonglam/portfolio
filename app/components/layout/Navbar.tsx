@@ -1,22 +1,17 @@
 'use client';
 
-import { navigationItems as navigationLinks } from '@/data/navigation.data';
-import { useIcons } from '@/components/providers/IconProvider';
-import { Button } from '@/components/ui/button';
+import { navigationItems } from '@/data/navigation.data';
 import { motion } from 'framer-motion';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { DesktopNav } from './navigation/DesktopNav';
+import { Logo } from './navigation/Logo';
+import { MobileMenuButton } from './navigation/MobileMenuButton';
+import { MobileNav } from './navigation/MobileNav';
 
-export default function Navbar(): JSX.Element | null {
-  const { getIcon } = useIcons();
+export default function Navbar(): JSX.Element {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState('');
-
-  const MenuIcon = getIcon('MenuIcon');
-  const CloseIcon = getIcon('CloseIcon');
-
-  if (!MenuIcon || !CloseIcon) return null;
+  const [activeSection, setActiveSection] = useState('about');
 
   const toggleMenu = (): void => {
     setIsMenuOpen(!isMenuOpen);
@@ -31,8 +26,15 @@ export default function Navbar(): JSX.Element | null {
       }
 
       // Update active section based on scroll position
-      const sections = navigationLinks.map(link => link.href.substring(1));
+      const sections = navigationItems.map(link => link.href.substring(1));
 
+      // Check if we're at the top (hero/about section)
+      if (window.scrollY < 100) {
+        setActiveSection('about');
+        return;
+      }
+
+      // Check other sections
       for (const section of sections) {
         const element = document.getElementById(section);
         if (element) {
@@ -77,76 +79,21 @@ export default function Navbar(): JSX.Element | null {
       transition={{ duration: 0.5 }}
       className={`fixed w-full top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'py-2 bg-gradient-to-r from-[#0F172A]/95 to-[#1E293B]/95 shadow-md'
-          : 'py-3 sm:py-4 bg-gradient-to-r from-[#0F172A]/90 to-[#1E293B]/90'
+          ? 'py-2 bg-gradient-to-r from-[oklab(35%_-.00637898_-.0362918_/.95)] to-[oklab(35%_-.00637898_-.0362918_/.95)] shadow-md'
+          : 'py-3 sm:py-4 bg-gradient-to-r from-[oklab(35%_-.00637898_-.0362918_/.9)] to-[oklab(35%_-.00637898_-.0362918_/.9)]'
       } backdrop-blur-sm border-b border-gray-800`}
     >
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
-          <Link
-            href="/"
-            className="bg-clip-text text-transparent bg-gradient-to-r from-[#38BDF8] to-[#818CF8] text-xl sm:text-2xl font-bold"
-          >
-            TONG
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-3 lg:space-x-6">
-            {navigationLinks.map((link, index) => (
-              <Link
-                key={index}
-                href={link.href}
-                className={`text-xs lg:text-sm transition-colors duration-200 relative group ${
-                  activeSection === link.href.substring(1)
-                    ? 'text-[#38BDF8]'
-                    : 'text-gray-300 hover:text-[#38BDF8]'
-                }`}
-              >
-                {link.label}
-                <span
-                  className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-[#38BDF8] transition-all duration-200 ${
-                    activeSection === link.href.substring(1) ? 'w-full' : 'group-hover:w-full'
-                  }`}
-                ></span>
-              </Link>
-            ))}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <Button variant="ghost" size="icon" className="text-white" onClick={toggleMenu}>
-              {isMenuOpen ? <CloseIcon size={24} /> : <MenuIcon size={24} />}
-            </Button>
-          </div>
+          <Logo />
+          <DesktopNav activeSection={activeSection} />
+          <MobileMenuButton isOpen={isMenuOpen} onClick={toggleMenu} />
         </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="md:hidden mt-4 bg-white dark:bg-[#1E293B] rounded-lg p-4 shadow-lg mobile-menu-container"
-          >
-            <div className="flex flex-col space-y-2">
-              {navigationLinks.map((link, index) => (
-                <Link
-                  key={index}
-                  href={link.href}
-                  className={`py-2 px-4 rounded-md transition-colors duration-200 ${
-                    activeSection === link.href.substring(1)
-                      ? 'bg-gray-100 dark:bg-[#0F172A] text-[#2563EB] dark:text-[#38BDF8]'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#0F172A] hover:text-[#2563EB] dark:hover:text-[#38BDF8]'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        )}
+        <MobileNav
+          isOpen={isMenuOpen}
+          activeSection={activeSection}
+          onLinkClick={() => setIsMenuOpen(false)}
+        />
       </div>
     </motion.nav>
   );

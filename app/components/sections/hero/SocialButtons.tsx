@@ -1,17 +1,29 @@
 'use client';
 
-import { useIcons } from '@/components/providers/IconProvider';
+import { GithubIcon, LinkedinIcon, XIcon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import socialProfiles from '@/data/socialLinks.data';
 import Link from 'next/link';
 
-export default function SocialButtons(): JSX.Element {
-  const { getIcon } = useIcons();
+// Define icon types for TypeScript
+type SocialIconType = 'GithubIcon' | 'LinkedinIcon' | 'XIcon';
+type IconComponent = typeof GithubIcon;
 
+// Map of icon components for easy reference
+const socialIcons: Record<SocialIconType, IconComponent> = {
+  GithubIcon,
+  LinkedinIcon,
+  XIcon,
+};
+
+export default function SocialButtons(): JSX.Element {
   return (
     <div className="flex space-x-4">
       {socialProfiles.map(profile => {
-        const IconComponent = getIcon(profile.icon);
+        // Type-safe icon lookup
+        const iconName = profile.icon as SocialIconType;
+        const IconComponent = socialIcons[iconName];
+
         if (!IconComponent) return null;
 
         return (

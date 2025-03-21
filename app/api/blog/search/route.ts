@@ -34,6 +34,10 @@ export async function get(request: NextRequest): Promise<NextResponse> {
   // Fetch data from R2 storage
   const response = await fetch(EXTERNAL_URLS.BLOG_DATA_SOURCE, {
     next: { revalidate: CACHE_SETTINGS.BLOG.REVALIDATE },
+    headers: {
+      'Cache-Control': cacheControl,
+      Authorization: process.env.CLOUDFLARE_API_TOKEN || '',
+    },
   });
 
   // Return error if fetch fails

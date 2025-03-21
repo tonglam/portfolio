@@ -10,19 +10,30 @@ import { NextResponse } from 'next/server';
  */
 export const revalidate = CACHE_SETTINGS.BLOG.CATEGORIES.REVALIDATE;
 
-export async function get(): Promise<NextResponse<CategoriesApiResponse | ApiError>> {
+export async function GET(): Promise<NextResponse<CategoriesApiResponse | ApiError>> {
   const cacheControl = CACHE_SETTINGS.BLOG.CATEGORIES.CONTROL;
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
 
-  // Fetch data from R2 storage
+  if (!apiToken) {
+    console.error('Missing Cloudflare API token');
+    return handleRouteError(
+      ApiErrors.INTERNAL('Server configuration error'),
+      'Blog Categories API'
+    ) as NextResponse<ApiError>;
+  }
+
+  // Fetch data from R2 storage with Cloudflare R2 authentication
   const response = await fetch(`${EXTERNAL_URLS.BLOG_DATA_SOURCE}?cache=${Date.now()}`, {
     headers: {
       'Cache-Control': cacheControl,
-    },
+      Authorization: apiToken,
+    } as HeadersInit,
   });
 
   if (!response.ok) {
+    console.error('Failed to fetch blog categories:', response.status, response.statusText);
     return handleRouteError(
-      ApiErrors.INTERNAL('Failed to fetch blog categories'),
+      ApiErrors.INTERNAL(`Failed to fetch blog categories: ${response.status}`),
       'Blog Categories API'
     ) as NextResponse<ApiError>;
   }

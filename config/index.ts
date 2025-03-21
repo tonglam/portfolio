@@ -5,7 +5,6 @@
 // Re-export all constants
 export * from './cache.config';
 export * from './common.config';
-export * from './constants';
 export * from './cors.config';
 export * from './defaults.config';
 export * from './errors.config';

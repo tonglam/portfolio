@@ -1,5 +1,6 @@
 'use client';
 
+import { Icon } from '@/components/ui/Icon';
 import type { SkillCategory } from '@/types/data/data.type';
 import { motion } from 'framer-motion';
 
@@ -41,22 +42,19 @@ function SkillCategoryCard({ title, skills, delay = 0 }: SkillCategoryCardProps)
         {title}
       </h3>
       <ul className="space-y-3">
-        {skills.map((skill, index) => {
-          const IconComponent = skill.icon;
-          return (
-            <motion.li
-              key={index}
-              className="flex items-center gap-3"
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: delay + index * 0.1 }}
-            >
-              <IconComponent size={20} className={skill.color} />
-              <span className="text-gray-700 dark:text-gray-300">{skill.name}</span>
-            </motion.li>
-          );
-        })}
+        {skills.map((skill, index) => (
+          <motion.li
+            key={index}
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.3, delay: delay + index * 0.1 }}
+          >
+            <Icon name={skill.icon} size={20} className={skill.color} />
+            <span className="text-gray-700 dark:text-gray-300">{skill.name}</span>
+          </motion.li>
+        ))}
       </ul>
     </motion.div>
   );

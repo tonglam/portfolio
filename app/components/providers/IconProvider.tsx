@@ -1,3 +1,5 @@
+'use client';
+
 import iconRegistry from '@/components/icons';
 import type {
   IconComponent,

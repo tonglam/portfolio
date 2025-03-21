@@ -3,6 +3,7 @@ import type { IconRegistry } from '@/types/components/icon.type';
 import { IconCategory } from '@/types/components/icon.type';
 import { AiOutlineCode } from 'react-icons/ai';
 import { BiLogoGithub, BiLogoLinkedin, BiLogoTwitter } from 'react-icons/bi';
+import { BsKanban } from 'react-icons/bs';
 import {
   FaArrowUp,
   FaAws,
@@ -26,6 +27,7 @@ import {
   FaTerminal,
   FaTimes,
 } from 'react-icons/fa';
+import { GrStatusInfo } from 'react-icons/gr';
 import { HiLocationMarker, HiMail } from 'react-icons/hi';
 import {
   SiBun,
@@ -54,6 +56,7 @@ import {
   SiTypescript,
   SiVitest,
 } from 'react-icons/si';
+import { BoltNewIcon, CursorIcon, MCPIcon, V0Icon, WindsurfIcon } from './ai-tool-icons';
 import { ExternalLinkIcon } from './external-link';
 
 // Social Icons
@@ -106,6 +109,8 @@ const PostmanIcon = createIconComponent(SiPostman);
 const GitIcon = createIconComponent(FaGitAlt);
 const JenkinsIcon = createIconComponent(SiJenkins);
 const JiraIcon = createIconComponent(SiJira);
+const AgileIcon = createIconComponent(GrStatusInfo);
+const KanbanIcon = createIconComponent(BsKanban);
 const ShellIcon = createIconComponent(FaTerminal);
 const ConfluenceIcon = createIconComponent(SiConfluence);
 const GithubProjectsIcon = createIconComponent(FaGithubAlt);
@@ -346,6 +351,16 @@ export const iconRegistry: IconRegistry = {
     category: IconCategory.TECH,
     component: JiraIcon,
   },
+  AgileIcon: {
+    name: 'AgileIcon',
+    category: IconCategory.TECH,
+    component: AgileIcon,
+  },
+  KanbanIcon: {
+    name: 'KanbanIcon',
+    category: IconCategory.TECH,
+    component: KanbanIcon,
+  },
   ShellIcon: {
     name: 'ShellIcon',
     category: IconCategory.TECH,
@@ -396,12 +411,41 @@ export const iconRegistry: IconRegistry = {
     category: IconCategory.TECH,
     component: SupabaseIcon,
   },
+
+  // AI Tool Icons
+  V0Icon: {
+    name: 'V0Icon',
+    category: IconCategory.AI_TOOLS,
+    component: V0Icon,
+  },
+  BoltNewIcon: {
+    name: 'BoltNewIcon',
+    category: IconCategory.AI_TOOLS,
+    component: BoltNewIcon,
+  },
+  CursorIcon: {
+    name: 'CursorIcon',
+    category: IconCategory.AI_TOOLS,
+    component: CursorIcon,
+  },
+  WindsurfIcon: {
+    name: 'WindsurfIcon',
+    category: IconCategory.AI_TOOLS,
+    component: WindsurfIcon,
+  },
+  MCPIcon: {
+    name: 'MCPIcon',
+    category: IconCategory.AI_TOOLS,
+    component: MCPIcon,
+  },
 };
 
 // Export individual icons for direct use if needed
 export {
+  AgileIcon,
   ArrowUpIcon,
   AwsIcon,
+  BoltNewIcon,
   BootstrapIcon,
   BunIcon,
   CheckIcon,
@@ -409,6 +453,7 @@ export {
   CommentIcon,
   ConfluenceIcon,
   CssIcon,
+  CursorIcon,
   DatabaseIcon,
   DockerIcon,
   ElysiaIcon,
@@ -431,8 +476,10 @@ export {
   JestIcon,
   JiraIcon,
   JunitIcon,
+  KanbanIcon,
   LinkedinIcon,
   LocationIcon,
+  MCPIcon,
   MenuIcon,
   MongodbIcon,
   MysqlIcon,
@@ -456,7 +503,9 @@ export {
   StrapiIcon,
   SupabaseIcon,
   TypescriptIcon,
+  V0Icon,
   VitestIcon,
+  WindsurfIcon,
   XIcon,
 };
 
