@@ -2,13 +2,24 @@
 const nextConfig = {
   // Remove output: "export" to enable API routes
   // output: "export",
+  staticPageGenerationTimeout: 180, // Increase timeout to 3 minutes
   eslint: {
     ignoreDuringBuilds: true,
-    dirs: ['pages', 'app', 'components', 'lib', 'hooks', 'data', 'types'],
+    dirs: ['pages', 'app', 'components', 'hooks', 'lib', 'data', 'types'],
   },
   images: {
     unoptimized: true,
-    domains: ['res.cloudinary.com', 'media.licdn.com', 'images.credly.com'],
+    minimumCacheTTL: 60,
+    domains: [
+      'res.cloudinary.com',
+      'media.licdn.com',
+      'images.credly.com',
+      'v0.dev',
+      'bolt.new',
+      'cursor.com',
+      'codeium.com',
+      'claudemcp.com',
+    ],
     formats: ['image/webp'],
   },
   // Custom headers cannot be used with output: 'export'
@@ -39,16 +50,6 @@ const nextConfig = {
               "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.vercel-scripts.com https://*.vercel-insights.com https://*.vercel-analytics.com https://*.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://*.vercel-scripts.com https://*.vercel-insights.com https://*.vercel-analytics.com https://*.cloudflareinsights.com;",
           },
         ],
-      },
-    ];
-  },
-  // Redirect configuration
-  async redirects() {
-    return [
-      {
-        source: '/blog',
-        destination: '/blog/1',
-        permanent: true,
       },
     ];
   },

@@ -1,51 +1,62 @@
-import BackToTopButton from '@/components/BackToTopButton';
-import Footer from '@/components/layout/Footer';
-import Navbar from '@/components/layout/Navbar';
-import About from '@/components/sections/About';
-import Blogs from '@/components/sections/Blogs';
-import Contact from '@/components/sections/Contact';
-import Education from '@/components/sections/Education';
-import Experience from '@/components/sections/Experience';
-import Hero from '@/components/sections/Hero';
-import Projects from '@/components/sections/Projects';
-import Skills from '@/components/sections/Skills';
-import React from 'react';
+import { AboutSection } from '@/components/sections/about/AboutSection';
+import { BlogSectionWrapper } from '@/components/sections/blogs/server/BlogSectionWrapper';
+import { ContactSection } from '@/components/sections/contact/ContactSection';
+import { EducationSection } from '@/components/sections/education/EducationSection';
+import { ExperienceSection } from '@/components/sections/experience/ExperienceSection';
+import { HeroSection } from '@/components/sections/hero/HeroSection';
+import { ProjectSection } from '@/components/sections/projects/ProjectSection';
+import { SkillsSection } from '@/components/sections/skills/SkillsSection';
+import SectionContainer from '@/components/ui/SectionContainer';
+import { Suspense } from 'react';
 
-export default function Home(): React.ReactNode {
+export default async function Home() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gradient-to-b dark:from-[#0F172A] dark:to-[#1E293B] text-gray-900 dark:text-white">
-      {/* Navigation */}
-      <Navbar />
+    <main className="flex min-h-screen flex-col items-center justify-between">
+      <Suspense>
+        <HeroSection />
+      </Suspense>
 
-      {/* Hero Section */}
-      <Hero />
+      <SectionContainer id="about">
+        <Suspense>
+          <AboutSection />
+        </Suspense>
+      </SectionContainer>
 
-      {/* About Section */}
-      <About />
+      <SectionContainer id="experience">
+        <Suspense>
+          <ExperienceSection />
+        </Suspense>
+      </SectionContainer>
 
-      {/* Experience Section */}
-      <Experience />
+      <SectionContainer id="projects">
+        <Suspense>
+          <ProjectSection />
+        </Suspense>
+      </SectionContainer>
 
-      {/* Education Section */}
-      <Education />
+      <SectionContainer id="blogs">
+        <Suspense>
+          <BlogSectionWrapper initialPage={1} initialCategory="All" initialSearchQuery="" />
+        </Suspense>
+      </SectionContainer>
 
-      {/* Skills Section */}
-      <Skills />
+      <SectionContainer id="education">
+        <Suspense>
+          <EducationSection />
+        </Suspense>
+      </SectionContainer>
 
-      {/* Projects Section */}
-      <Projects />
+      <SectionContainer id="skills">
+        <Suspense>
+          <SkillsSection />
+        </Suspense>
+      </SectionContainer>
 
-      {/* Blogs Section */}
-      <Blogs />
-
-      {/* Contact Section */}
-      <Contact />
-
-      {/* Footer */}
-      <Footer />
-
-      {/* Back to Top Button */}
-      <BackToTopButton />
-    </div>
+      <SectionContainer id="contact">
+        <Suspense>
+          <ContactSection />
+        </Suspense>
+      </SectionContainer>
+    </main>
   );
 }

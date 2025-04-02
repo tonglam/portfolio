@@ -1,98 +1,33 @@
-import { EXTERNAL_URLS } from '@/config';
-import type { ExtendedNotionPost } from '@/types/api/blog';
+import { logger } from '@/lib/logger.util';
 import type { MetadataRoute } from 'next';
-
-// Define an interface for Notion text items
-interface NotionTextItem {
-  plain_text?: string;
-  text?: {
-    content: string;
-  };
-}
-
-/**
- * Helper function to extract plain text from Notion rich text
- */
-function extractPlainText(richText: NotionTextItem[] | NotionTextItem | undefined): string {
-  if (!richText) {
-    return '';
-  }
-
-  // Handle array case
-  if (Array.isArray(richText)) {
-    if (richText.length === 0) return '';
-    return richText.map(item => item.plain_text || '').join('');
-  }
-
-  // Handle single item case
-  return richText.plain_text || '';
-}
 
 /**
  * Generates a dynamic sitemap for the website including all blog posts
- * @see https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap
+ * Revalidates every 24 hours to ensure fresh content while maintaining performance
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Base URL of the website
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yourportfolio.com';
-
-  // Static routes with their update frequency
-  const staticRoutes = [
-    {
-      url: `${baseUrl}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 0.8,
-    },
-    // Add any other static routes here
-  ];
-
-  // Fetch blog posts from the R2 storage
-  try {
-    const response = await fetch(EXTERNAL_URLS.BLOG_DATA_SOURCE, {
-      next: { revalidate: 3600 },
-    });
-
-    if (response.ok) {
-      const allPosts = (await response.json()) as ExtendedNotionPost[];
-
-      // Create sitemap entries for blog posts
-      const blogPosts = allPosts
-        .filter(post => post.properties && post.properties.Title)
-        .map(post => {
-          const title = post.properties?.Title?.title
-            ? extractPlainText(post.properties.Title.title)
-            : '';
-
-          // Create slug from title
-          const slug = title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)/g, '');
-
-          const lastModified = post.last_edited_time ? new Date(post.last_edited_time) : new Date();
-
-          return {
-            url: `${baseUrl}/blog/${slug}`,
-            lastModified,
-            changeFrequency: 'monthly' as const,
-            priority: 0.7,
-          };
-        });
-
-      // Return combined static routes and blog posts
-      return [...staticRoutes, ...blogPosts];
-    }
-  } catch (error) {
-    console.error('Error generating sitemap:', error);
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!baseUrl) {
+    logger.error('NEXT_PUBLIC_SITE_URL environment variable is not set');
+    throw new Error('Site URL not configured. Cannot generate sitemap.');
   }
 
-  // Fallback to static routes only if blog post fetching fails
+  // Basic static routes with prioritized homepage
+  const staticRoutes: MetadataRoute.Sitemap = [
+    '',
+    '/about',
+    '/experience',
+    '/education',
+    '/skills',
+    '/projects',
+    '/blog',
+    '/contact',
+  ].map(route => ({
+    url: `${baseUrl}${route}`,
+    lastModified: new Date(),
+    changeFrequency: route === '' ? ('daily' as const) : ('weekly' as const),
+    priority: route === '' ? 1 : 0.8,
+  }));
+
   return staticRoutes;
 }

@@ -1,0 +1,21 @@
+{
+  "name": "Qitong Lan's Portfolio",
+  "short_name": "Tong's Portfolio",
+  "description": "Personal portfolio website showcasing my professional experience and projects",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "hsl(0 0% 3.9%)",
+  "theme_color": "hsl(0 0% 98%)",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

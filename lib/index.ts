@@ -1,17 +1,18 @@
 /**
- * Central exports for the lib directory
- * This file provides a clean interface for importing utilities
+ * Central export point for all utilities
  */
 
 // Core utilities
-export * from './codeHighlighter';
-export * from './config-validator';
-export * from './dependency-container';
-export * from './error-handler';
-export { logger, type Logger } from './logger';
-export { cn } from './utils';
+export * from './env.util';
+export * from './error.util';
+export * from './logger.util';
 
-// Re-export specific subdirectory exports using the new files
-export * as api from './api';
-export * as services from './services';
-export * as utils from './utils-reexport';
+// UI utilities
+export * from './animations.util';
+export * from './icon.util';
+export * from './tailwind.util';
+export * from './toast.util';
+
+// Feature utilities
+export * from './codeHighlighter.util';
+export * from './date.util';

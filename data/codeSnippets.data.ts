@@ -1,0 +1,25 @@
+export const developerProfileCode: string[] = [
+  'const developer = {',
+  "  name: 'Qitong Lan',",
+  "  nickname: 'Tong',",
+  "  role: 'Full-Stack Engineer',",
+  "  experience: '9+ years',",
+  "  companies: ['eSurfing Cloud', 'NetEase', 'China Telecom'],",
+  "  frontendSkills: ['React', 'Next.js', 'TypeScript', 'HTML/CSS'],",
+  "  backendSkills: ['Java', 'Spring Boot', 'Node.js', 'Python'],",
+  "  databaseSkills: ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis'],",
+  "  devOpsSkills: ['Docker', 'AWS', 'Jenkins', 'GitHub Actions'],",
+  '  certifications: true,',
+  '  cloudArchitect: true,',
+  '  problemSolver: true,',
+  '  hireable: function() {',
+  '    return (',
+  '      this.experience &&',
+  '      this.problemSolver &&',
+  '      this.cloudArchitect',
+  '    );',
+  '  }',
+  '};',
+];
+
+export default developerProfileCode;

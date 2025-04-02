@@ -4,17 +4,17 @@
  * for convenient imports throughout the application
  */
 
-// Common types
-export type * from './common';
-export { ApiTypes };
+// Core types
+export * from './blog.type';
+export * from './common.type';
+export * from './data.type';
 
-// API types - export with namespace to avoid conflicts
-import type * as ApiTypes from './api';
+// UI and Component types
+export * from './icon.type';
+export * from './toast.type';
+export * from './ui.type';
 
-// Data types - export with namespace to avoid conflicts
-import type * as DataTypes from './data';
-export { DataTypes };
-
-// Note: config types directory doesn't exist yet, so commented out for now
-// import type * as ConfigTypes from './config';
-// export { ConfigTypes };
+// Feature types
+export * from './email.type';
+export * from './errors.type';
+export * from './urls.type';
