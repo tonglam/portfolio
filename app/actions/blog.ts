@@ -1,11 +1,12 @@
 'use server';
 
 import { db } from '@/lib/db.util';
+import { ProcessedBlogPost } from '@/types/blog.type';
 import { revalidatePath } from 'next/cache';
 
 // Define type for blog data response
 type BlogDataResponse = {
-  posts: any[];
+  posts: ProcessedBlogPost[];
   totalPages: number;
   currentPage: number;
   error?: string;

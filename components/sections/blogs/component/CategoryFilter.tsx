@@ -7,7 +7,6 @@ import { Search, X } from 'lucide-react';
 import React from 'react';
 
 const MotionDiv = motion.div;
-const MotionButton = motion.button;
 
 export interface CategoryFilterProps {
   categories: string[];
