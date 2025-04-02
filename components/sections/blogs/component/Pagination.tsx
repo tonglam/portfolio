@@ -40,6 +40,7 @@ export function CustomPagination({ currentPage, totalPages, onPageChange }: Cust
               ? 'text-gray-400 cursor-not-allowed opacity-50'
               : 'hover:bg-gradient-to-r hover:from-[#2563EB]/10 hover:to-[#4F46E5]/10 dark:hover:from-[#38BDF8]/10 dark:hover:to-[#818CF8]/10 text-gray-700 dark:text-gray-300'
           }`}
+          aria-label="Go to previous page"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           <span className="hidden sm:inline">Previous</span>
@@ -66,6 +67,8 @@ export function CustomPagination({ currentPage, totalPages, onPageChange }: Cust
                       ? 'bg-gradient-to-r from-[#2563EB] to-[#4F46E5] dark:from-[#38BDF8] dark:to-[#818CF8] text-white shadow-md'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#2563EB]/10 hover:to-[#4F46E5]/10 dark:hover:from-[#38BDF8]/10 dark:hover:to-[#818CF8]/10'
                   }`}
+                  aria-label={`Go to page ${page}${isCurrentPage ? ', current page' : ''}`}
+                  aria-current={isCurrentPage ? 'page' : undefined}
                 >
                   {page}
                 </MotionButton>
@@ -78,6 +81,7 @@ export function CustomPagination({ currentPage, totalPages, onPageChange }: Cust
                 <span
                   key={page}
                   className="flex h-9 w-9 items-center justify-center text-gray-500 dark:text-gray-400"
+                  aria-hidden="true"
                 >
                   <MoreHorizontal className="h-5 w-5" />
                 </span>
@@ -103,6 +107,7 @@ export function CustomPagination({ currentPage, totalPages, onPageChange }: Cust
               ? 'text-gray-400 cursor-not-allowed opacity-50'
               : 'hover:bg-gradient-to-r hover:from-[#2563EB]/10 hover:to-[#4F46E5]/10 dark:hover:from-[#38BDF8]/10 dark:hover:to-[#818CF8]/10 text-gray-700 dark:text-gray-300'
           }`}
+          aria-label="Go to next page"
         >
           <span className="hidden sm:inline">Next</span>
           <ChevronRight className="h-4 w-4 ml-1" />
