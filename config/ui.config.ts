@@ -13,7 +13,7 @@ import type {
   ToastConstants,
   TransitionConstants,
   ZIndexConstants,
-} from '@/types/config/ui.type';
+} from '@/types/ui.type';
 import { TIME } from './common.config';
 
 /**

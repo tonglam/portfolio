@@ -1,4 +1,4 @@
-import type { ContactData } from '@/types/data/data.type';
+import { ContactData } from '@/types/data.type';
 import socialProfiles from './socialLinks.data';
 
 export const contactData: ContactData = {

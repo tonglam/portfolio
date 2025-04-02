@@ -1,19 +1,14 @@
 'use server';
 
-import { logger } from '@/lib/core/logger.util';
+import { logger } from '@/lib/logger.util';
 import type {
   ContactFormData,
   EmailErrorCode,
   EmailResponse,
   ResendEmailData,
-} from '@/types/api/email.type';
+} from '@/types/email.type';
 import { Resend } from 'resend';
 
-/**
- * Sends an email using the Resend API based on contact form data
- * @param formData - Contact form submission data
- * @returns EmailResponse with success status and optional error details
- */
 export async function sendEmail(formData: ContactFormData): Promise<EmailResponse> {
   // Validate input
   if (!formData.name || !formData.email || !formData.subject || !formData.message) {
@@ -42,7 +37,6 @@ export async function sendEmail(formData: ContactFormData): Promise<EmailRespons
     };
   }
 
-  // Get email configuration from environment variables
   const fromEmail = process.env.EMAIL_FROM;
   const toEmail = process.env.EMAIL_TO;
 

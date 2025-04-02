@@ -1,9 +1,4 @@
-/**
- * Navigation data for the site
- * Contains all navigation links and their properties
- */
-
-import type { NavigationItem } from '@/types/data/data.type';
+import { NavigationItem } from '@/types/data.type';
 
 export const navigationItems: NavigationItem[] = [
   { name: 'About', href: '#about', label: 'ABOUT' },

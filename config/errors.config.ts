@@ -1,4 +1,4 @@
-import type { ErrorMessages } from '@/types/config/errors.type';
+import type { ErrorMessages } from '@/types/errors.type';
 import { LIMITS } from './common.config';
 
 /**

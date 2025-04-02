@@ -1,10 +1,5 @@
-/**
- * Professional experience data
- * Contains work history, roles, responsibilities, and achievements
- */
-
-import { EXTERNAL_URLS } from '@/config';
-import type { CompanyDetails, ExperienceItem, ProfessionalSkill } from '@/types/data/data.type';
+import { EXTERNAL_URLS } from '@/config/urls.config';
+import { CompanyDetails, ExperienceItem, ProfessionalSkill } from '@/types/data.type';
 
 export const experienceData: ExperienceItem[] = [
   {
@@ -24,7 +19,6 @@ export const experienceData: ExperienceItem[] = [
   },
 ];
 
-// Specific skills gained throughout career
 export const gainedSkills: string[] = [
   'Java',
   'JavaScript',
@@ -53,7 +47,6 @@ export const gainedSkills: string[] = [
   'AI Coding',
 ];
 
-// Professional skills data
 export const skillsData: ProfessionalSkill[] = [
   { name: 'System Architecture & Design', percentage: 90 },
   { name: 'Frontend Development', percentage: 85 },
@@ -66,7 +59,6 @@ export const skillsData: ProfessionalSkill[] = [
   { name: 'Emerging Technologies & Trends', percentage: 80 },
 ];
 
-// Company details with responsibilities and technologies
 export const companyDetails: CompanyDetails = {
   'eSurfing Cloud': {
     logo: EXTERNAL_URLS.COMPANY.ESURFING_CLOUD.LOGO,

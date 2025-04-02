@@ -1,12 +1,9 @@
-/**
- * Project data for the portfolio
- * Contains information about personal and professional projects
- */
+import { ProjectLink } from '@/types/data.type';
 
-import type { Project, ProjectLink } from '@/types/data/data.type';
-import { ProjectCategory } from '@/types/data/data.type';
+import { Project } from '@/types/data.type';
 
-// Helper function to create links with multiple types
+import { ProjectCategory } from '@/types/data.type';
+
 const createProjectLinks = (
   links: { type: ProjectLink['type']; url: string; label?: string }[]
 ): ProjectLink[] => {
@@ -89,25 +86,26 @@ export const projectsData: Project[] = [
     order: 5,
   },
   {
-    id: 'notion-page-db',
-    title: 'Notion Page DB',
+    id: 'smart-home-website',
+    title: 'Smart Home Website',
     description:
-      'Tool for managing and synchronizing Notion pages and databases, with automated content organization.',
-    technologies: ['TypeScript', 'Notion API', 'Cloudflare Workers'],
-    categories: [ProjectCategory.BACKEND],
+      'CITS5506 project - A modern web interface for smart home management and monitoring, built with Next.js and TypeScript.',
+    technologies: ['TypeScript', 'Next.js', 'Tailwind CSS', 'React', 'IoT'],
+    categories: [ProjectCategory.FULLSTACK],
     links: createProjectLinks([
-      { type: 'github', url: 'https://github.com/tonglam/notion-page-db' },
+      { type: 'github', url: 'https://github.com/tonglam/smart_home-website' },
+      { type: 'demo', url: 'https://smarthomesystem.vercel.app/' },
     ]),
   },
   {
-    id: 'notion2worker',
-    title: 'Notion2Worker',
+    id: 'notion-d1-worker',
+    title: 'Notion D1 Worker',
     description:
-      'Cloudflare Worker that retrieves Notion database content and efficiently stores it in Cloudflare R2 storage.',
-    technologies: ['JavaScript', 'Cloudflare Workers', 'Notion API', 'R2 Storage'],
+      'Cloudflare Worker designed to sync Notion posts to D1 database, enabling efficient content management and distribution.',
+    technologies: ['TypeScript', 'Cloudflare Workers', 'D1', 'Notion API'],
     categories: [ProjectCategory.BACKEND],
     links: createProjectLinks([
-      { type: 'github', url: 'https://github.com/tonglam/notion2Worker' },
+      { type: 'github', url: 'https://github.com/tonglam/notion-d1-worker' },
     ]),
   },
   {
@@ -191,7 +189,6 @@ export const projectsData: Project[] = [
   },
 ];
 
-// Enhanced helper functions for better filtering
 export const getHomePageProjects = (): Project[] => {
   return projectsData.filter(project => project.displayOnHome);
 };

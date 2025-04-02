@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "esnext",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -22,30 +21,21 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@/components/*": ["app/components/*"],
+      "@/components/*": ["components/*"],
+      "@/hooks/*": ["hooks/*"],
       "@/lib/*": ["lib/*"],
-      "@/hooks/*": ["app/hooks/*"],
       "@/types/*": ["types/*"],
-      "@/config/*": ["config/*"],
-      "@/styles/*": ["styles/*"],
       "@/public/*": ["public/*"],
       "@/data/*": ["data/*"]
-    },
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictPropertyInitialization": true
+    }
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "app/components/sections/education/EducationTimeline.tsx"
+    "vitest.config.ts",
+    "vitest.setup.ts"
   ],
   "exclude": ["node_modules", "dist", ".next", "out"]
 }

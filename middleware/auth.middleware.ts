@@ -2,20 +2,35 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 /**
- * Authentication middleware for protected API routes
- * Verifies API keys for Cloudflare API access
+ * CORS protection middleware for API routes
+ * Only allows requests from authorized origins
  */
 export async function authMiddleware(request: NextRequest): Promise<NextResponse | null> {
-  // Check for API key in headers
-  const apiKey = request.headers.get('x-api-key');
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
 
-  if (request.nextUrl.pathname.startsWith('/api/') && !apiKey) {
-    return new NextResponse(JSON.stringify({ success: false, message: 'API key required' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
+  // Define allowed origins
+  const allowedOrigins = ['https://www.qitonglan.com', process.env.NEXT_PUBLIC_SITE_URL].filter(
+    Boolean
+  ); // Remove any undefined values
+
+  // Allow requests from:
+  // 1. No origin (direct API calls)
+  // 2. localhost during development
+  // 3. Explicitly allowed origins
+  // 4. Our own referer
+  if (
+    !origin ||
+    origin.startsWith('http://localhost:') ||
+    allowedOrigins.includes(origin) ||
+    (referer && allowedOrigins.includes(new URL(referer).origin))
+  ) {
+    return null;
   }
 
-  // Add more auth checks as needed
-  return null;
+  // Block requests from unauthorized origins
+  return new NextResponse(JSON.stringify({ success: false, message: 'Unauthorized origin' }), {
+    status: 403,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }

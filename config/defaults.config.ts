@@ -1,53 +1,56 @@
-import type { Defaults } from '@/types/config/defaults.type';
 import { LIMITS, TIME } from './common.config';
 
 /**
  * Default values and settings
  */
-
-export const BLOG_DEFAULTS = {
-  limit: LIMITS.MAX_PAGE_SIZE,
-  minRead: '3 Min Read',
-  pagination: {
-    itemsPerPage: 10,
-    maxPages: 5,
-  },
-  batchSize: 50,
-} as const;
-
-export const CACHE_DEFAULTS = {
-  control: `public, max-age=${TIME.HOUR / TIME.SECOND}, stale-while-revalidate=${TIME.DAY / TIME.SECOND}`,
-  revalidate: TIME.HOUR / TIME.SECOND,
-} as const;
-
-export const API_DEFAULTS = {
-  retryAttempts: 3,
-  timeout: 10 * TIME.SECOND,
-  rateLimit: {
-    windowMs: TIME.MINUTE,
-    maxRequests: 60,
-  },
-} as const;
-
-export const IMAGE_DEFAULTS = {
-  quality: 75,
-  maxWidth: 1920,
-  maxHeight: 1080,
-  formats: ['webp', 'jpeg'] as const,
-  maxSize: LIMITS.MAX_FILE_SIZE,
-} as const;
-
-export const DEFAULTS: Defaults = {
+export const DEFAULTS = {
   BLOG: {
     LIMIT: 6,
     MIN_READ: '3 Min Read',
     BATCH_SIZE: 50,
+    PAGINATION: {
+      ITEMS_PER_PAGE: 10,
+      MAX_PAGES: 5,
+    },
+    CACHE: {
+      LIST: {
+        REVALIDATE: TIME.DAY / TIME.SECOND, // 24 hours
+        CONTROL: `public, max-age=${TIME.DAY / TIME.SECOND}, must-revalidate`,
+      },
+      DETAIL: {
+        REVALIDATE: TIME.DAY / TIME.SECOND, // 24 hours
+        CONTROL: `public, max-age=${TIME.DAY / TIME.SECOND}, must-revalidate`,
+      },
+      CATEGORIES: {
+        REVALIDATE: TIME.DAY / TIME.SECOND, // 24 hours
+        CONTROL: `public, max-age=${TIME.DAY / TIME.SECOND}, must-revalidate`,
+      },
+      SEARCH: {
+        REVALIDATE: 0, // No cache for search
+        CONTROL: 'no-store, no-cache, must-revalidate',
+      },
+    },
   },
-};
+  CACHE: {
+    CONTROL: `public, max-age=${TIME.HOUR / TIME.SECOND}, stale-while-revalidate=${TIME.DAY / TIME.SECOND}`,
+    REVALIDATE: TIME.HOUR / TIME.SECOND,
+  },
+  API: {
+    RETRY_ATTEMPTS: 3,
+    TIMEOUT: 10 * TIME.SECOND,
+    RATE_LIMIT: {
+      WINDOW_MS: TIME.MINUTE,
+      MAX_REQUESTS: 60,
+    },
+  },
+  IMAGE: {
+    QUALITY: 75,
+    MAX_WIDTH: 1920,
+    MAX_HEIGHT: 1080,
+    FORMATS: ['webp', 'jpeg'] as const,
+    MAX_SIZE: LIMITS.MAX_FILE_SIZE,
+  },
+} as const;
 
-export type BlogDefaults = typeof BLOG_DEFAULTS;
-export type CacheDefaults = typeof CACHE_DEFAULTS;
-export type ApiDefaults = typeof API_DEFAULTS;
-export type ImageDefaults = typeof IMAGE_DEFAULTS;
-
+export type Defaults = typeof DEFAULTS;
 export default DEFAULTS;

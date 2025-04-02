@@ -1,11 +1,10 @@
-import { IconProvider } from '@/components/providers/IconProvider';
-import { ErrorBoundary } from '@/components/ui/error-boundary';
+import BackToTopButton from '@/components/layout/BackToTopButton';
+import Footer from '@/components/layout/Footer';
+import Navbar from '@/components/layout/Navbar';
 import { Toaster } from '@/components/ui/toaster';
 import { SITE } from '@/config/common.config';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Inter } from 'next/font/google';
-import React from 'react';
+import React, { Suspense } from 'react';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -38,25 +37,25 @@ export const metadata = {
   manifest: '/site.webmanifest',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }): JSX.Element {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <meta name="theme-color" content="#000000" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/favicon.ico" />
       </head>
-      <body className={inter.className}>
-        <ErrorBoundary fullScreen>
-          <IconProvider>
-            {children}
-            <Analytics />
-            <SpeedInsights />
-            <Toaster />
-          </IconProvider>
-        </ErrorBoundary>
+      <body className={`${inter.className} flex flex-col min-h-screen bg-[#1a2234] text-gray-200`}>
+        <Suspense fallback={<div className="h-16" />}>
+          <Navbar />
+        </Suspense>
+        <main className="flex flex-col flex-grow justify-center">{children}</main>
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
+        <Toaster />
+        <Suspense fallback={null}>
+          <BackToTopButton />
+        </Suspense>
       </body>
     </html>
   );

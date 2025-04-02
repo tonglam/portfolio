@@ -1,20 +1,22 @@
-/**
- * Code snippets for the portfolio site
- * Used in the code section to showcase programming skills
- */
-
 export const developerProfileCode: string[] = [
-  'const coder = {',
-  "  name: 'Tong',",
-  "  skills: ['React', 'NextJS', 'Express',",
-  "           'MySQL', 'MongoDB', 'Docker', 'AWS'],",
-  '  hardWorker: true,',
-  '  quickLearner: true,',
+  'const developer = {',
+  "  name: 'Qitong Lan',",
+  "  nickname: 'Tong',",
+  "  role: 'Full-Stack Engineer',",
+  "  experience: '9+ years',",
+  "  companies: ['eSurfing Cloud', 'NetEase', 'China Telecom'],",
+  "  frontendSkills: ['React', 'Next.js', 'TypeScript', 'HTML/CSS'],",
+  "  backendSkills: ['Java', 'Spring Boot', 'Node.js', 'Python'],",
+  "  databaseSkills: ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis'],",
+  "  devOpsSkills: ['Docker', 'AWS', 'Jenkins', 'GitHub Actions'],",
+  '  certifications: true,',
+  '  cloudArchitect: true,',
   '  problemSolver: true,',
   '  hireable: function() {',
   '    return (',
-  '      this.hardWorker &&',
-  '      this.problemSolver',
+  '      this.experience &&',
+  '      this.problemSolver &&',
+  '      this.cloudArchitect',
   '    );',
   '  }',
   '};',

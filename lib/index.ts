@@ -1,15 +1,18 @@
 /**
- * Core library exports
+ * Central export point for all utilities
  */
 
-// Export core infrastructure
-export * from './core/dependency-container.util';
-export * from './core/error-handler.util';
-export * from './core/logger.util';
+// Core utilities
+export * from './env.util';
+export * from './error.util';
+export * from './logger.util';
 
-// Export services
-export * from './services';
+// UI utilities
+export * from './animations.util';
+export * from './icon.util';
+export * from './tailwind.util';
+export * from './toast.util';
 
-// Export utilities
-export * from './utils';
-export * from './utils/syntax/codeHighlighter.util';
+// Feature utilities
+export * from './codeHighlighter.util';
+export * from './date.util';

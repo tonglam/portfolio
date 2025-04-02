@@ -1,10 +1,5 @@
-/**
- * Skills data for the Skills section
- */
+import { Skill, SkillsData } from '@/types/data.type';
 
-import type { Skill, SkillsData } from '@/types/data/data.type';
-
-// Organized skills data by categories
 export const skillsData: SkillsData = {
   categories: [
     {
@@ -92,17 +87,16 @@ export const skillsData: SkillsData = {
     {
       name: 'AI Tools',
       skills: [
-        { name: 'v0', icon: 'V0Icon', color: 'text-black dark:text-white' }, // Vercel brand color
-        { name: 'bolt.new', icon: 'BoltNewIcon', color: 'text-[#1389FD]' }, // StackBlitz blue
-        { name: 'Cursor', icon: 'CursorIcon', color: 'text-[#7C3AED]' }, // Cursor purple
-        { name: 'Windsurf', icon: 'WindsurfIcon', color: 'text-[#0EA5E9]' }, // Windsurf blue
-        { name: 'MCP', icon: 'MCPIcon', color: 'text-[#6366F1]' }, // Indigo color
+        { name: 'v0', icon: 'V0Icon', color: 'text-black dark:text-white' },
+        { name: 'bolt.new', icon: 'BoltNewIcon', color: 'text-[#1389FD]' },
+        { name: 'Cursor', icon: 'CursorIcon', color: 'text-[#7C3AED]' },
+        { name: 'Windsurf', icon: 'WindsurfIcon', color: 'text-[#0EA5E9]' },
+        { name: 'MCP', icon: 'MCPIcon', color: 'text-[#6366F1]' },
       ],
     },
   ],
 };
 
-// Legacy format to maintain backward compatibility with existing components
 export const flattenedSkillsData: Skill[] = skillsData.categories.reduce<Skill[]>(
   (acc, category) => [...acc, ...category.skills],
   []

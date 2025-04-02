@@ -2,30 +2,39 @@
  * Common type definitions used across the application
  */
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-}
-
-export interface Pagination {
-  page: number;
-  limit: number;
-  totalPages: number;
-  totalItems: number;
-  hasMore: boolean;
-}
-
 export type ApiErrorCode =
   | 'NOT_FOUND'
   | 'BAD_REQUEST'
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
-  | 'INTERNAL_SERVER_ERROR';
+  | 'INTERNAL_SERVER_ERROR'
+  | 'CONFIGURATION_ERROR';
 
 export interface ApiError {
   code: ApiErrorCode;
   message: string;
   details?: unknown;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: ApiError;
+  message?: string;
+}
+
+export interface PaginationData {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  hasMore: boolean;
+}
+
+export interface PaginatedResponse<T> extends ApiResponse<T> {
+  data: T & {
+    pagination: PaginationData;
+  };
 }
 
 export interface Metadata {

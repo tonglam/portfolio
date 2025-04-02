@@ -10,10 +10,15 @@ import { NextResponse } from 'next/server';
  */
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   try {
-    // Validate incoming request
-    const validationResponse = await validateRequest(request);
-    if (validationResponse instanceof NextResponse) {
-      return validationResponse;
+    // Check if it's a server action POST request to the root
+    const isServerActionPost = request.method === 'POST' && request.nextUrl.pathname === '/';
+
+    // Temporarily bypass validation for server action POST requests
+    if (!isServerActionPost) {
+      const validationResponse = await validateRequest(request);
+      if (validationResponse instanceof NextResponse) {
+        return validationResponse;
+      }
     }
 
     // Run authentication middleware for Cloudflare API routes

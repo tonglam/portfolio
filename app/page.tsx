@@ -1,106 +1,62 @@
-import BackToTopButton from '@/components/BackToTopButton';
-import Footer from '@/components/layout/Footer';
-import Navbar from '@/components/layout/Navbar';
-import About from '@/components/sections/about/page';
-import Blogs from '@/components/sections/blogs/page';
-import Contact from '@/components/sections/contact/page';
-import Education from '@/components/sections/education/page';
-import Experience from '@/components/sections/experience/page';
-import Hero from '@/components/sections/hero/page';
-import Projects from '@/components/sections/projects/page';
-import Skills from '@/components/sections/skills/page';
-import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { AboutSection } from '@/components/sections/about/AboutSection';
+import { BlogSectionWrapper } from '@/components/sections/blogs/server/BlogSectionWrapper';
+import { ContactSection } from '@/components/sections/contact/ContactSection';
+import { EducationSection } from '@/components/sections/education/EducationSection';
+import { ExperienceSection } from '@/components/sections/experience/ExperienceSection';
+import { HeroSection } from '@/components/sections/hero/HeroSection';
+import { ProjectSection } from '@/components/sections/projects/ProjectSection';
+import { SkillsSection } from '@/components/sections/skills/SkillsSection';
+import SectionContainer from '@/components/ui/SectionContainer';
 import { Suspense } from 'react';
 
-export default function Home(): React.ReactNode {
+export default async function Home() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gradient-to-b dark:from-[#0F172A] dark:to-[#1E293B] text-gray-900 dark:text-white">
-      {/* Navigation */}
-      <ErrorBoundary>
-        <Navbar />
-      </ErrorBoundary>
+    <main className="flex min-h-screen flex-col items-center justify-between">
+      <Suspense>
+        <HeroSection />
+      </Suspense>
 
-      {/* Hero Section */}
-      <ErrorBoundary>
-        <Suspense
-          fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}
-        >
-          <Hero />
+      <SectionContainer id="about">
+        <Suspense>
+          <AboutSection />
         </Suspense>
-      </ErrorBoundary>
+      </SectionContainer>
 
-      {/* About Section */}
-      <ErrorBoundary>
-        <Suspense
-          fallback={<div className="h-96 flex items-center justify-center">Loading...</div>}
-        >
-          <About />
+      <SectionContainer id="experience">
+        <Suspense>
+          <ExperienceSection />
         </Suspense>
-      </ErrorBoundary>
+      </SectionContainer>
 
-      {/* Experience Section */}
-      <ErrorBoundary>
-        <Suspense
-          fallback={<div className="h-96 flex items-center justify-center">Loading...</div>}
-        >
-          <Experience />
+      <SectionContainer id="projects">
+        <Suspense>
+          <ProjectSection />
         </Suspense>
-      </ErrorBoundary>
+      </SectionContainer>
 
-      {/* Education Section */}
-      <ErrorBoundary>
-        <Suspense
-          fallback={<div className="h-96 flex items-center justify-center">Loading...</div>}
-        >
-          <Education />
+      <SectionContainer id="blogs">
+        <Suspense>
+          <BlogSectionWrapper initialPage={1} initialCategory="All" initialSearchQuery="" />
         </Suspense>
-      </ErrorBoundary>
+      </SectionContainer>
 
-      {/* Skills Section */}
-      <ErrorBoundary>
-        <Suspense
-          fallback={<div className="h-96 flex items-center justify-center">Loading...</div>}
-        >
-          <Skills />
+      <SectionContainer id="education">
+        <Suspense>
+          <EducationSection />
         </Suspense>
-      </ErrorBoundary>
+      </SectionContainer>
 
-      {/* Projects Section */}
-      <ErrorBoundary>
-        <Suspense
-          fallback={<div className="h-96 flex items-center justify-center">Loading...</div>}
-        >
-          <Projects />
+      <SectionContainer id="skills">
+        <Suspense>
+          <SkillsSection />
         </Suspense>
-      </ErrorBoundary>
+      </SectionContainer>
 
-      {/* Blogs Section */}
-      <ErrorBoundary>
-        <Suspense
-          fallback={<div className="h-96 flex items-center justify-center">Loading...</div>}
-        >
-          <Blogs />
+      <SectionContainer id="contact">
+        <Suspense>
+          <ContactSection />
         </Suspense>
-      </ErrorBoundary>
-
-      {/* Contact Section */}
-      <ErrorBoundary>
-        <Suspense
-          fallback={<div className="h-96 flex items-center justify-center">Loading...</div>}
-        >
-          <Contact />
-        </Suspense>
-      </ErrorBoundary>
-
-      {/* Footer */}
-      <ErrorBoundary>
-        <Footer />
-      </ErrorBoundary>
-
-      {/* Back to Top Button */}
-      <ErrorBoundary>
-        <BackToTopButton />
-      </ErrorBoundary>
-    </div>
+      </SectionContainer>
+    </main>
   );
 }

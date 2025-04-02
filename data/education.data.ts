@@ -1,10 +1,4 @@
-/**
- * Education data
- * Academic background, degrees, and educational achievements
- */
-
-import type { EducationItem } from '@/types/data/data.type';
-
+import { EducationItem } from '@/types/data.type';
 export const educationData: EducationItem[] = [
   {
     period: '2023 - 2025',

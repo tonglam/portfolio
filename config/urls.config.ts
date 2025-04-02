@@ -1,41 +1,45 @@
 /**
  * URL constants
  */
-import type { ExternalUrls } from '@/types/config/urls.type';
+import type { ExternalUrls } from '@/types/urls.type';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 export const API_PATHS = {
-  BASE: '/api',
-  BLOG: '/api/blog',
-  CONTACT: '/api/contact',
+  BLOG: '/blog',
+  CONTACT: '/contact',
 } as const;
 
 export const BLOG_PATHS = {
-  LIST: API_PATHS.BLOG,
-  DETAIL: (slug: string) => `${API_PATHS.BLOG}/${slug}`,
-  SEARCH: `${API_PATHS.BLOG}/search`,
-  CATEGORIES: `${API_PATHS.BLOG}/categories`,
+  LIST: `/api${API_PATHS.BLOG}`,
+  DETAIL: (slug: string) => `/api${API_PATHS.BLOG}/${slug}`,
+  SEARCH: `/api${API_PATHS.BLOG}/search`,
+  CATEGORIES: `/api${API_PATHS.BLOG}/categories`,
 } as const;
 
 export const PLACEHOLDER_URLS = {
-  BLOG_IMAGE:
-    'https://res.cloudinary.com/demo/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/sample',
-  AVATAR:
-    'https://res.cloudinary.com/demo/image/upload/w_400,h_400,c_fill,g_face,q_auto,f_auto/face_sample',
+  BLOG: {
+    CARD: 'https://res.cloudinary.com/demo/image/upload/w_400,h_300,c_fill,q_auto,f_auto/sample',
+    HERO: 'https://res.cloudinary.com/demo/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/sample',
+    THUMBNAIL:
+      'https://res.cloudinary.com/demo/image/upload/w_100,h_100,c_fill,q_auto,f_auto/sample',
+  },
+  AVATAR: 'https://gravatar.com/bluedragon00000',
 } as const;
 
 type ExternalUrlsType = ExternalUrls;
 
 export const EXTERNAL_URLS: ExternalUrlsType = {
-  BLOG_DATA_SOURCE: 'https://pub-d8dffa084afd41feb7c476a46103017d.r2.dev/blog-data.json',
   NOTION: {
     PAGE: (id: string) => `https://notion.so/${id}`,
   },
   SOCIAL: {
     GITHUB: 'https://github.com/tonglam',
-    LINKEDIN: 'https://linkedin.com/in/tonglam',
-    TWITTER: 'https://twitter.com/tonglam',
-    EMAIL: 'mailto:contact@tonglan.dev',
+    LINKEDIN: 'https://www.linkedin.com/in/qitonglan/',
+    X: 'https://x.com/tong_lam_14',
+    EMAIL: 'mailto:qilonglan@gmail.com',
   },
+  RESUME: 'https://qitonglan.com/resume.pdf',
   MAPS: {
     SEARCH: (address: string) => `https://www.google.com/maps/search/?api=1&query=${address}`,
   },
@@ -55,17 +59,22 @@ export const EXTERNAL_URLS: ExternalUrlsType = {
   },
   CERTIFICATES: {
     AWS_CLOUD_PRACTITIONER: {
-      CREDENTIAL_URL: 'https://www.credly.com/badges/a912a582-dba1-4a36-b497-82ddf633721d',
+      CREDENTIAL_URL: 'https://www.credly.com/badges/a19f51dc-d001-48f0-a959-4d62d2b07761',
       IMAGE_URL:
         'https://images.credly.com/size/340x340/images/00634f82-b07f-4bbd-a6bb-53de397fc3a6/image.png',
     },
     AWS_SOLUTIONS_ARCHITECT: {
-      CREDENTIAL_URL: 'https://www.credly.com/badges/a912a582-dba1-4a36-b497-82ddf633721d',
+      CREDENTIAL_URL: 'https://www.credly.com/badges/4ca74e6e-cd0c-4ed7-a377-4bf7f9f9bd0e',
       IMAGE_URL:
         'https://images.credly.com/size/340x340/images/0e284c3f-5164-4b21-8660-0d84737941bc/image.png',
     },
   },
   PLACEHOLDERS: PLACEHOLDER_URLS,
+} as const;
+
+export const CLOUDFLARE_API_PATHS = {
+  D1_QUERY: (accountId: string, databaseId: string) =>
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`,
 } as const;
 
 export const urls = {
@@ -77,11 +86,13 @@ export const urls = {
   },
   external: EXTERNAL_URLS,
   placeholders: PLACEHOLDER_URLS,
+  cloudflare: CLOUDFLARE_API_PATHS,
 } as const;
 
 export type ApiPaths = typeof API_PATHS;
 export type BlogPaths = typeof BLOG_PATHS;
 export type PlaceholderUrls = typeof PLACEHOLDER_URLS;
 export type Urls = typeof urls;
+export type CloudflareApiPaths = typeof CLOUDFLARE_API_PATHS;
 
 export default urls;
