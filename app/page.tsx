@@ -93,7 +93,7 @@ export default function HomePage() {
             <span>LetLetMe users</span>
           </div>
           <div>
-            <strong>3</strong>
+            <strong>50+</strong>
             <span>games supported at NetEase</span>
           </div>
           <div>
