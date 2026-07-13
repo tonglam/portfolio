@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Vehicle operations overview</title>
+  <desc id="desc">Editorial dashboard illustration showing fleet status, inspections and compliance records.</desc>
+  <rect width="1600" height="1000" fill="#101820"/>
+  <rect x="44" y="44" width="1512" height="912" rx="24" fill="#f6f4ef"/>
+  <rect x="44" y="44" width="300" height="912" rx="24" fill="#17222c"/>
+  <text x="94" y="116" fill="#f6f4ef" font-family="monospace" font-size="25" font-weight="700">FLEET / OPS</text>
+  <circle cx="103" cy="194" r="8" fill="#7394ff"/>
+  <text x="126" y="203" fill="#d9e0e5" font-family="sans-serif" font-size="20">Overview</text>
+  <text x="94" y="266" fill="#8997a3" font-family="sans-serif" font-size="20">Vehicles</text>
+  <text x="94" y="326" fill="#8997a3" font-family="sans-serif" font-size="20">Drivers</text>
+  <text x="94" y="386" fill="#8997a3" font-family="sans-serif" font-size="20">Inspections</text>
+  <text x="94" y="446" fill="#8997a3" font-family="sans-serif" font-size="20">Documents</text>
+  <text x="394" y="118" fill="#15202a" font-family="Georgia, serif" font-size="45">Operations overview</text>
+  <text x="394" y="164" fill="#66717a" font-family="sans-serif" font-size="18">Records requiring attention, without hiding the operational context.</text>
+  <g font-family="sans-serif">
+    <rect x="394" y="222" width="335" height="170" rx="18" fill="#fff" stroke="#d8d4cb"/>
+    <text x="430" y="270" fill="#66717a" font-size="17">ACTIVE VEHICLES</text><text x="430" y="345" fill="#15202a" font-size="58" font-weight="700">42</text>
+    <rect x="759" y="222" width="335" height="170" rx="18" fill="#fff" stroke="#d8d4cb"/>
+    <text x="795" y="270" fill="#66717a" font-size="17">INSPECTIONS DUE</text><text x="795" y="345" fill="#15202a" font-size="58" font-weight="700">06</text>
+    <rect x="1124" y="222" width="335" height="170" rx="18" fill="#315bff"/>
+    <text x="1160" y="270" fill="#dfe6ff" font-size="17">RECORDS TO REVIEW</text><text x="1160" y="345" fill="#fff" font-size="58" font-weight="700">11</text>
+    <rect x="394" y="430" width="1065" height="438" rx="18" fill="#fff" stroke="#d8d4cb"/>
+    <text x="430" y="485" fill="#15202a" font-size="24" font-weight="700">Attention queue</text>
+    <text x="1240" y="485" fill="#315bff" font-size="17">View all →</text>
+    <line x1="430" y1="520" x2="1423" y2="520" stroke="#e3dfd7"/>
+    <text x="430" y="565" fill="#66717a" font-size="15">VEHICLE</text><text x="760" y="565" fill="#66717a" font-size="15">RECORD</text><text x="1080" y="565" fill="#66717a" font-size="15">STATUS</text>
+    <g fill="#15202a" font-size="18">
+      <text x="430" y="626">1ABC 234</text><text x="760" y="626">Annual inspection</text><text x="1080" y="626">Due in 3 days</text>
+      <text x="430" y="699">1QTL 808</text><text x="760" y="699">Driver agreement</text><text x="1080" y="699">Signature required</text>
+      <text x="430" y="772">1OPS 101</text><text x="760" y="772">Registration</text><text x="1080" y="772">Review document</text>
+      <text x="430" y="845">1SYS 042</text><text x="760" y="845">Safety checklist</text><text x="1080" y="845">Complete</text>
+    </g>
+    <g fill="#7394ff"><circle cx="1407" cy="620" r="7"/><circle cx="1407" cy="693" r="7"/><circle cx="1407" cy="766" r="7"/></g><circle cx="1407" cy="839" r="7" fill="#6a8b71"/>
+  </g>
+</svg>

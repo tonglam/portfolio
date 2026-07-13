@@ -1,0 +1,62 @@
+Cloud billing sits between many systems with different responsibilities. Product teams produce usage records. Pricing and discount rules turn that usage into charges. Account services expose results. Invoice and payment workflows move the financial record forward.
+
+I worked as one of three senior software engineers on a distributed cloud billing program at China Telecom Cloud Technology. The workstream used Java/Spring Boot, Node.js, Kafka, MySQL and independently deployable services. The details below describe general engineering lessons from that experience without exposing proprietary rules, internal code or confidential operational data.
+
+## Start with domain boundaries
+
+“Billing service” is too broad to be a useful ownership boundary. A clearer model separates responsibilities such as:
+
+- receiving usage records from cloud products;
+- validating and normalizing those records;
+- applying pricing and discount rules;
+- persisting calculated charges;
+- exposing account and billing data;
+- generating invoice records;
+- integrating account-payment workflows.
+
+These boundaries reduce accidental coupling. A change in invoice presentation should not alter usage ingestion, and a product team sending usage should not need to know how discounts are calculated.
+
+## Treat the event contract as a product
+
+Kafka makes asynchronous movement possible, but the broker does not create a stable contract by itself. Producers and consumers still need to agree on identifiers, timestamps, units, versioning and failure semantics.
+
+A useful event contract answers several questions:
+
+- Which product and account produced the usage?
+- What period does the record cover?
+- What unit and precision does the quantity use?
+- Can the record be delivered more than once?
+- How is a correction represented?
+- Which schema version is this consumer reading?
+
+Versioned contracts let upstream cloud-product teams and billing consumers change at different speeds. They also make production investigations much more concrete than debugging an undocumented message payload.
+
+## Make duplicate delivery safe
+
+Asynchronous systems should assume that a message can be retried. Billing cannot convert the same usage record into two charges simply because a consumer restarted after processing but before acknowledging the event.
+
+The processing path therefore needs a stable business identifier and an idempotent persistence decision. The consumer should be able to distinguish a new record, a duplicate delivery and a legitimate correction. This is a domain concern, not just a Kafka configuration option.
+
+## Keep calculation explainable
+
+Pricing and discounts evolve. Even when the final charge is stored, the calculation should retain enough context to explain which input, rule version and discount produced it.
+
+That traceability helps in three places:
+
+1. customer and account support;
+2. production reconciliation;
+3. safe rule changes and reprocessing.
+
+It also discourages opaque “final amount only” models that are easy to write and difficult to operate.
+
+## Separate retryable and non-retryable failures
+
+Not every failure should be retried in the same way. A temporary database or network problem may succeed later. A structurally invalid usage record will not become valid after ten identical retries.
+
+A dependable workflow distinguishes transport failures from business validation failures, records the reason, and routes each toward the correct recovery path. Observability should use the same business identifiers found in the event contract so an operator can follow one usage record through calculation, persistence and invoice processing.
+
+## The broader lesson
+
+Event-driven billing is not primarily about moving messages quickly. It is about keeping financial state correct and explainable while several teams and services evolve independently.
+
+The strongest design tools are clear domain ownership, versioned contracts, idempotent consumers, traceable calculations and deliberate recovery paths. Kafka supports that design, but it does not replace it.

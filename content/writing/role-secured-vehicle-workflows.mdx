@@ -1,0 +1,62 @@
+Operational software often looks simple from the outside: a dashboard, a table of vehicles, a few forms and some uploaded documents. The harder problem is underneath. Different users can perform different actions, records move through a lifecycle, and supporting evidence must stay connected to the right operational subject.
+
+The Vehicle Operations & Compliance platform models vehicles, drivers, inspections, agreements, signatures, documents and compliance records. It uses Next.js, TypeScript, Better Auth, Drizzle ORM and PostgreSQL, with Vercel and Supabase providing the hosted application and data layers.
+
+## Begin with actions, not role names
+
+A role such as “admin” is easy to add and easy to overuse. A clearer authorization model starts with the actions the product must protect:
+
+- view operational records;
+- create or update a vehicle;
+- assign a driver;
+- record an inspection;
+- generate an agreement;
+- request or apply a signature;
+- attach and review documents;
+- close a compliance workflow.
+
+Roles can group those permissions, but services and route boundaries should still check the action required for the current operation. That keeps authorization tied to behaviour rather than to a broad label.
+
+## Enforce permissions at the server boundary
+
+Hiding a button is useful interface feedback, not an authorization control. Every mutation must re-establish the user session and required role or permission on the server.
+
+The application keeps route handlers thin: parse the request, validate its shape, establish authentication, enforce the boundary and pass typed input to a service. The service owns the domain transition, while Drizzle persists the resulting record.
+
+This separation makes permission logic easier to find and reduces the chance that one route quietly bypasses a rule implemented elsewhere.
+
+## Model workflow state explicitly
+
+A folder of documents is not a compliance workflow. The product needs to know whether an inspection is pending, whether an agreement was produced from an approved record, whether a signature is still required and which final document belongs to that sequence.
+
+Explicit state supports both the interface and the audit trail. The dashboard can show what requires attention, and a detail view can explain how the record arrived at its current stage.
+
+A useful transition should record:
+
+- the subject, such as a vehicle or agreement;
+- the previous and next state;
+- the authorized actor;
+- the time of the action;
+- the supporting record or document when relevant.
+
+## Use Server Components for the default read path
+
+Most operational views are data-heavy but interaction-light. Server Components can render the initial dashboard, detail data and permission-aware navigation without shipping a full client data layer.
+
+Client Components remain useful for forms, table controls, immediate validation and progressive feedback. Keeping those boundaries small makes the browser code easier to reason about while preserving a responsive interface.
+
+## Keep transport, domain and persistence separate
+
+The architecture uses three deliberate layers:
+
+1. route handlers for HTTP, validation and authentication;
+2. services for business rules and workflow transitions;
+3. Drizzle models and migrations for typed persistence.
+
+This is intentionally less elaborate than a large distributed platform. The product targets a focused operational team, so maintainability matters more than adding service boundaries without a demonstrated need.
+
+## The broader lesson
+
+Good internal software does not need to look complicated. It needs to make responsibility visible: who can act, what state changes, which evidence supports it and how the record can be followed later.
+
+When those questions are reflected in the domain model and enforced at the server boundary, the interface can stay simple without making the underlying workflow vague.

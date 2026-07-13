@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Compliance workflow detail</title>
+  <desc id="desc">Editorial application illustration showing inspection, agreement, signature and document stages.</desc>
+  <rect width="1600" height="1000" fill="#e9e6df"/>
+  <rect x="44" y="44" width="1512" height="912" rx="24" fill="#f9f8f4" stroke="#d2cdc2"/>
+  <text x="94" y="110" fill="#6b747c" font-family="monospace" font-size="18">VEHICLE / 1ABC 234 / COMPLIANCE</text>
+  <text x="94" y="180" fill="#15202a" font-family="Georgia, serif" font-size="54">Annual compliance record</text>
+  <rect x="1260" y="116" width="214" height="62" rx="31" fill="#e5ecff"/>
+  <circle cx="1300" cy="147" r="8" fill="#315bff"/><text x="1322" y="154" fill="#2347c2" font-family="sans-serif" font-size="18">In progress</text>
+  <line x1="94" y1="234" x2="1506" y2="234" stroke="#d8d4cb"/>
+  <g font-family="sans-serif">
+    <g><circle cx="182" cy="335" r="37" fill="#315bff"/><text x="182" y="344" text-anchor="middle" fill="#fff" font-size="22">1</text><text x="242" y="326" fill="#15202a" font-size="22" font-weight="700">Inspection</text><text x="242" y="354" fill="#66717a" font-size="17">Completed 08 Jul 2026</text></g>
+    <line x1="182" y1="372" x2="182" y2="486" stroke="#315bff" stroke-width="3"/>
+    <g><circle cx="182" cy="523" r="37" fill="#315bff"/><text x="182" y="532" text-anchor="middle" fill="#fff" font-size="22">2</text><text x="242" y="514" fill="#15202a" font-size="22" font-weight="700">Agreement</text><text x="242" y="542" fill="#66717a" font-size="17">Generated from approved record</text></g>
+    <line x1="182" y1="560" x2="182" y2="674" stroke="#bfc5cb" stroke-width="3"/>
+    <g><circle cx="182" cy="711" r="37" fill="#fff" stroke="#315bff" stroke-width="3"/><text x="182" y="720" text-anchor="middle" fill="#315bff" font-size="22">3</text><text x="242" y="702" fill="#15202a" font-size="22" font-weight="700">Signature</text><text x="242" y="730" fill="#66717a" font-size="17">Waiting for authorised signer</text></g>
+    <line x1="182" y1="748" x2="182" y2="824" stroke="#bfc5cb" stroke-width="3"/>
+    <g><circle cx="182" cy="861" r="37" fill="#f0eee8"/><text x="182" y="870" text-anchor="middle" fill="#66717a" font-size="22">4</text><text x="242" y="852" fill="#15202a" font-size="22" font-weight="700">Document record</text><text x="242" y="880" fill="#66717a" font-size="17">Available after signature</text></g>
+    <rect x="756" y="286" width="710" height="568" rx="20" fill="#fff" stroke="#d8d4cb"/>
+    <text x="804" y="345" fill="#15202a" font-size="25" font-weight="700">Record details</text>
+    <text x="804" y="410" fill="#66717a" font-size="15">VEHICLE</text><text x="804" y="447" fill="#15202a" font-size="20">2023 Fleet Utility · 1ABC 234</text>
+    <text x="804" y="516" fill="#66717a" font-size="15">ASSIGNED DRIVER</text><text x="804" y="553" fill="#15202a" font-size="20">Operations user 018</text>
+    <text x="804" y="622" fill="#66717a" font-size="15">INSPECTION RESULT</text><text x="804" y="659" fill="#15202a" font-size="20">Approved with follow-up note</text>
+    <rect x="804" y="714" width="280" height="72" rx="10" fill="#315bff"/><text x="944" y="758" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">Review agreement</text>
+    <rect x="1104" y="714" width="314" height="72" rx="10" fill="#f5f3ee" stroke="#d8d4cb"/><text x="1261" y="758" text-anchor="middle" fill="#15202a" font-size="18" font-weight="700">View inspection</text>
+  </g>
+</svg>
