@@ -5,10 +5,14 @@ export const caseStudySchema = z.object({
   title: z.string().min(1),
   eyebrow: z.string().min(1),
   summary: z.string().min(1),
+  seoDescription: z.string().min(1),
+  cardFocus: z.string().min(1),
   period: z.string().min(1),
+  updatedAt: z.string().date(),
   role: z.string().min(1),
   ownership: z.array(z.string().min(1)).min(1),
   evidence: z.array(z.object({ label: z.string(), value: z.string() })).min(1),
+  outcomes: z.array(z.string().min(1)).min(1),
   capabilities: z.array(z.string().min(1)).min(1),
   challenge: z.string().min(1),
   architecture: z.object({
@@ -20,24 +24,58 @@ export const caseStudySchema = z.object({
       title: z.string(),
       context: z.string(),
       decision: z.string(),
+      tradeoff: z.string(),
       outcome: z.string(),
     })
   ),
+  operatingConcerns: z
+    .array(
+      z.object({
+        label: z.string(),
+        title: z.string(),
+        detail: z.string(),
+      })
+    )
+    .min(1),
+  reflection: z.object({
+    summary: z.string(),
+    learned: z.string(),
+    next: z.string(),
+  }),
+  sectionHeadings: z.object({
+    overview: z.string().min(1),
+    context: z.string().min(1),
+    architecture: z.string().min(1),
+    decisions: z.string().min(1),
+    operations: z.string().min(1),
+    evidence: z.string().min(1),
+    reflection: z.string().min(1),
+  }),
   gallery: z.array(
     z.object({
       src: z.string(),
       alt: z.string(),
+      label: z.string().min(1),
+      note: z.string().min(1).optional(),
       caption: z.string(),
       width: z.number(),
       height: z.number(),
     })
   ),
-  links: z.array(z.object({ label: z.string(), href: z.string().url(), event: z.string() })),
+  links: z.array(
+    z.object({
+      label: z.string(),
+      href: z.string().url(),
+      event: z.string(),
+      note: z.string().min(1).optional(),
+    })
+  ),
 });
 
 export const writingMetaSchema = z.object({
   slug: z.string().min(1),
   title: z.string().min(1),
+  seoTitle: z.string().min(1),
   description: z.string().min(1),
   publishedAt: z.string().date(),
   updatedAt: z.string().date(),

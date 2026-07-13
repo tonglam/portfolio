@@ -15,7 +15,7 @@ const display = localFont({
   weight: '500',
   style: 'normal',
   variable: '--font-display',
-  display: 'swap',
+  display: 'optional',
 });
 
 const sans = IBM_Plex_Sans({
@@ -43,12 +43,13 @@ export const metadata: Metadata = {
   authors: [{ name: site.name, url: site.url }],
   creator: site.name,
   keywords: [
+    'full-stack software engineer Perth',
     'software engineer Perth',
+    'React Next.js engineer',
+    'TypeScript Node.js engineer',
     'backend engineer',
     'platform engineer',
-    'full-stack engineer',
     'Java Spring Boot',
-    'TypeScript Node.js',
   ],
   alternates: { canonical: '/' },
   openGraph: {
@@ -89,6 +90,14 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       suppressHydrationWarning
       className={`${display.variable} ${sans.variable} ${mono.variable}`}
     >
+      <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Qitong Lan — Engineering Writing"
+          href={`${site.url}/rss.xml`}
+        />
+      </head>
       <body>
         <ThemeProvider>
           <a className="skip-link" href="#main-content">

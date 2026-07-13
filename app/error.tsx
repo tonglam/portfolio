@@ -6,7 +6,7 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
       <p className="eyebrow">Application error</p>
       <h1>This route did not complete.</h1>
       <p>
-        Retry the request. If the problem continues, use the direct contact details in the footer.
+        Retry the request. If the problem continues, use the LinkedIn or GitHub links in the footer.
       </p>
       <button className="button button-primary" type="button" onClick={reset}>
         Try again

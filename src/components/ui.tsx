@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { CaseStudy, WritingMeta } from '@/src/content/types';
+import { formatPublicationDate } from '@/src/content/format';
 
 export function SectionHeading({
   eyebrow,
@@ -36,23 +37,37 @@ export function CaseStudyCard({ study, index }: { study: CaseStudy; index: numbe
           alt={image.alt}
           width={image.width}
           height={image.height}
-          sizes="(max-width: 760px) 100vw, 50vw"
+          sizes="(max-width: 1040px) 100vw, 55vw"
         />
+        <span className="work-image-caption">
+          <small>{image.label}</small>
+          {image.caption}
+          {image.note ? <em>{image.note}</em> : null}
+        </span>
       </Link>
       <div className="work-card-body">
         <div className="work-meta">
           <span>0{index + 1}</span>
-          <span>{study.eyebrow}</span>
+          <span>{study.period}</span>
         </div>
+        <p className="work-kicker">{study.eyebrow}</p>
         <h3>{study.title}</h3>
         <p>{study.summary}</p>
+        <p className="work-role">
+          <span>Ownership</span>
+          {study.role}
+        </p>
         <div className="evidence-row">
-          {study.evidence.slice(0, 2).map(item => (
+          {study.evidence.map(item => (
             <span key={item.label}>
               <small>{item.label}</small>
               {item.value}
             </span>
           ))}
+        </div>
+        <div className="work-focus">
+          <span>Engineering focus</span>
+          <p>{study.cardFocus}</p>
         </div>
         <Link href={`/work/${study.slug}`} className="text-link">
           Read the case study <ArrowRight aria-hidden="true" size={17} />
@@ -62,17 +77,27 @@ export function CaseStudyCard({ study, index }: { study: CaseStudy; index: numbe
   );
 }
 
-export function ArticleCard({ article, index }: { article: WritingMeta; index: number }) {
+export function ArticleCard({
+  article,
+  index,
+  headingLevel = 3,
+}: {
+  article: WritingMeta;
+  index: number;
+  headingLevel?: 2 | 3;
+}) {
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
+
   return (
     <article className="article-card">
       <div className="article-index">0{index + 1}</div>
       <div>
         <p className="article-meta">
-          {article.publishedAt} · {article.minutes} min read
+          {formatPublicationDate(article.publishedAt)} · {article.minutes} min read
         </p>
-        <h3>
+        <Heading>
           <Link href={`/writing/${article.slug}`}>{article.title}</Link>
-        </h3>
+        </Heading>
         <p>{article.description}</p>
         <div className="tag-row">
           {article.tags.map(tag => (

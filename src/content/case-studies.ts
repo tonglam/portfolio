@@ -7,7 +7,12 @@ const studies = [
     eyebrow: 'Real-time analytics & workflow platform',
     summary:
       'A maintained full-stack Fantasy Premier League platform that turns fast-moving external data into live analytics, tournament workflows, notifications, and companion experiences.',
+    seoDescription:
+      'Explore how I built and maintain LetLetMe, a full-stack FPL platform serving 800+ users with live data, APIs, workflows and recovery paths.',
+    cardFocus:
+      'Keeping live scores, tournament state and notifications consistent when upstream data changes.',
     period: 'April 2020 — present',
+    updatedAt: '2026-07-13',
     role: 'Builder and maintainer across product, backend services, data workflows and cloud delivery',
     ownership: [
       'Product and architecture decisions across web, API, processing and delivery surfaces',
@@ -16,8 +21,13 @@ const studies = [
     ],
     evidence: [
       { label: 'Reach', value: '800+ users' },
-      { label: 'Surfaces', value: 'Web, mobile companion and bot delivery' },
+      { label: 'Surfaces', value: 'Web, WeChat and bot delivery' },
       { label: 'Runtime', value: 'Live data, scheduled jobs and recovery workflows' },
+    ],
+    outcomes: [
+      'Used by 800+ users across its product surfaces.',
+      'Maintained and operated continuously as a personal product since April 2020.',
+      'Shared scoring and tournament rules serve web, WeChat and bot experiences.',
     ],
     capabilities: [
       'Next.js',
@@ -41,7 +51,7 @@ const studies = [
         { label: 'Source of truth', detail: 'PostgreSQL/MySQL domain records' },
         { label: 'Live cache', detail: 'Redis-backed freshness-sensitive reads' },
         { label: 'Product APIs', detail: 'REST, GraphQL and workflow services' },
-        { label: 'Client surfaces', detail: 'Web, companion client and Telegram delivery' },
+        { label: 'Client surfaces', detail: 'Web, WeChat and Telegram delivery' },
       ],
     },
     decisions: [
@@ -50,6 +60,8 @@ const studies = [
         context: 'External sources can be slow or temporarily inconsistent.',
         decision:
           'Run ingestion and normalization as scheduled background workflows, then serve product reads from controlled storage and cache layers.',
+        tradeoff:
+          'Product reads use controlled freshness windows instead of fetching providers on demand, so scheduled workflows need deliberate monitoring and recovery.',
         outcome: 'User-facing routes do not depend directly on external-provider response time.',
       },
       {
@@ -57,6 +69,8 @@ const studies = [
         context: 'Redis and relational records can drift after partial failures or delayed jobs.',
         decision:
           'Add verification, rebuild and rerun paths rather than assuming every synchronization step succeeds.',
+        tradeoff:
+          'Repair paths add operational code and explicit checks, but avoid using a full cache reset as the default response to partial failure.',
         outcome:
           'The system can recover deliberately without treating cache resets as the default response.',
       },
@@ -65,13 +79,52 @@ const studies = [
         context: 'Web, bot and companion experiences consume overlapping domain state.',
         decision:
           'Centralize scoring and workflow rules in backend services and expose them through APIs.',
+        tradeoff:
+          'Shared APIs require stable contracts and careful changes, but keep each client from recreating domain rules.',
         outcome: 'Clients can evolve independently without duplicating core calculations.',
       },
     ],
+    operatingConcerns: [
+      {
+        label: 'Freshness',
+        title: 'Make staleness visible and intentional',
+        detail:
+          'Scheduled refresh windows and controlled read layers keep product behaviour understandable when upstream data changes quickly.',
+      },
+      {
+        label: 'Recovery',
+        title: 'Treat repair as part of the product runtime',
+        detail:
+          'Verification, rebuild and rerun paths give partial failures a deliberate recovery route instead of relying on manual cache clearing.',
+      },
+      {
+        label: 'Consistency',
+        title: 'Keep shared rules behind the API boundary',
+        detail:
+          'Web, companion and bot experiences consume the same scoring and workflow behaviour from backend services.',
+      },
+    ],
+    reflection: {
+      summary:
+        'Operating LetLetMe over time reinforced that reliability is a product behaviour, not a single infrastructure component.',
+      learned:
+        'Cached data needs an explicit lifecycle: when it becomes fresh, how it can drift, and how the system restores agreement after interruption.',
+      next: 'Continue tightening observability and recovery workflows as the product and its live-data surfaces evolve.',
+    },
+    sectionHeadings: {
+      overview: 'Owning the product loop.',
+      context: 'Live data rarely fails cleanly.',
+      architecture: 'From provider payloads to product state.',
+      decisions: 'Three choices that shaped reliability.',
+      operations: 'Freshness, recovery and shared rules.',
+      evidence: 'A maintained product in use.',
+      reflection: 'Reliability became a product concern.',
+    },
     gallery: [
       {
         src: '/work/letletme/desktop-workflow.png',
         alt: 'LetLetMe desktop tournament workflow with filters, ownership and ranking controls',
+        label: 'Live product screen',
         caption: 'Tournament workflow backed by synchronized product state.',
         width: 1600,
         height: 900,
@@ -79,6 +132,7 @@ const studies = [
       {
         src: '/work/letletme/desktop-analytics.png',
         alt: 'LetLetMe analytics view showing live fantasy football data',
+        label: 'Live product screen',
         caption: 'Freshness-sensitive analytics served through explicit cache behaviour.',
         width: 1600,
         height: 900,
@@ -86,6 +140,7 @@ const studies = [
       {
         src: '/work/letletme/live-tournament.png',
         alt: 'LetLetMe mobile tournament experience',
+        label: 'Live product screen',
         caption: 'A companion workflow using the same backend rules and live state.',
         width: 680,
         height: 900,
@@ -102,21 +157,31 @@ const studies = [
   },
   {
     slug: 'vehicle-operations',
-    title: 'Vehicle Operations & Compliance',
+    title: 'Vehicle Operations & Compliance Platform',
     eyebrow: 'Role-secured operational product',
     summary:
-      'A backend-heavy web platform for vehicle, driver, inspection, agreement, signature, document and compliance workflows.',
+      'A deployed full-stack web application for vehicle, driver, inspection, agreement, signature, document and compliance workflows.',
+    seoDescription:
+      'A full-stack Next.js case study covering role-secured vehicle, inspection, agreement, signature, document and compliance workflows.',
+    cardFocus:
+      'Making role-secured operational records understandable across inspections, signatures, agreements and documents.',
     period: '2025',
+    updatedAt: '2026-07-13',
     role: 'Full-stack product design and implementation',
     ownership: [
       'Domain modelling for vehicles, users and operational records',
-      'Authenticated and role-secured application boundaries',
+      'Shared authorization policy for authenticated agreement operations',
       'Server-rendered data views with focused client interaction for forms and tables',
     ],
     evidence: [
-      { label: 'Access', value: 'Role-secured workflows' },
-      { label: 'Records', value: 'Inspections, agreements and documents' },
-      { label: 'Delivery', value: 'Next.js, PostgreSQL and Vercel' },
+      { label: 'Access', value: '4 application roles' },
+      { label: 'Workflow', value: 'Inspection → agreement → signature' },
+      { label: 'Delivery', value: 'Deployed app + public source' },
+    ],
+    outcomes: [
+      'A deployed application demonstrates the role-secured operational workflow.',
+      'The public repository exposes the implementation, schema and focused policy tests.',
+      'Agreement signing has explicit state transitions from draft through signature or termination.',
     ],
     capabilities: [
       'Next.js',
@@ -128,57 +193,104 @@ const studies = [
       'Vercel',
     ],
     challenge:
-      'Operational tools need a simple interface while preserving permission boundaries and an understandable record trail across vehicles, drivers, inspections, agreements, signatures and supporting documents.',
+      'The interface needs to stay simple while the server preserves access rules and an understandable record trail across vehicles, drivers, inspections, agreements, signatures and supporting documents.',
     architecture: {
       description:
-        'Next.js Server Components render data-heavy views. Route handlers validate requests and enforce roles before thin service boundaries apply domain rules and persist typed records through Drizzle.',
+        'Next.js Server Components render data-heavy views. Agreement endpoints use a shared server authorization boundary, while the signing route validates transport input and delegates the workflow transition, persistence and invitation email to a service.',
       stages: [
         { label: 'User interface', detail: 'Server-rendered dashboards, forms and tables' },
-        { label: 'Authentication', detail: 'Better Auth sessions and role checks' },
-        { label: 'Route boundary', detail: 'Request parsing and Zod validation' },
-        { label: 'Domain services', detail: 'Operational rules and workflow state' },
+        { label: 'Authentication', detail: 'Better Auth sessions and active-user checks' },
+        { label: 'Authorization', detail: 'Shared admin and manager policy boundary' },
+        { label: 'Workflow service', detail: 'Signing transition, persistence and invitation' },
         { label: 'Typed data', detail: 'Drizzle models and migrations' },
         { label: 'PostgreSQL', detail: 'Supabase-hosted operational records' },
       ],
     },
     decisions: [
       {
-        title: 'Keep route handlers thin',
+        title: 'Centralize agreement authorization',
         context:
-          'Authentication, validation and business rules become difficult to test when mixed together.',
+          'Repeated session and role queries can drift between endpoints and omit important checks.',
         decision:
-          'Use route handlers for transport concerns and service modules for domain behaviour.',
-        outcome: 'Permissions and workflow rules have clearer ownership boundaries.',
+          'Use one server helper for the session, active-user lookup and allowed-role policy across agreement endpoints.',
+        tradeoff:
+          'The shared boundary adds a module dependency, but removes repeated authorization implementations.',
+        outcome: 'Agreement mutations now apply the same admin and manager access policy.',
       },
       {
-        title: 'Prefer server-rendered operational views',
+        title: 'Put signing orchestration behind a service',
         context:
-          'Most dashboard screens are data-heavy and do not require a fully client-rendered application.',
+          'The finalisation route previously mixed authorization, database reads, state changes, link generation and email delivery.',
         decision:
-          'Use Server Components by default and isolate client code to tables, forms and immediate feedback.',
+          'Keep request parsing in the route and move agreement lookup, state validation, persistence and invitation delivery into a named service.',
+        tradeoff:
+          'Email remains an external side effect after persistence, so a failed send returns a retryable error while retaining the same signing token.',
         outcome:
-          'The browser receives less application JavaScript while retaining focused interaction.',
+          'The HTTP entry point is small enough to review while the workflow has one implementation.',
       },
       {
-        title: 'Model auditability into the workflow',
+        title: 'Model the agreement lifecycle explicitly',
         context:
           'Documents, signatures and compliance records need clear relationships to the operational subject.',
         decision:
-          'Represent the record lifecycle explicitly instead of attaching unstructured files to vehicles.',
-        outcome: 'Operators can follow the state and supporting evidence of each workflow.',
+          'Represent draft, pending-signature, signed and terminated states with permitted transitions.',
+        tradeoff:
+          'Explicit workflow records require more domain modelling and migrations, but preserve the relationships needed for auditability.',
+        outcome:
+          'Invalid reversals and actions on terminated agreements are rejected before persistence.',
       },
     ],
+    operatingConcerns: [
+      {
+        label: 'Access',
+        title: 'Enforce roles at the request boundary',
+        detail:
+          'A shared server helper checks the session, active user and permitted roles before agreement mutations run.',
+      },
+      {
+        label: 'Integrity',
+        title: 'Model supporting evidence as structured records',
+        detail:
+          'Agreements, inspections, signatures and documents retain clear relationships to the vehicle and workflow they support.',
+      },
+      {
+        label: 'Delivery',
+        title: 'Keep the client boundary deliberately small',
+        detail:
+          'Server-rendered views handle data-heavy screens while focused client components provide forms, tables and immediate feedback.',
+      },
+    ],
+    reflection: {
+      summary:
+        'The project demonstrates that operational software becomes easier to use when permissions, record structure and interface state are designed together.',
+      learned:
+        'Compliance workflows should expose their state and evidence clearly instead of hiding important relationships inside generic attachments.',
+      next: 'Extend automated workflow coverage and operational feedback as the product continues to mature.',
+    },
+    sectionHeadings: {
+      overview: 'From vehicle records to signed agreements.',
+      context: 'Permissions and auditability shape the workflow.',
+      architecture: 'A server-led operational application.',
+      decisions: 'Three implementation choices behind the product.',
+      operations: 'Access, state and delivery boundaries.',
+      evidence: 'A sanitized view of the working product.',
+      reflection: 'Designing the record and interface together.',
+    },
     gallery: [
       {
         src: '/work/vehicle/operations-overview.svg',
-        alt: 'Vehicle operations dashboard concept showing fleet status, inspections and compliance records',
+        alt: 'Sanitized vehicle operations dashboard illustration using synthetic fleet and compliance data',
+        label: 'Sanitized product illustration',
+        note: 'Synthetic demo data — not a production screenshot.',
         caption: 'A focused operational overview, designed around records requiring attention.',
         width: 1600,
         height: 1000,
       },
       {
         src: '/work/vehicle/workflow-detail.svg',
-        alt: 'Vehicle compliance record workflow showing agreement, inspection, signature and document stages',
+        alt: 'Sanitized vehicle workflow illustration using synthetic agreement, inspection, signature and document data',
+        label: 'Sanitized product illustration',
+        note: 'Synthetic demo data — not a production screenshot.',
         caption: 'Explicit workflow state keeps supporting records understandable.',
         width: 1600,
         height: 1000,
@@ -186,13 +298,14 @@ const studies = [
     ],
     links: [
       {
-        label: 'Open live product',
+        label: 'Open deployed application',
         href: 'https://vehicle-track-amber.vercel.app',
         event: 'visit_vehicle_live',
+        note: 'Sign-in required',
       },
       {
-        label: 'View source repository',
-        href: 'https://github.com/tonglam/vehicle-track',
+        label: 'View implementation branch',
+        href: 'https://github.com/tonglam/vehicle-track/tree/codex/vehicle-evidence-hardening',
         event: 'visit_vehicle_source',
       },
     ],

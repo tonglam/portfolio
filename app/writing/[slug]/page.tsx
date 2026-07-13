@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { JsonLd } from '@/src/components/ui';
 import { site } from '@/src/content/site';
 import { articles, getArticle } from '@/src/content/writing';
+import { formatPublicationDate } from '@/src/content/format';
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -20,7 +21,7 @@ export async function generateMetadata({
   const article = getArticle(slug);
   if (!article) return {};
   return {
-    title: article.title,
+    title: article.seoTitle,
     description: article.description,
     alternates: { canonical: `/writing/${article.slug}` },
     openGraph: {
@@ -46,18 +47,37 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!article) notFound();
   const { Component } = article;
   const canonical = `${site.url}/writing/${article.slug}`;
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: article.title,
-    description: article.description,
-    url: canonical,
-    datePublished: article.publishedAt,
-    dateModified: article.updatedAt,
-    keywords: article.tags.join(', '),
-    author: { '@type': 'Person', name: site.name, url: site.url },
-    publisher: { '@type': 'Person', name: site.name, url: site.url },
-  };
+  const image = `${canonical}/opengraph-image`;
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: article.title,
+      description: article.description,
+      url: canonical,
+      mainEntityOfPage: canonical,
+      image,
+      datePublished: article.publishedAt,
+      dateModified: article.updatedAt,
+      keywords: article.tags.join(', '),
+      author: {
+        '@type': 'Person',
+        name: site.name,
+        url: site.url,
+        sameAs: [site.social.linkedin, site.social.github],
+      },
+      publisher: { '@type': 'Person', name: site.name, url: site.url },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: site.url },
+        { '@type': 'ListItem', position: 2, name: 'Writing', item: `${site.url}/writing` },
+        { '@type': 'ListItem', position: 3, name: article.title, item: canonical },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -68,7 +88,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <ArrowLeft aria-hidden="true" size={17} /> All writing
           </Link>
           <p className="eyebrow">
-            {article.publishedAt} · {article.minutes} min read
+            {formatPublicationDate(article.publishedAt)} · {article.minutes} min read
           </p>
           <h1>{article.title}</h1>
           <p>{article.description}</p>

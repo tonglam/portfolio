@@ -5,24 +5,25 @@ export const site = {
   email: 'qitonglan@gmail.com',
   location: 'Perth, WA',
   workRights: 'Full Australian working rights',
+  updatedAt: '2026-07-13',
   description:
-    'Perth-based software engineer with 8+ years of commercial experience building backend platforms, APIs, data workflows, and web products.',
+    'Perth-based full-stack software engineer with 8+ years of commercial experience delivering web products, APIs, data workflows and cloud systems.',
   social: {
     github: 'https://github.com/tonglam',
     linkedin: 'https://www.linkedin.com/in/qitonglan',
   },
   resumes: [
     {
-      label: 'Backend & Platform CV',
-      href: '/resume/qitong-lan-cv-backend-platform.pdf',
-      detail: 'APIs, distributed systems, SQL and cloud',
-      event: 'download_cv_backend',
-    },
-    {
       label: 'Full-Stack & Product CV',
       href: '/resume/qitong-lan-cv-full-stack-product.pdf',
       detail: 'React, Next.js, Node.js and end-to-end delivery',
       event: 'download_cv_full_stack',
+    },
+    {
+      label: 'Backend & Platform CV',
+      href: '/resume/qitong-lan-cv-backend-platform.pdf',
+      detail: 'APIs, distributed systems, SQL and cloud',
+      event: 'download_cv_backend',
     },
   ],
 } as const;
@@ -57,31 +58,31 @@ export const experience = [
 export const capabilities = [
   {
     index: '01',
-    title: 'Backend & platform systems',
+    title: 'Full-stack product delivery',
+    description:
+      'End-to-end web products delivered from domain modelling and APIs through React/Next.js interfaces, authentication, testing and deployment.',
+    evidence: 'LetLetMe · Vehicle Operations · enterprise web applications',
+  },
+  {
+    index: '02',
+    title: 'Backend & API engineering',
     description:
       'API contracts, distributed services, event-driven workflows and production support across Java/Spring Boot and TypeScript/Node.js.',
     evidence: 'Cloud billing · telecom CRM · LetLetMe services',
   },
   {
-    index: '02',
-    title: 'Data-intensive products',
+    index: '03',
+    title: 'Data & workflow reliability',
     description:
       'Relational modelling, SQL, Redis caching, scheduled ingestion and synchronization paths designed around freshness and recovery.',
-    evidence: 'PostgreSQL · MySQL · Redis · Kafka',
-  },
-  {
-    index: '03',
-    title: 'End-to-end delivery',
-    description:
-      'Backend-heavy web products delivered from domain modelling and APIs through React/Next.js interfaces, testing and deployment.',
-    evidence: 'LetLetMe · Vehicle Operations · enterprise tools',
+    evidence: 'LetLetMe live-data pipeline · cloud billing events',
   },
   {
     index: '04',
     title: 'Cloud & operations',
     description:
       'Practical delivery using Docker, AWS, Vercel, Cloudflare, CI/CD, observability and hands-on production troubleshooting.',
-    evidence: 'AWS certified · GitHub Actions · Jenkins · Linux',
+    evidence: 'LetLetMe operations · enterprise CI/CD · AWS credentials',
   },
 ] as const;
 

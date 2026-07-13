@@ -1,59 +1,75 @@
-A live sports product does not have one tidy database update. Fixtures move, events arrive in bursts, corrections appear later, and several product surfaces expect a consistent answer at the same time. In LetLetMe, that answer supports analytics, tournament workflows, notifications and companion experiences used by 800+ users.
+A live sports product can be wrong even when every service is running. One job may save entry data while another misses a tournament result. A database write can complete before a cached view is refreshed. Later corrections from the data provider can also make an earlier calculation incomplete.
 
-The useful engineering question is not simply “how do we fetch the latest data?” It is: **how do we know what is fresh, what is authoritative and how to recover when part of the pipeline fails?**
+LetLetMe is a maintained Fantasy Premier League analytics and tournament platform used by 800+ users. Its data layer supports scheduled ingestion, derived scoring and several product surfaces. The most useful reliability work has therefore been about detecting incomplete state and repairing only what is affected.
 
-## Separate collection from product reads
+## Define the invariants before the recovery command
 
-The first boundary is between external data collection and user-facing requests. Calling an upstream provider directly from a page route couples product latency and availability to a service outside the product’s control.
+“Sync succeeded” is too vague. A tournament is usable only when several relationships agree. The current audit checks concrete conditions such as:
 
-LetLetMe instead treats ingestion as its own workflow:
+- the number of tournament entries matches the configured team count;
+- every participant has entry and league information;
+- group positions form a complete sequence;
+- generated knockout matches and results match the expected structure;
+- each event in the requested window has results for every participant;
+- knockout rows contain both entries and a result where one is expected.
 
-1. Scheduled jobs fetch the required source payloads.
-2. Validation rejects structurally incomplete responses.
-3. Normalization maps provider-specific data into domain records.
-4. Scoring and derived-data steps apply shared business rules.
-5. Synchronization updates relational storage and Redis.
-6. Product APIs expose controlled state to clients.
+Those checks turn an operational feeling into a report. The result identifies missing entry data, whether the tournament structure needs rebuilding, and the event IDs that can be rerun independently.
 
-This boundary lets product routes remain predictable even when an external source is slow. It also gives ingestion failures an observable place to live instead of turning them into unexplained page errors.
+```text
+audit result
+  missing entry details: [entry ids]
+  structure rebuild required: true | false
+  event reruns required: [event ids]
+  issues: [human-readable reasons]
+```
 
-## Give each storage layer a clear job
+The report is deliberately useful to both code and an operator. Structured fields drive the repair path; readable reasons make logs and investigations understandable.
 
-Relational storage and Redis are not interchangeable copies. Relational records remain the durable source for domain state and history. Redis supports freshness-sensitive reads where rebuilding the same view repeatedly would add unnecessary work.
+## Choose the narrowest safe repair
 
-That distinction affects implementation:
+Not every inconsistency needs a full rebuild. The repair sequence separates three cases.
 
-- cache keys should describe a domain view rather than an arbitrary page;
-- expiry should follow the expected update rhythm of the data;
-- writes should make their ordering explicit;
-- a missing cache entry should be recoverable from durable records;
-- clients should not contain a second version of scoring rules.
+First, missing participant details can be synchronized without touching tournament results. Second, an invalid group sequence or knockout shape requires rebuilding the structure and backfilling its history. Third, incomplete event results can be regenerated for only the affected event IDs.
 
-The point is not to cache everything. It is to make the read path intentional.
+In simplified form, the control flow looks like this:
 
-## Design for partial completion
+```text
+audit
+  -> sync missing participant details
+  -> if structure is invalid
+       rebuild structure
+       backfill the requested history window
+     else
+       rerun only incomplete events
+  -> audit again
+  -> fail on remaining structural issues
+  -> report recoverable gaps as warnings
+```
 
-Distributed workflows rarely fail as a single clean transaction. A fetch may succeed while normalization fails. Database writes may complete before a cache refresh. A notification step may be delayed after the product state is already correct.
+This is safer than clearing Redis or replaying an entire season by default. The repair has a smaller blast radius, and every action follows from a failed invariant.
 
-The operating model therefore needs more than retries. LetLetMe uses explicit verification and repair paths: check the source-of-truth record, compare derived or cached state, rebuild the affected view, and rerun only the safe stage when necessary.
+## Re-audit after writing
 
-This is a more useful recovery sequence than clearing an entire cache and hoping the next scheduled job repairs everything. It narrows the blast radius and makes the response explainable.
+A repair command is not proof that the product is correct. It can fail partially, or it can reveal another dependency that was not visible during the first pass. LetLetMe therefore runs the same audit again after the repair.
 
-## Keep shared rules behind APIs
+Remaining issues are classified by consequence. Entry-count mismatches, invalid group positions and knockout-structure mismatches are treated as critical because the tournament shape cannot be trusted. Other missing results can be reported as recoverable warnings so an operator knows that a narrower follow-up is still required.
 
-The platform has more than one client surface. Web views, companion clients and notification services consume overlapping state, but they should not each calculate it differently.
+That second pass is the important part of the sequence. “Attempted repair” and “verified recovery” are different states.
 
-Shared backend rules give those clients a stable contract. REST endpoints handle focused product operations; GraphQL supports composed analytics reads; background services own ingestion and derived-data work. The exact interface matters less than keeping domain calculations in one accountable place.
+## Keep collection away from product requests
 
-## What I would preserve in another live-data product
+The audit works because ingestion is already separated from user-facing reads. Scheduled workers fetch and normalize external data, domain services calculate results, and APIs expose controlled state to web, WeChat and bot experiences.
 
-The reusable lessons are straightforward:
+Relational records provide durable domain state. Redis supports freshness-sensitive reads and derived views. A cache miss can be rebuilt; it is not treated as an alternative authority. Product clients also avoid implementing their own scoring rules, which prevents three surfaces from returning three answers.
 
-- define freshness as a product requirement, not an incidental cache setting;
-- keep ingestion independent from interactive requests;
-- state which layer is authoritative for each kind of data;
-- make partial progress and reruns observable;
-- build repair operations before the first production incident;
-- centralize business rules used by multiple clients.
+## What this changed in my approach
 
-Reliability in this kind of product comes from visible boundaries. Once collection, normalization, durable state, live reads and recovery are separate concepts, the system becomes much easier to reason about and operate.
+The useful abstraction is not “database plus cache.” It is a set of invariants and recovery scopes:
+
+- participant identity can be repaired independently;
+- structural records may require a rebuild;
+- event calculations can be rerun by event;
+- every repair is followed by verification;
+- logs carry the tournament and event identifiers needed to investigate one path.
+
+I would use the same approach for feeds, imports or scheduled reporting: state what complete data means, detect the smallest failed unit, repair that unit, and verify the invariant again. Reliability becomes much easier to operate when recovery is an explicit product workflow rather than an emergency script.

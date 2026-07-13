@@ -1,10 +1,11 @@
 import { access, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import robots from '@/app/robots';
 import sitemap from '@/app/sitemap';
 import { GET as getRss } from '@/app/rss.xml/route';
 import { archiveGroups, archivePosts } from '@/src/content/archive';
-import { articleMetadata } from '@/src/content/article-metadata';
+import { articleMetadata, estimateReadingMinutes } from '@/src/content/article-metadata';
 import { caseStudies } from '@/src/content/case-studies';
 import { site } from '@/src/content/site';
 
@@ -43,14 +44,47 @@ describe('portfolio content', () => {
     expect(copy).not.toMatch(/millions of daily transactions/i);
   });
 
+  it('derives article reading time from the published MDX', () => {
+    for (const article of articleMetadata) {
+      expect(article.minutes).toBe(estimateReadingMinutes(article.slug));
+      expect(article.minutes).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it('labels synthetic Vehicle visuals and authenticated access explicitly', () => {
+    const vehicle = caseStudies.find(({ slug }) => slug === 'vehicle-operations');
+    expect(vehicle).toBeDefined();
+    expect(vehicle?.gallery.every(({ label }) => label === 'Sanitized product illustration')).toBe(
+      true
+    );
+    expect(vehicle?.gallery.every(({ note }) => note?.includes('Synthetic demo data'))).toBe(true);
+    expect(vehicle?.links.find(({ event }) => event === 'visit_vehicle_live')?.note).toBe(
+      'Sign-in required'
+    );
+  });
+
   it('generates a sitemap containing only real canonical routes', () => {
-    const routes = sitemap().map(({ url }) => url);
+    const entries = sitemap();
+    const routes = entries.map(({ url }) => url);
     expect(routes).toContain(site.url);
     expect(routes).toContain(site.url + '/work/letletme');
     expect(routes).toContain(site.url + '/work/vehicle-operations');
     expect(routes).toContain(site.url + '/writing');
     expect(routes).not.toContain(site.url + '/about');
     expect(routes).not.toContain(site.url + '/writing/archive');
+    expect(entries.every(({ lastModified }) => lastModified instanceof Date)).toBe(true);
+  });
+
+  it('keeps noindex pages crawlable so crawlers can observe their metadata', () => {
+    expect(JSON.stringify(robots())).not.toContain('/writing/archive');
+  });
+
+  it('provides concise search titles and page-specific descriptions', () => {
+    expect(new Set(articleMetadata.map(({ seoTitle }) => seoTitle)).size).toBe(
+      articleMetadata.length
+    );
+    expect(articleMetadata.every(({ seoTitle }) => seoTitle.length <= 40)).toBe(true);
+    expect(caseStudies.every(({ seoDescription }) => seoDescription.length <= 160)).toBe(true);
   });
 
   it('generates an RSS document for all three articles', async () => {
