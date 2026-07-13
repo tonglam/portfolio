@@ -71,7 +71,7 @@ export const projectsData: Project[] = [
       { type: 'github', url: 'https://github.com/tonglam/Askify' },
       { type: 'demo', url: 'https://askify-q4k0.onrender.com' },
     ]),
-    order: 2,
+    order: 10,
   },
   {
     id: 'letletme-api',
@@ -85,7 +85,7 @@ export const projectsData: Project[] = [
       { type: 'demo', url: 'https://api.letletme.top' },
     ]),
     featured: true,
-    order: 6,
+    order: 14,
   },
   {
     id: 'letletme-web',
@@ -99,7 +99,7 @@ export const projectsData: Project[] = [
       { type: 'demo', url: 'https://letletme.top' },
     ]),
     featured: true,
-    order: 4,
+    order: 12,
   },
   {
     id: 'letletme-data',
@@ -112,7 +112,7 @@ export const projectsData: Project[] = [
       { type: 'github', url: 'https://github.com/tonglam/letletme_data' },
     ]),
     featured: true,
-    order: 5,
+    order: 13,
   },
   {
     id: 'smart-home-website',
@@ -149,7 +149,7 @@ export const projectsData: Project[] = [
       { type: 'demo', url: 'https://qitonglan.com/miniprogram.webp' },
     ]),
     featured: true,
-    order: 3,
+    order: 11,
   },
   {
     id: 'fpl-data-public',

@@ -25,7 +25,6 @@ export function CareerTimeline({
       </div>
 
       <SkillTags skills={gainedSkills} />
-
     </div>
   );
 }

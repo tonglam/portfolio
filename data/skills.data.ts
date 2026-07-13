@@ -84,16 +84,6 @@ export const skillsData: SkillsData = {
         },
       ],
     },
-    {
-      name: 'AI Tools',
-      skills: [
-        { name: 'v0', icon: 'V0Icon', color: 'text-black dark:text-white' },
-        { name: 'bolt.new', icon: 'BoltNewIcon', color: 'text-[#1389FD]' },
-        { name: 'Cursor', icon: 'CursorIcon', color: 'text-[#7C3AED]' },
-        { name: 'Windsurf', icon: 'WindsurfIcon', color: 'text-[#0EA5E9]' },
-        { name: 'MCP', icon: 'MCPIcon', color: 'text-[#6366F1]' },
-      ],
-    },
   ],
 };
 

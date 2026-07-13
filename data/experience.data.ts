@@ -1,5 +1,5 @@
 import { EXTERNAL_URLS } from '@/config/urls.config';
-import { CompanyDetails, ExperienceItem, ProfessionalSkill } from '@/types/data.type';
+import { CompanyDetails, ExperienceItem } from '@/types/data.type';
 
 export const experienceData: ExperienceItem[] = [
   {
@@ -44,18 +44,6 @@ export const gainedSkills: string[] = [
   'Agile development',
   'AWS',
   'Kafka',
-];
-
-export const skillsData: ProfessionalSkill[] = [
-  { name: 'System Architecture & Design', percentage: 90 },
-  { name: 'Frontend Development', percentage: 85 },
-  { name: 'Backend Development', percentage: 100 },
-  { name: 'Cloud Infrastructure', percentage: 70 },
-  { name: 'DevOps', percentage: 80 },
-  { name: 'Testing, Quality Assurance & Automation', percentage: 70 },
-  { name: 'Data Management & Database Optimization', percentage: 80 },
-  { name: 'Soft Skills & Communication', percentage: 90 },
-  { name: 'Emerging Technologies & Trends', percentage: 80 },
 ];
 
 export const companyDetails: CompanyDetails = {
@@ -112,15 +100,11 @@ export const companyDetails: CompanyDetails = {
     url: EXTERNAL_URLS.COMPANY.CHINA_TELECOM.URL,
     displayName: 'China Telecom Corporation Limited',
     responsibilities: [
-      'Developed and maintained program code for the core CRM service, focusing on financial transactions',
-      'Implemented order cost calculation, billing, and refund processes',
-      'Collaborated in systems integration, database administration, and software configuration tasks',
-      'Performed code reviews, software testing, and debugging',
-      'Assisted in test automation and configuration management',
+      'Built and supported backend CRM services for order processing, billing, customer management, and account provisioning',
+      'Optimised SQL and refactored legacy Java service logic for maintainability and response performance',
+      'Troubleshot daily production issues and delivered tested changes under established deployment standards',
     ],
     technologies: ['Java', 'SpringBoot', 'MySQL'],
-    achievements: [
-      'Successfully implemented order cost calculation, billing, and refund processes, ensuring accuracy and efficiency in financial transactions',
-    ],
+    achievements: ['Supported provincial telecommunications services used across Guangdong'],
   },
 };
