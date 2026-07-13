@@ -16,6 +16,36 @@ const createProjectLinks = (
 
 export const projectsData: Project[] = [
   {
+    id: 'letletme-platform',
+    title: 'LetLetMe FPL Platform',
+    description:
+      'Real-time Fantasy Premier League analytics and tournament platform used by 800+ users, with scheduled ingestion, live-data synchronisation, APIs, and Redis-backed caching.',
+    technologies: ['TypeScript', 'Node.js', 'React', 'Next.js', 'PostgreSQL', 'Redis'],
+    categories: [ProjectCategory.FULLSTACK, ProjectCategory.BACKEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/letletme-case-study' },
+      { type: 'demo', url: 'https://letletme.top' },
+    ]),
+    featured: true,
+    displayOnHome: true,
+    order: 1,
+  },
+  {
+    id: 'vehicle-operations',
+    title: 'Vehicle Operations & Compliance Platform',
+    description:
+      'Role-secured platform for vehicle, driver, inspection, agreement, signature, document, and compliance workflows.',
+    technologies: ['Next.js', 'TypeScript', 'PostgreSQL', 'Drizzle ORM', 'Better Auth'],
+    categories: [ProjectCategory.FULLSTACK],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/vehicle-track' },
+      { type: 'demo', url: 'https://vehicle-track-amber.vercel.app' },
+    ]),
+    featured: true,
+    displayOnHome: true,
+    order: 2,
+  },
+  {
     id: 'portfolio',
     title: 'Portfolio',
     description:
@@ -28,7 +58,7 @@ export const projectsData: Project[] = [
     ]),
     featured: true,
     displayOnHome: true,
-    order: 1,
+    order: 3,
   },
   {
     id: 'askify',
@@ -69,7 +99,6 @@ export const projectsData: Project[] = [
       { type: 'demo', url: 'https://letletme.top' },
     ]),
     featured: true,
-    displayOnHome: true,
     order: 4,
   },
   {

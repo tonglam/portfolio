@@ -1,6 +1,6 @@
 'use client';
 
-import { companyDetails, experienceData, gainedSkills, skillsData } from '@/data/experience.data';
+import { companyDetails, experienceData, gainedSkills } from '@/data/experience.data';
 import { motion } from 'framer-motion';
 import { CareerTimeline } from './component/CareerTimeline';
 import { ExperienceCards } from './component/ExperienceCards';
@@ -31,7 +31,6 @@ export function ExperienceSection() {
             <CareerTimeline
               experienceData={experienceData}
               gainedSkills={gainedSkills}
-              skillsData={skillsData}
               companyDetails={companyDetails}
             />
           </motion.div>

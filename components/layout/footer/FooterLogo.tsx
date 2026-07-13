@@ -27,7 +27,7 @@ export function FooterLogo() {
         Tong
       </Link>
       <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-        Full-stack engineer evolving for the new era of tech.
+        Software engineer building reliable platforms, APIs, and web products.
       </p>
       <div className="flex space-x-3">
         {socialProfiles.map(profile => {

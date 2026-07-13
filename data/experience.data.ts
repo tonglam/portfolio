@@ -5,12 +5,12 @@ export const experienceData: ExperienceItem[] = [
   {
     period: 'Dec 2021 - Jun 2023',
     title: 'Senior Software Engineer',
-    company: 'eSurfing Cloud',
+    company: 'China Telecom Cloud Technology',
   },
   {
     period: 'Jan 2018 - Dec 2021',
     title: 'Senior Software Engineer',
-    company: 'NetEase, Inc',
+    company: 'NetEase Games',
   },
   {
     period: 'Jul 2014 - Jan 2018',
@@ -38,13 +38,12 @@ export const gainedSkills: string[] = [
   'Jenkins',
   'Docker',
   'Nginx',
-  'Kubernetes',
   'Microservices',
   'DevOps',
   'Cloud',
   'Agile development',
   'AWS',
-  'AI Coding',
+  'Kafka',
 ];
 
 export const skillsData: ProfessionalSkill[] = [
@@ -60,15 +59,15 @@ export const skillsData: ProfessionalSkill[] = [
 ];
 
 export const companyDetails: CompanyDetails = {
-  'eSurfing Cloud': {
+  'China Telecom Cloud Technology': {
     logo: EXTERNAL_URLS.COMPANY.ESURFING_CLOUD.LOGO,
     url: EXTERNAL_URLS.COMPANY.ESURFING_CLOUD.URL,
-    displayName: 'China Telecom eSurfing Cloud',
+    displayName: 'China Telecom Cloud Technology Co., Ltd.',
     responsibilities: [
-      'Led the development of core modules for the cloud billing system using microservices architecture',
-      'Implemented CI/CD pipelines for automated testing and deployment',
-      'Optimized application performance and scalability on cloud infrastructure',
-      'Provided technical leadership and mentorship to junior developers',
+      'Delivered backend services as one of three senior engineers on a distributed cloud billing program',
+      'Built Java/Spring Boot and Node.js APIs for usage calculation, discounts, billing, invoices, and account data',
+      'Implemented Kafka-based event processing for asynchronous billing workflows',
+      'Guided three junior engineers within the workstream and supported production delivery',
     ],
     technologies: [
       'Java',
@@ -77,22 +76,22 @@ export const companyDetails: CompanyDetails = {
       'Microservices',
       'Redis',
       'Docker',
-      'Kubernetes',
+      'Kafka',
       'Cloud',
       'Agile development',
     ],
     achievements: [
-      'Led the successful development and deployment of core modules for the cloud billing system, achieving project milestones and client satisfaction',
+      'Delivered and supported independently deployable billing services with versioned API contracts and event-driven processing',
     ],
   },
-  'NetEase, Inc': {
+  'NetEase Games': {
     logo: EXTERNAL_URLS.COMPANY.NETEASE.LOGO,
     url: EXTERNAL_URLS.COMPANY.NETEASE.URL,
     displayName: 'NetEase Games',
     responsibilities: [
-      'Developed and maintained backend services for multiple mobile games',
-      'Designed and implemented RESTful APIs for game features',
-      'Collaborated with cross-functional teams to deliver game updates',
+      'Developed workflow automation for ticket creation, engagement, and user segmentation across 50+ games',
+      'Built secure APIs and authenticated workflows for platforms serving hundreds of thousands of VIP customers',
+      'Worked with QA, product, and operations teams through delivery and production support',
     ],
     technologies: [
       'Java',
@@ -105,7 +104,7 @@ export const companyDetails: CompanyDetails = {
       'JavaScript',
     ],
     achievements: [
-      'Played a crucial role in the design and development of operation center systems, contributing to the seamless integration and operation of multiple game platforms',
+      'Delivered and supported game-operations tools, authenticated applications, and repeatable deployment workflows',
     ],
   },
   'China Telecom Corporation Limited': {
