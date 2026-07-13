@@ -67,7 +67,7 @@ export const capabilities = [
     title: 'Data-intensive products',
     description:
       'Relational modelling, SQL, Redis caching, scheduled ingestion and synchronization paths designed around freshness and recovery.',
-    evidence: 'PostgreSQL · MySQL · Redis · Kafka',
+    evidence: 'LetLetMe live-data pipeline · cloud billing events',
   },
   {
     index: '03',
@@ -81,7 +81,7 @@ export const capabilities = [
     title: 'Cloud & operations',
     description:
       'Practical delivery using Docker, AWS, Vercel, Cloudflare, CI/CD, observability and hands-on production troubleshooting.',
-    evidence: 'AWS certified · GitHub Actions · Jenkins · Linux',
+    evidence: 'LetLetMe operations · enterprise CI/CD · AWS credentials',
   },
 ] as const;
 

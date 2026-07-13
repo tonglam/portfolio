@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { CaseStudy, WritingMeta } from '@/src/content/types';
+import { formatPublicationDate } from '@/src/content/format';
 
 export function SectionHeading({
   eyebrow,
@@ -38,9 +39,10 @@ export function CaseStudyCard({ study, index }: { study: CaseStudy; index: numbe
           height={image.height}
           sizes="(max-width: 1040px) 100vw, 55vw"
         />
-        <span className="work-image-caption" aria-hidden="true">
-          <small>Production evidence</small>
+        <span className="work-image-caption">
+          <small>{image.label}</small>
           {image.caption}
+          {image.note ? <em>{image.note}</em> : null}
         </span>
       </Link>
       <div className="work-card-body">
@@ -81,7 +83,7 @@ export function ArticleCard({ article, index }: { article: WritingMeta; index: n
       <div className="article-index">0{index + 1}</div>
       <div>
         <p className="article-meta">
-          {article.publishedAt} · {article.minutes} min read
+          {formatPublicationDate(article.publishedAt)} · {article.minutes} min read
         </p>
         <h3>
           <Link href={`/writing/${article.slug}`}>{article.title}</Link>

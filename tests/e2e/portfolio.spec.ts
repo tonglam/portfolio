@@ -28,7 +28,7 @@ test('all public routes render without browser errors', async ({ page }) => {
 for (const width of [320, 390, 768, 1024, 1440]) {
   test('key pages have no horizontal overflow at ' + width + 'px', async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    for (const route of ['/', '/work/letletme']) {
+    for (const route of ['/', '/work/letletme', '/work/vehicle-operations']) {
       await page.goto(route);
       const sizes = await page.evaluate(() => ({
         client: document.documentElement.clientWidth,
@@ -45,7 +45,7 @@ test('case studies expose structured decisions and navigable sections', async ({
   await expect(contents.getByRole('link')).toHaveCount(7);
   await expect(page.locator('dt', { hasText: 'Trade-off' })).toHaveCount(3);
   await expect(
-    page.getByRole('heading', { name: 'What has to remain true at runtime.' })
+    page.getByRole('heading', { name: 'Freshness, recovery and shared rules.' })
   ).toBeVisible();
 });
 
@@ -84,7 +84,7 @@ test('mobile menu exposes state and closes with Escape', async ({ page }) => {
 test('key pages have no serious or critical axe violations in either theme', async ({ page }) => {
   for (const colorScheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme });
-    for (const route of ['/', '/work/letletme']) {
+    for (const route of ['/', '/work/letletme', '/work/vehicle-operations', '/writing']) {
       await page.goto(route);
       const results = await new AxeBuilder({ page }).analyze();
       const blocking = results.violations.filter(({ impact }) =>

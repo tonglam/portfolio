@@ -92,7 +92,7 @@ export default function HomePage() {
           </div>
           <div>
             <strong>3</strong>
-            <span>enterprise system domains</span>
+            <span>games supported at NetEase</span>
           </div>
           <div>
             <strong>Perth</strong>
@@ -137,9 +137,9 @@ export default function HomePage() {
           ))}
         </div>
         <div className="return-note">
-          <p className="eyebrow">2023 — 2025 / deliberate study period</p>
+          <p className="eyebrow">Postgraduate study / 2023 — 2025</p>
           <p>
-            After completing my commercial role in June 2023, I undertook a Master of Information
+            After leaving my commercial role in June 2023, I undertook a Master of Information
             Technology at UWA. During that period I continued hands-on development through LetLetMe
             and other software projects. With the degree completed, I am focused on returning to a
             commercial engineering team.
@@ -169,7 +169,7 @@ export default function HomePage() {
         <div className="shell">
           <SectionHeading
             eyebrow="Writing / 04"
-            title="Engineering notes from systems I have built."
+            title="Engineering notes from systems I’ve built and worked on."
             intro="Practical reasoning about reliability, event-driven billing and role-secured product workflows."
           />
           <div className="article-list">
@@ -190,8 +190,8 @@ export default function HomePage() {
         </div>
         <div className="about-copy">
           <p>
-            I work best on hands-on individual-contributor roles where system boundaries, data
-            behaviour and the user experience need to make sense together.
+            I work best in hands-on engineering roles where system boundaries, data behaviour and
+            the user experience need to make sense together.
           </p>
           <p>
             My commercial background is strongest in Java/Spring Boot services, APIs, distributed
@@ -221,7 +221,7 @@ export default function HomePage() {
         <div className="shell contact-grid">
           <div>
             <p className="eyebrow">Contact / 06</p>
-            <h2>Let’s talk about the system you need to build.</h2>
+            <h2>Let’s talk about how I can contribute to your engineering team.</h2>
           </div>
           <div className="contact-actions">
             <TrackedLink

@@ -1,4 +1,16 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { writingMetaSchema, type WritingMeta } from './types';
+
+export function estimateReadingMinutes(slug: string) {
+  const source = readFileSync(join(process.cwd(), 'content', 'writing', `${slug}.mdx`), 'utf8');
+  const readableText = source
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[#*_`>[\]()|:-]/g, ' ');
+  const words = readableText.match(/[\p{L}\p{N}][\p{L}\p{N}'’.-]*/gu)?.length ?? 0;
+  return Math.max(1, Math.ceil(words / 200));
+}
 
 const metadata = [
   {
@@ -9,7 +21,7 @@ const metadata = [
     publishedAt: '2026-07-13',
     updatedAt: '2026-07-13',
     tags: ['Data pipelines', 'Redis', 'Reliability'],
-    minutes: 7,
+    minutes: estimateReadingMinutes('reliable-live-data-pipelines'),
     featured: true,
   },
   {
@@ -20,7 +32,7 @@ const metadata = [
     publishedAt: '2026-07-13',
     updatedAt: '2026-07-13',
     tags: ['Event-driven systems', 'Java', 'Billing'],
-    minutes: 7,
+    minutes: estimateReadingMinutes('event-driven-cloud-billing'),
     featured: true,
   },
   {
@@ -31,7 +43,7 @@ const metadata = [
     publishedAt: '2026-07-13',
     updatedAt: '2026-07-13',
     tags: ['Next.js', 'Authentication', 'Domain modelling'],
-    minutes: 6,
+    minutes: estimateReadingMinutes('role-secured-vehicle-workflows'),
     featured: true,
   },
 ] satisfies WritingMeta[];

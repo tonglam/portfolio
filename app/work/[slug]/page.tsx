@@ -84,14 +84,16 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           <p className="case-hero-summary">{study.summary}</p>
           <div className="case-hero-actions">
             {study.links.map(link => (
-              <TrackedLink
-                key={link.href}
-                className="button button-secondary"
-                href={link.href}
-                event={link.event}
-              >
-                {link.label} <ArrowUpRight aria-hidden="true" size={17} />
-              </TrackedLink>
+              <div className="case-hero-action" key={link.href}>
+                <TrackedLink
+                  className="button button-secondary"
+                  href={link.href}
+                  event={link.event}
+                >
+                  {link.label} <ArrowUpRight aria-hidden="true" size={17} />
+                </TrackedLink>
+                {link.note ? <small>{link.note}</small> : null}
+              </div>
             ))}
           </div>
         </div>
@@ -105,8 +107,9 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
             sizes="(max-width: 1040px) 100vw, 56vw"
           />
           <figcaption>
-            <span>Primary product view</span>
+            <span>{heroImage.label}</span>
             {heroImage.caption}
+            {heroImage.note ? <small>{heroImage.note}</small> : null}
           </figcaption>
         </figure>
         <div className="case-hero-evidence" aria-label="Project evidence">
@@ -148,7 +151,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
         <div className="case-content">
           <section id="overview" aria-labelledby="overview-heading">
             <p className="eyebrow">01 / Overview</p>
-            <h2 id="overview-heading">Ownership across the working system.</h2>
+            <h2 id="overview-heading">{study.sectionHeadings.overview}</h2>
             <p className="case-lead">{study.role}.</p>
             <ul className="ownership-list">
               {study.ownership.map(item => (
@@ -159,7 +162,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
           <section id="context" aria-labelledby="context-heading">
             <p className="eyebrow">02 / System context</p>
-            <h2 id="context-heading">The constraint behind the interface.</h2>
+            <h2 id="context-heading">{study.sectionHeadings.context}</h2>
             <p className="case-statement">{study.challenge}</p>
             <div className="case-focus-callout">
               <span>Engineering focus</span>
@@ -169,7 +172,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
           <section id="architecture" aria-labelledby="architecture-heading">
             <p className="eyebrow">03 / Architecture</p>
-            <h2 id="architecture-heading">A deliberate path through the system.</h2>
+            <h2 id="architecture-heading">{study.sectionHeadings.architecture}</h2>
             <p className="case-lead">{study.architecture.description}</p>
             <ol className="architecture-flow">
               {study.architecture.stages.map((stage, index) => (
@@ -184,7 +187,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
           <section id="decisions" aria-labelledby="decisions-heading">
             <p className="eyebrow">04 / Key decisions</p>
-            <h2 id="decisions-heading">Why the system takes this shape.</h2>
+            <h2 id="decisions-heading">{study.sectionHeadings.decisions}</h2>
             <div className="decision-list">
               {study.decisions.map((item, index) => (
                 <article key={item.title}>
@@ -217,7 +220,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
           <section id="operations" aria-labelledby="operations-heading">
             <p className="eyebrow">05 / Operating concerns</p>
-            <h2 id="operations-heading">What has to remain true at runtime.</h2>
+            <h2 id="operations-heading">{study.sectionHeadings.operations}</h2>
             <div className="operating-grid">
               {study.operatingConcerns.map((concern, index) => (
                 <article key={concern.label}>
@@ -233,7 +236,12 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
           <section id="evidence" aria-labelledby="evidence-heading">
             <p className="eyebrow">06 / Evidence &amp; outcomes</p>
-            <h2 id="evidence-heading">The system made visible.</h2>
+            <h2 id="evidence-heading">{study.sectionHeadings.evidence}</h2>
+            <ul className="outcome-list">
+              {study.outcomes.map(outcome => (
+                <li key={outcome}>{outcome}</li>
+              ))}
+            </ul>
             <div className="case-gallery">
               {study.gallery.slice(1).map(image => (
                 <figure key={image.src}>
@@ -244,7 +252,11 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                     height={image.height}
                     sizes="(max-width: 900px) 100vw, 820px"
                   />
-                  <figcaption>{image.caption}</figcaption>
+                  <figcaption>
+                    <span>{image.label}</span>
+                    {image.caption}
+                    {image.note ? <small>{image.note}</small> : null}
+                  </figcaption>
                 </figure>
               ))}
             </div>
@@ -252,7 +264,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
           <section id="reflection" aria-labelledby="reflection-heading">
             <p className="eyebrow">07 / Reflection</p>
-            <h2 id="reflection-heading">What the work changed in my approach.</h2>
+            <h2 id="reflection-heading">{study.sectionHeadings.reflection}</h2>
             <p className="case-statement">{study.reflection.summary}</p>
             <div className="reflection-grid">
               <div>

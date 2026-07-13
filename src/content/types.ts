@@ -10,6 +10,7 @@ export const caseStudySchema = z.object({
   role: z.string().min(1),
   ownership: z.array(z.string().min(1)).min(1),
   evidence: z.array(z.object({ label: z.string(), value: z.string() })).min(1),
+  outcomes: z.array(z.string().min(1)).min(1),
   capabilities: z.array(z.string().min(1)).min(1),
   challenge: z.string().min(1),
   architecture: z.object({
@@ -39,16 +40,34 @@ export const caseStudySchema = z.object({
     learned: z.string(),
     next: z.string(),
   }),
+  sectionHeadings: z.object({
+    overview: z.string().min(1),
+    context: z.string().min(1),
+    architecture: z.string().min(1),
+    decisions: z.string().min(1),
+    operations: z.string().min(1),
+    evidence: z.string().min(1),
+    reflection: z.string().min(1),
+  }),
   gallery: z.array(
     z.object({
       src: z.string(),
       alt: z.string(),
+      label: z.string().min(1),
+      note: z.string().min(1).optional(),
       caption: z.string(),
       width: z.number(),
       height: z.number(),
     })
   ),
-  links: z.array(z.object({ label: z.string(), href: z.string().url(), event: z.string() })),
+  links: z.array(
+    z.object({
+      label: z.string(),
+      href: z.string().url(),
+      event: z.string(),
+      note: z.string().min(1).optional(),
+    })
+  ),
 });
 
 export const writingMetaSchema = z.object({

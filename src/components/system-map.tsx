@@ -4,14 +4,14 @@ const nodes = [
   {
     index: '03',
     label: 'Source of truth',
-    detail: 'PostgreSQL / MySQL',
+    detail: 'relational domains',
     x: 418,
     y: 48,
     width: 174,
   },
   { index: '04', label: 'Live cache', detail: 'Redis freshness', x: 418, y: 230, width: 174 },
   { index: '05', label: 'Product APIs', detail: 'REST + GraphQL', x: 226, y: 230, width: 142 },
-  { index: '06', label: 'User surfaces', detail: 'web + bot + client', x: 36, y: 230, width: 138 },
+  { index: '06', label: 'User surfaces', detail: 'web + WeChat + bot', x: 36, y: 230, width: 138 },
 ] as const;
 
 export function SystemMap() {
@@ -30,7 +30,7 @@ export function SystemMap() {
           <title id="system-map-title">LetLetMe live-data architecture</title>
           <desc id="system-map-desc">
             External live data flows through scheduled ingestion and normalization into relational
-            storage and Redis, then through APIs to web, companion and bot experiences. Verification
+            storage and Redis, then through APIs to web, WeChat and bot experiences. Verification
             and recovery workflows protect consistency between the storage layers.
           </desc>
 
@@ -98,7 +98,8 @@ export function SystemMap() {
       </div>
 
       <figcaption id="system-map-caption">
-        A simplified production flow showing freshness, shared rules and deliberate recovery.
+        A simplified maintained-product flow showing freshness, shared rules and deliberate
+        recovery.
       </figcaption>
     </figure>
   );

@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { JsonLd } from '@/src/components/ui';
 import { site } from '@/src/content/site';
 import { articles, getArticle } from '@/src/content/writing';
+import { formatPublicationDate } from '@/src/content/format';
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -68,7 +69,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <ArrowLeft aria-hidden="true" size={17} /> All writing
           </Link>
           <p className="eyebrow">
-            {article.publishedAt} · {article.minutes} min read
+            {formatPublicationDate(article.publishedAt)} · {article.minutes} min read
           </p>
           <h1>{article.title}</h1>
           <p>{article.description}</p>

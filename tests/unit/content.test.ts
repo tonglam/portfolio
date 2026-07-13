@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import sitemap from '@/app/sitemap';
 import { GET as getRss } from '@/app/rss.xml/route';
 import { archiveGroups, archivePosts } from '@/src/content/archive';
-import { articleMetadata } from '@/src/content/article-metadata';
+import { articleMetadata, estimateReadingMinutes } from '@/src/content/article-metadata';
 import { caseStudies } from '@/src/content/case-studies';
 import { site } from '@/src/content/site';
 
@@ -41,6 +41,25 @@ describe('portfolio content', () => {
     ).join('\n');
     expect(copy).not.toMatch(/30% efficiency/i);
     expect(copy).not.toMatch(/millions of daily transactions/i);
+  });
+
+  it('derives article reading time from the published MDX', () => {
+    for (const article of articleMetadata) {
+      expect(article.minutes).toBe(estimateReadingMinutes(article.slug));
+      expect(article.minutes).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it('labels synthetic Vehicle visuals and authenticated access explicitly', () => {
+    const vehicle = caseStudies.find(({ slug }) => slug === 'vehicle-operations');
+    expect(vehicle).toBeDefined();
+    expect(vehicle?.gallery.every(({ label }) => label === 'Sanitized product illustration')).toBe(
+      true
+    );
+    expect(vehicle?.gallery.every(({ note }) => note?.includes('Synthetic demo data'))).toBe(true);
+    expect(vehicle?.links.find(({ event }) => event === 'visit_vehicle_live')?.note).toBe(
+      'Sign-in required'
+    );
   });
 
   it('generates a sitemap containing only real canonical routes', () => {
