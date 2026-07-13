@@ -18,9 +18,9 @@ export function HeroSection() {
               </span>
               ,
               <br />
-              I&apos;m a Professional{' '}
+              I&apos;m a{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#2563EB] to-[#4F46E5] dark:from-[#38BDF8] dark:to-[#818CF8]">
-                Full-stack Engineer.
+                Software Engineer.
               </span>
             </h1>
           </div>

@@ -5,9 +5,8 @@ export function WorkAvailability() {
         Let&apos;s Work Together
       </h4>
       <p className="text-gray-700 dark:text-gray-300 text-sm">
-        I&apos;m currently available for full-stack engineer positions. If you have opportunities
-        that match my skills and expertise, I would love to discuss how I can contribute to your
-        team.
+        I&apos;m available for backend, platform, full-stack, and software engineer roles in Perth,
+        hybrid, or remote teams. I hold full Australian working rights.
       </p>
     </div>
   );

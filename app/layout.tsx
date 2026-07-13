@@ -10,7 +10,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 const description =
-  'Professional portfolio of Qitong Lan, a full-stack engineer evolving for the new era of tech.';
+  'Portfolio of Qitong Lan, a Perth-based software engineer building backend platforms, APIs, data workflows, and web products.';
 
 export const metadata = {
   metadataBase: new URL(SITE.URL),

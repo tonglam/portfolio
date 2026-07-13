@@ -37,7 +37,7 @@ export const EXTERNAL_URLS: ExternalUrlsType = {
     GITHUB: 'https://github.com/tonglam',
     LINKEDIN: 'https://www.linkedin.com/in/qitonglan/',
     X: 'https://x.com/tong_lam_14',
-    EMAIL: 'mailto:qilonglan@gmail.com',
+    EMAIL: 'mailto:qitonglan@gmail.com',
   },
   RESUME: 'https://qitonglan.com/resume.pdf',
   MAPS: {
@@ -45,7 +45,7 @@ export const EXTERNAL_URLS: ExternalUrlsType = {
   },
   COMPANY: {
     ESURFING_CLOUD: {
-      URL: 'https://www.esurfingcloud.com/',
+      URL: 'https://www.ctyun.cn/',
       LOGO: 'https://media.licdn.com/dms/image/v2/D560BAQH82DslRiJ2kQ/company-logo_100_100/company-logo_100_100/0/1685497414232?e=1749081600&v=beta&t=re1qSuRl4fNR5hpaRMQOKA_1ybOKsKODTuyx-LcAObw',
     },
     NETEASE: {

@@ -27,8 +27,8 @@ export function ProjectSection() {
         Projects
       </h2>
       <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto text-sm md:text-base text-center">
-        Explore my portfolio of projects showcasing my skills in web development, from responsive
-        front-end designs to complex back-end systems.
+        Implemented products that demonstrate backend services, data processing, authenticated
+        workflows, and end-to-end web delivery.
       </p>
 
       <CategoryFilter

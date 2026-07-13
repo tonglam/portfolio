@@ -1,20 +1,17 @@
 import { CareerStats } from '@/components/sections/experience/component/CareerStats';
-import { SkillProgressBars } from '@/components/sections/experience/component/SkillProgressBars';
 import { SkillTags } from '@/components/sections/experience/component/SkillTags';
 import { TimelineList } from '@/components/sections/experience/component/TimelineList';
-import { CompanyDetails, ExperienceItem, ProfessionalSkill } from '@/types/data.type';
+import { CompanyDetails, ExperienceItem } from '@/types/data.type';
 
 interface CareerTimelineProps {
   experienceData: ExperienceItem[];
   gainedSkills: string[];
-  skillsData: ProfessionalSkill[];
   companyDetails: CompanyDetails;
 }
 
 export function CareerTimeline({
   experienceData,
   gainedSkills,
-  skillsData,
   companyDetails,
 }: CareerTimelineProps) {
   return (
@@ -24,12 +21,10 @@ export function CareerTimeline({
 
         <TimelineList experienceData={experienceData} companyDetails={companyDetails} />
 
-        <CareerStats yearsOfExperience={9} numberOfCompanies={3} />
+        <CareerStats yearsOfExperience={8} numberOfCompanies={3} />
       </div>
 
       <SkillTags skills={gainedSkills} />
-
-      <SkillProgressBars skills={skillsData} />
     </div>
   );
 }

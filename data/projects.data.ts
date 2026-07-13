@@ -16,6 +16,36 @@ const createProjectLinks = (
 
 export const projectsData: Project[] = [
   {
+    id: 'letletme-platform',
+    title: 'LetLetMe FPL Platform',
+    description:
+      'Real-time Fantasy Premier League analytics and tournament platform used by 800+ users, with scheduled ingestion, live-data synchronisation, APIs, and Redis-backed caching.',
+    technologies: ['TypeScript', 'Node.js', 'React', 'Next.js', 'PostgreSQL', 'Redis'],
+    categories: [ProjectCategory.FULLSTACK, ProjectCategory.BACKEND],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/letletme-case-study' },
+      { type: 'demo', url: 'https://letletme.top' },
+    ]),
+    featured: true,
+    displayOnHome: true,
+    order: 1,
+  },
+  {
+    id: 'vehicle-operations',
+    title: 'Vehicle Operations & Compliance Platform',
+    description:
+      'Role-secured platform for vehicle, driver, inspection, agreement, signature, document, and compliance workflows.',
+    technologies: ['Next.js', 'TypeScript', 'PostgreSQL', 'Drizzle ORM', 'Better Auth'],
+    categories: [ProjectCategory.FULLSTACK],
+    links: createProjectLinks([
+      { type: 'github', url: 'https://github.com/tonglam/vehicle-track' },
+      { type: 'demo', url: 'https://vehicle-track-amber.vercel.app' },
+    ]),
+    featured: true,
+    displayOnHome: true,
+    order: 2,
+  },
+  {
     id: 'portfolio',
     title: 'Portfolio',
     description:
@@ -28,7 +58,7 @@ export const projectsData: Project[] = [
     ]),
     featured: true,
     displayOnHome: true,
-    order: 1,
+    order: 3,
   },
   {
     id: 'askify',
@@ -41,7 +71,7 @@ export const projectsData: Project[] = [
       { type: 'github', url: 'https://github.com/tonglam/Askify' },
       { type: 'demo', url: 'https://askify-q4k0.onrender.com' },
     ]),
-    order: 2,
+    order: 10,
   },
   {
     id: 'letletme-api',
@@ -55,7 +85,7 @@ export const projectsData: Project[] = [
       { type: 'demo', url: 'https://api.letletme.top' },
     ]),
     featured: true,
-    order: 6,
+    order: 14,
   },
   {
     id: 'letletme-web',
@@ -69,8 +99,7 @@ export const projectsData: Project[] = [
       { type: 'demo', url: 'https://letletme.top' },
     ]),
     featured: true,
-    displayOnHome: true,
-    order: 4,
+    order: 12,
   },
   {
     id: 'letletme-data',
@@ -83,7 +112,7 @@ export const projectsData: Project[] = [
       { type: 'github', url: 'https://github.com/tonglam/letletme_data' },
     ]),
     featured: true,
-    order: 5,
+    order: 13,
   },
   {
     id: 'smart-home-website',
@@ -120,7 +149,7 @@ export const projectsData: Project[] = [
       { type: 'demo', url: 'https://qitonglan.com/miniprogram.webp' },
     ]),
     featured: true,
-    order: 3,
+    order: 11,
   },
   {
     id: 'fpl-data-public',

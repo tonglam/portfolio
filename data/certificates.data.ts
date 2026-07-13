@@ -16,7 +16,7 @@ export const certificates: Certificate[] = [
   {
     id: 'aws-saa',
     name: 'AWS Solutions Architect Associate',
-    shortName: 'AWS SAS',
+    shortName: 'AWS SAA',
     issuer: 'Amazon Web Services',
     issueDate: '2025-03-21',
     credentialId: '4ca74e6e-cd0c-4ed7-a377-4bf7f9f9bd0e',
