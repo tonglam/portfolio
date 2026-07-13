@@ -51,7 +51,7 @@ export default function HomePage() {
           <p className="availability">
             <span aria-hidden="true" /> Open to Perth, hybrid and remote software roles
           </p>
-          <h1>I build dependable backend platforms and useful web products.</h1>
+          <h1>I build dependable backend systems and useful products.</h1>
           <p className="hero-intro">
             Hands-on software engineer with 8+ years of commercial experience across cloud billing,
             telecommunications CRM, game operations and current full-stack products.
@@ -148,7 +148,11 @@ export default function HomePage() {
       </section>
 
       <section className="section shell">
-        <SectionHeading eyebrow="Capabilities / 03" title="Technical range anchored to delivery." />
+        <SectionHeading
+          eyebrow="Capabilities / 03"
+          title="Technical range anchored to delivery."
+          intro="Four engineering surfaces, each linked to commercial systems or maintained product evidence."
+        />
         <div className="capability-grid">
           {capabilities.map(capability => (
             <article key={capability.index} className="capability-card">

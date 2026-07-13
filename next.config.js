@@ -1,5 +1,7 @@
 import createMDX from '@next/mdx';
 
+const developmentScriptSource = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
+
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -16,7 +18,7 @@ const securityHeaders = [
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
-      "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+      `script-src 'self' 'unsafe-inline'${developmentScriptSource} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
       "connect-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com",
     ].join('; '),
   },
@@ -24,6 +26,7 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: ['127.0.0.1'],
   pageExtensions: ['ts', 'tsx', 'md', 'mdx'],
   poweredByHeader: false,
   reactStrictMode: true,

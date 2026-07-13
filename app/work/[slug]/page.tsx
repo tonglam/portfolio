@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import { TrackedLink } from '@/src/components/tracked-link';
-import { JsonLd, PageIntro } from '@/src/components/ui';
+import { JsonLd } from '@/src/components/ui';
 import { caseStudies, getCaseStudy } from '@/src/content/case-studies';
 import { site } from '@/src/content/site';
 
@@ -60,69 +60,115 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       ],
     },
   ];
+  const sections = [
+    { id: 'overview', index: '01', label: 'Overview' },
+    { id: 'context', index: '02', label: 'System context' },
+    { id: 'architecture', index: '03', label: 'Architecture' },
+    { id: 'decisions', index: '04', label: 'Key decisions' },
+    { id: 'operations', index: '05', label: 'Operating concerns' },
+    { id: 'evidence', index: '06', label: 'Evidence & outcomes' },
+    { id: 'reflection', index: '07', label: 'Reflection' },
+  ] as const;
+  const heroImage = study.gallery[0];
 
   return (
     <>
       <JsonLd data={jsonLd} />
-      <PageIntro
-        eyebrow={`${study.eyebrow} / ${study.period}`}
-        title={study.title}
-        summary={study.summary}
-      >
-        <div className="page-intro-actions">
-          {study.links.map(link => (
-            <TrackedLink
-              key={link.href}
-              className="button button-secondary"
-              href={link.href}
-              event={link.event}
-            >
-              {link.label} <ArrowUpRight aria-hidden="true" size={17} />
-            </TrackedLink>
+      <section className="case-hero shell">
+        <div className="case-hero-copy">
+          <p className="eyebrow">Case study / verified engineering evidence</p>
+          <p className="case-hero-kicker">
+            {study.eyebrow} <span aria-hidden="true">/</span> {study.period}
+          </p>
+          <h1>{study.title}</h1>
+          <p className="case-hero-summary">{study.summary}</p>
+          <div className="case-hero-actions">
+            {study.links.map(link => (
+              <TrackedLink
+                key={link.href}
+                className="button button-secondary"
+                href={link.href}
+                event={link.event}
+              >
+                {link.label} <ArrowUpRight aria-hidden="true" size={17} />
+              </TrackedLink>
+            ))}
+          </div>
+        </div>
+        <figure className="case-hero-visual">
+          <Image
+            src={heroImage.src}
+            alt={heroImage.alt}
+            width={heroImage.width}
+            height={heroImage.height}
+            priority
+            sizes="(max-width: 1040px) 100vw, 56vw"
+          />
+          <figcaption>
+            <span>Primary product view</span>
+            {heroImage.caption}
+          </figcaption>
+        </figure>
+        <div className="case-hero-evidence" aria-label="Project evidence">
+          {study.evidence.map(item => (
+            <div key={item.label}>
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </div>
           ))}
         </div>
-      </PageIntro>
+      </section>
 
       <div className="case-layout shell">
-        <aside className="case-aside" aria-label="Case study overview">
-          <div>
-            <span>Role</span>
-            <p>{study.role}</p>
-          </div>
-          <div>
-            <span>Period</span>
-            <p>{study.period}</p>
-          </div>
-          <div>
-            <span>Technical context</span>
-            <p>{study.capabilities.join(' · ')}</p>
+        <aside className="case-aside">
+          <nav className="case-toc" aria-label="Case study contents">
+            <p>Case file</p>
+            <ol>
+              {sections.map(section => (
+                <li key={section.id}>
+                  <a href={`#${section.id}`}>
+                    <span>{section.index}</span>
+                    {section.label}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+          <div className="case-aside-meta" aria-label="Case study overview">
+            <div>
+              <span>Role</span>
+              <p>{study.role}</p>
+            </div>
+            <div>
+              <span>Technical context</span>
+              <p>{study.capabilities.join(' · ')}</p>
+            </div>
           </div>
         </aside>
         <div className="case-content">
-          <section aria-labelledby="evidence-heading">
-            <p className="eyebrow">Evidence</p>
-            <h2 id="evidence-heading">What this work demonstrates.</h2>
-            <div className="case-evidence">
-              {study.evidence.map(item => (
-                <div key={item.label}>
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
-                </div>
-              ))}
-            </div>
-          </section>
-          <section aria-labelledby="scope-heading">
-            <p className="eyebrow">Scope</p>
-            <h2 id="scope-heading">Ownership and operating context.</h2>
-            <p className="case-lead">{study.challenge}</p>
+          <section id="overview" aria-labelledby="overview-heading">
+            <p className="eyebrow">01 / Overview</p>
+            <h2 id="overview-heading">Ownership across the working system.</h2>
+            <p className="case-lead">{study.role}.</p>
             <ul className="ownership-list">
               {study.ownership.map(item => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
           </section>
-          <section aria-labelledby="architecture-heading">
-            <p className="eyebrow">Architecture</p>
+
+          <section id="context" aria-labelledby="context-heading">
+            <p className="eyebrow">02 / System context</p>
+            <h2 id="context-heading">The constraint behind the interface.</h2>
+            <p className="case-statement">{study.challenge}</p>
+            <div className="case-focus-callout">
+              <span>Engineering focus</span>
+              <p>{study.cardFocus}</p>
+            </div>
+          </section>
+
+          <section id="architecture" aria-labelledby="architecture-heading">
+            <p className="eyebrow">03 / Architecture</p>
             <h2 id="architecture-heading">A deliberate path through the system.</h2>
             <p className="case-lead">{study.architecture.description}</p>
             <ol className="architecture-flow">
@@ -135,8 +181,9 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               ))}
             </ol>
           </section>
-          <section aria-labelledby="decisions-heading">
-            <p className="eyebrow">Decisions & trade-offs</p>
+
+          <section id="decisions" aria-labelledby="decisions-heading">
+            <p className="eyebrow">04 / Key decisions</p>
             <h2 id="decisions-heading">Why the system takes this shape.</h2>
             <div className="decision-list">
               {study.decisions.map((item, index) => (
@@ -144,25 +191,51 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                   <span>0{index + 1}</span>
                   <div>
                     <h3>{item.title}</h3>
-                    <p>
-                      <strong>Context.</strong> {item.context}
-                    </p>
-                    <p>
-                      <strong>Decision.</strong> {item.decision}
-                    </p>
-                    <p>
-                      <strong>Result.</strong> {item.outcome}
-                    </p>
+                    <dl>
+                      <div>
+                        <dt>Problem</dt>
+                        <dd>{item.context}</dd>
+                      </div>
+                      <div>
+                        <dt>Decision</dt>
+                        <dd>{item.decision}</dd>
+                      </div>
+                      <div className="decision-tradeoff">
+                        <dt>Trade-off</dt>
+                        <dd>{item.tradeoff}</dd>
+                      </div>
+                      <div className="decision-result">
+                        <dt>Result</dt>
+                        <dd>{item.outcome}</dd>
+                      </div>
+                    </dl>
                   </div>
                 </article>
               ))}
             </div>
           </section>
-          <section aria-labelledby="gallery-heading">
-            <p className="eyebrow">Product views</p>
-            <h2 id="gallery-heading">The system made visible.</h2>
+
+          <section id="operations" aria-labelledby="operations-heading">
+            <p className="eyebrow">05 / Operating concerns</p>
+            <h2 id="operations-heading">What has to remain true at runtime.</h2>
+            <div className="operating-grid">
+              {study.operatingConcerns.map((concern, index) => (
+                <article key={concern.label}>
+                  <span>
+                    0{index + 1} / {concern.label}
+                  </span>
+                  <h3>{concern.title}</h3>
+                  <p>{concern.detail}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section id="evidence" aria-labelledby="evidence-heading">
+            <p className="eyebrow">06 / Evidence &amp; outcomes</p>
+            <h2 id="evidence-heading">The system made visible.</h2>
             <div className="case-gallery">
-              {study.gallery.map(image => (
+              {study.gallery.slice(1).map(image => (
                 <figure key={image.src}>
                   <Image
                     src={image.src}
@@ -176,6 +249,23 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               ))}
             </div>
           </section>
+
+          <section id="reflection" aria-labelledby="reflection-heading">
+            <p className="eyebrow">07 / Reflection</p>
+            <h2 id="reflection-heading">What the work changed in my approach.</h2>
+            <p className="case-statement">{study.reflection.summary}</p>
+            <div className="reflection-grid">
+              <div>
+                <span>Learned</span>
+                <p>{study.reflection.learned}</p>
+              </div>
+              <div>
+                <span>Next</span>
+                <p>{study.reflection.next}</p>
+              </div>
+            </div>
+          </section>
+
           <Link className="back-link" href="/#work">
             <ArrowLeft aria-hidden="true" size={17} /> Back to selected work
           </Link>

@@ -5,6 +5,7 @@ export const caseStudySchema = z.object({
   title: z.string().min(1),
   eyebrow: z.string().min(1),
   summary: z.string().min(1),
+  cardFocus: z.string().min(1),
   period: z.string().min(1),
   role: z.string().min(1),
   ownership: z.array(z.string().min(1)).min(1),
@@ -20,9 +21,24 @@ export const caseStudySchema = z.object({
       title: z.string(),
       context: z.string(),
       decision: z.string(),
+      tradeoff: z.string(),
       outcome: z.string(),
     })
   ),
+  operatingConcerns: z
+    .array(
+      z.object({
+        label: z.string(),
+        title: z.string(),
+        detail: z.string(),
+      })
+    )
+    .min(1),
+  reflection: z.object({
+    summary: z.string(),
+    learned: z.string(),
+    next: z.string(),
+  }),
   gallery: z.array(
     z.object({
       src: z.string(),

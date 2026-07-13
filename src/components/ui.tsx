@@ -36,23 +36,36 @@ export function CaseStudyCard({ study, index }: { study: CaseStudy; index: numbe
           alt={image.alt}
           width={image.width}
           height={image.height}
-          sizes="(max-width: 760px) 100vw, 50vw"
+          sizes="(max-width: 1040px) 100vw, 55vw"
         />
+        <span className="work-image-caption" aria-hidden="true">
+          <small>Production evidence</small>
+          {image.caption}
+        </span>
       </Link>
       <div className="work-card-body">
         <div className="work-meta">
           <span>0{index + 1}</span>
-          <span>{study.eyebrow}</span>
+          <span>{study.period}</span>
         </div>
+        <p className="work-kicker">{study.eyebrow}</p>
         <h3>{study.title}</h3>
         <p>{study.summary}</p>
+        <p className="work-role">
+          <span>Ownership</span>
+          {study.role}
+        </p>
         <div className="evidence-row">
-          {study.evidence.slice(0, 2).map(item => (
+          {study.evidence.map(item => (
             <span key={item.label}>
               <small>{item.label}</small>
               {item.value}
             </span>
           ))}
+        </div>
+        <div className="work-focus">
+          <span>Engineering focus</span>
+          <p>{study.cardFocus}</p>
         </div>
         <Link href={`/work/${study.slug}`} className="text-link">
           Read the case study <ArrowRight aria-hidden="true" size={17} />

@@ -7,6 +7,8 @@ const studies = [
     eyebrow: 'Real-time analytics & workflow platform',
     summary:
       'A maintained full-stack Fantasy Premier League platform that turns fast-moving external data into live analytics, tournament workflows, notifications, and companion experiences.',
+    cardFocus:
+      'Keeping live scores, tournament state and notifications consistent when upstream data changes.',
     period: 'April 2020 — present',
     role: 'Builder and maintainer across product, backend services, data workflows and cloud delivery',
     ownership: [
@@ -50,6 +52,8 @@ const studies = [
         context: 'External sources can be slow or temporarily inconsistent.',
         decision:
           'Run ingestion and normalization as scheduled background workflows, then serve product reads from controlled storage and cache layers.',
+        tradeoff:
+          'Product reads use controlled freshness windows instead of fetching providers on demand, so scheduled workflows need deliberate monitoring and recovery.',
         outcome: 'User-facing routes do not depend directly on external-provider response time.',
       },
       {
@@ -57,6 +61,8 @@ const studies = [
         context: 'Redis and relational records can drift after partial failures or delayed jobs.',
         decision:
           'Add verification, rebuild and rerun paths rather than assuming every synchronization step succeeds.',
+        tradeoff:
+          'Repair paths add operational code and explicit checks, but avoid using a full cache reset as the default response to partial failure.',
         outcome:
           'The system can recover deliberately without treating cache resets as the default response.',
       },
@@ -65,9 +71,38 @@ const studies = [
         context: 'Web, bot and companion experiences consume overlapping domain state.',
         decision:
           'Centralize scoring and workflow rules in backend services and expose them through APIs.',
+        tradeoff:
+          'Shared APIs require stable contracts and careful changes, but keep each client from recreating domain rules.',
         outcome: 'Clients can evolve independently without duplicating core calculations.',
       },
     ],
+    operatingConcerns: [
+      {
+        label: 'Freshness',
+        title: 'Make staleness visible and intentional',
+        detail:
+          'Scheduled refresh windows and controlled read layers keep product behaviour understandable when upstream data changes quickly.',
+      },
+      {
+        label: 'Recovery',
+        title: 'Treat repair as part of the product runtime',
+        detail:
+          'Verification, rebuild and rerun paths give partial failures a deliberate recovery route instead of relying on manual cache clearing.',
+      },
+      {
+        label: 'Consistency',
+        title: 'Keep shared rules behind the API boundary',
+        detail:
+          'Web, companion and bot experiences consume the same scoring and workflow behaviour from backend services.',
+      },
+    ],
+    reflection: {
+      summary:
+        'Operating LetLetMe over time reinforced that reliability is a product behaviour, not a single infrastructure component.',
+      learned:
+        'Cached data needs an explicit lifecycle: when it becomes fresh, how it can drift, and how the system restores agreement after interruption.',
+      next: 'Continue tightening observability and recovery workflows as the product and its live-data surfaces evolve.',
+    },
     gallery: [
       {
         src: '/work/letletme/desktop-workflow.png',
@@ -106,6 +141,8 @@ const studies = [
     eyebrow: 'Role-secured operational product',
     summary:
       'A backend-heavy web platform for vehicle, driver, inspection, agreement, signature, document and compliance workflows.',
+    cardFocus:
+      'Making role-secured operational records understandable across inspections, signatures, agreements and documents.',
     period: '2025',
     role: 'Full-stack product design and implementation',
     ownership: [
@@ -148,6 +185,8 @@ const studies = [
           'Authentication, validation and business rules become difficult to test when mixed together.',
         decision:
           'Use route handlers for transport concerns and service modules for domain behaviour.',
+        tradeoff:
+          'The separation introduces more explicit modules, but keeps authentication, validation and business rules independently understandable.',
         outcome: 'Permissions and workflow rules have clearer ownership boundaries.',
       },
       {
@@ -156,6 +195,8 @@ const studies = [
           'Most dashboard screens are data-heavy and do not require a fully client-rendered application.',
         decision:
           'Use Server Components by default and isolate client code to tables, forms and immediate feedback.',
+        tradeoff:
+          'Interactive boundaries need to be chosen deliberately, but data-heavy screens ship less browser JavaScript.',
         outcome:
           'The browser receives less application JavaScript while retaining focused interaction.',
       },
@@ -165,9 +206,38 @@ const studies = [
           'Documents, signatures and compliance records need clear relationships to the operational subject.',
         decision:
           'Represent the record lifecycle explicitly instead of attaching unstructured files to vehicles.',
+        tradeoff:
+          'Explicit workflow records require more domain modelling and migrations, but preserve the relationships needed for auditability.',
         outcome: 'Operators can follow the state and supporting evidence of each workflow.',
       },
     ],
+    operatingConcerns: [
+      {
+        label: 'Access',
+        title: 'Enforce roles at the request boundary',
+        detail:
+          'Authenticated sessions and role checks protect operational actions before domain services apply workflow rules.',
+      },
+      {
+        label: 'Integrity',
+        title: 'Model supporting evidence as structured records',
+        detail:
+          'Agreements, inspections, signatures and documents retain clear relationships to the vehicle and workflow they support.',
+      },
+      {
+        label: 'Delivery',
+        title: 'Keep the client boundary deliberately small',
+        detail:
+          'Server-rendered views handle data-heavy screens while focused client components provide forms, tables and immediate feedback.',
+      },
+    ],
+    reflection: {
+      summary:
+        'The project demonstrates that operational software becomes easier to use when permissions, record structure and interface state are designed together.',
+      learned:
+        'Compliance workflows should expose their state and evidence clearly instead of hiding important relationships inside generic attachments.',
+      next: 'Extend automated workflow coverage and operational feedback as the product continues to mature.',
+    },
     gallery: [
       {
         src: '/work/vehicle/operations-overview.svg',

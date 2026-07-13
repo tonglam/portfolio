@@ -26,16 +26,28 @@ test('all public routes render without browser errors', async ({ page }) => {
 });
 
 for (const width of [320, 390, 768, 1024, 1440]) {
-  test('homepage has no horizontal overflow at ' + width + 'px', async ({ page }) => {
+  test('key pages have no horizontal overflow at ' + width + 'px', async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/');
-    const sizes = await page.evaluate(() => ({
-      client: document.documentElement.clientWidth,
-      scroll: document.documentElement.scrollWidth,
-    }));
-    expect(sizes.scroll).toBeLessThanOrEqual(sizes.client);
+    for (const route of ['/', '/work/letletme']) {
+      await page.goto(route);
+      const sizes = await page.evaluate(() => ({
+        client: document.documentElement.clientWidth,
+        scroll: document.documentElement.scrollWidth,
+      }));
+      expect(sizes.scroll, route).toBeLessThanOrEqual(sizes.client);
+    }
   });
 }
+
+test('case studies expose structured decisions and navigable sections', async ({ page }) => {
+  await page.goto('/work/letletme');
+  const contents = page.getByRole('navigation', { name: 'Case study contents' });
+  await expect(contents.getByRole('link')).toHaveCount(7);
+  await expect(page.locator('dt', { hasText: 'Trade-off' })).toHaveCount(3);
+  await expect(
+    page.getByRole('heading', { name: 'What has to remain true at runtime.' })
+  ).toBeVisible();
+});
 
 test('theme selection persists across navigation', async ({ page }) => {
   await page.goto('/');
@@ -69,15 +81,17 @@ test('mobile menu exposes state and closes with Escape', async ({ page }) => {
   await expect(trigger).toBeFocused();
 });
 
-test('homepage has no serious or critical axe violations in either theme', async ({ page }) => {
+test('key pages have no serious or critical axe violations in either theme', async ({ page }) => {
   for (const colorScheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme });
-    await page.goto('/');
-    const results = await new AxeBuilder({ page }).analyze();
-    const blocking = results.violations.filter(({ impact }) =>
-      ['serious', 'critical'].includes(impact ?? '')
-    );
-    expect(blocking, colorScheme).toEqual([]);
+    for (const route of ['/', '/work/letletme']) {
+      await page.goto(route);
+      const results = await new AxeBuilder({ page }).analyze();
+      const blocking = results.violations.filter(({ impact }) =>
+        ['serious', 'critical'].includes(impact ?? '')
+      );
+      expect(blocking, `${colorScheme} ${route}`).toEqual([]);
+    }
   }
 });
 
