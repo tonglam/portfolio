@@ -1,0 +1,75 @@
+A live sports product can be wrong even when every service is running. One job may save entry data while another misses a tournament result. A database write can complete before a cached view is refreshed. Later corrections from the data provider can also make an earlier calculation incomplete.
+
+LetLetMe is a maintained Fantasy Premier League analytics and tournament platform used by 800+ users. Its data layer supports scheduled ingestion, derived scoring and several product surfaces. The most useful reliability work has therefore been about detecting incomplete state and repairing only what is affected.
+
+## Define the invariants before the recovery command
+
+“Sync succeeded” is too vague. A tournament is usable only when several relationships agree. The current audit checks concrete conditions such as:
+
+- the number of tournament entries matches the configured team count;
+- every participant has entry and league information;
+- group positions form a complete sequence;
+- generated knockout matches and results match the expected structure;
+- each event in the requested window has results for every participant;
+- knockout rows contain both entries and a result where one is expected.
+
+Those checks turn an operational feeling into a report. The result identifies missing entry data, whether the tournament structure needs rebuilding, and the event IDs that can be rerun independently.
+
+```text
+audit result
+  missing entry details: [entry ids]
+  structure rebuild required: true | false
+  event reruns required: [event ids]
+  issues: [human-readable reasons]
+```
+
+The report is deliberately useful to both code and an operator. Structured fields drive the repair path; readable reasons make logs and investigations understandable.
+
+## Choose the narrowest safe repair
+
+Not every inconsistency needs a full rebuild. The repair sequence separates three cases.
+
+First, missing participant details can be synchronized without touching tournament results. Second, an invalid group sequence or knockout shape requires rebuilding the structure and backfilling its history. Third, incomplete event results can be regenerated for only the affected event IDs.
+
+In simplified form, the control flow looks like this:
+
+```text
+audit
+  -> sync missing participant details
+  -> if structure is invalid
+       rebuild structure
+       backfill the requested history window
+     else
+       rerun only incomplete events
+  -> audit again
+  -> fail on remaining structural issues
+  -> report recoverable gaps as warnings
+```
+
+This is safer than clearing Redis or replaying an entire season by default. The repair has a smaller blast radius, and every action follows from a failed invariant.
+
+## Re-audit after writing
+
+A repair command is not proof that the product is correct. It can fail partially, or it can reveal another dependency that was not visible during the first pass. LetLetMe therefore runs the same audit again after the repair.
+
+Remaining issues are classified by consequence. Entry-count mismatches, invalid group positions and knockout-structure mismatches are treated as critical because the tournament shape cannot be trusted. Other missing results can be reported as recoverable warnings so an operator knows that a narrower follow-up is still required.
+
+That second pass is the important part of the sequence. “Attempted repair” and “verified recovery” are different states.
+
+## Keep collection away from product requests
+
+The audit works because ingestion is already separated from user-facing reads. Scheduled workers fetch and normalize external data, domain services calculate results, and APIs expose controlled state to web, WeChat and bot experiences.
+
+Relational records provide durable domain state. Redis supports freshness-sensitive reads and derived views. A cache miss can be rebuilt; it is not treated as an alternative authority. Product clients also avoid implementing their own scoring rules, which prevents three surfaces from returning three answers.
+
+## What this changed in my approach
+
+The useful abstraction is not “database plus cache.” It is a set of invariants and recovery scopes:
+
+- participant identity can be repaired independently;
+- structural records may require a rebuild;
+- event calculations can be rerun by event;
+- every repair is followed by verification;
+- logs carry the tournament and event identifiers needed to investigate one path.
+
+I would use the same approach for feeds, imports or scheduled reporting: state what complete data means, detect the smallest failed unit, repair that unit, and verify the invariant again. Reliability becomes much easier to operate when recovery is an explicit product workflow rather than an emergency script.

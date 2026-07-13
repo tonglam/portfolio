@@ -1,85 +1,52 @@
+import createMDX from '@next/mdx';
+
+const developmentScriptSource = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
+
+const securityHeaders = [
+  { key: 'X-DNS-Prefetch-Control', value: 'on' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  {
+    key: 'Content-Security-Policy',
+    value: [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "img-src 'self' data: blob:",
+      "font-src 'self' data:",
+      "style-src 'self' 'unsafe-inline'",
+      `script-src 'self' 'unsafe-inline'${developmentScriptSource} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
+      "connect-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+    ].join('; '),
+  },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove output: "export" to enable API routes
-  // output: "export",
-  staticPageGenerationTimeout: 180, // Increase timeout to 3 minutes
-  eslint: {
-    ignoreDuringBuilds: true,
-    dirs: ['pages', 'app', 'components', 'hooks', 'lib', 'data', 'types'],
-  },
-  images: {
-    unoptimized: true,
-    minimumCacheTTL: 60,
-    domains: [
-      'res.cloudinary.com',
-      'media.licdn.com',
-      'images.credly.com',
-      'v0.dev',
-      'bolt.new',
-      'cursor.com',
-      'codeium.com',
-      'claudemcp.com',
-    ],
-    formats: ['image/webp'],
-  },
-  // Custom headers cannot be used with output: 'export'
-  // The resume can be placed in the /public folder and accessed directly
-  env: {
-    RESEND_API_KEY: process.env.RESEND_API_KEY,
-  },
-  // Add performance optimizations
+  allowedDevOrigins: ['127.0.0.1'],
+  pageExtensions: ['ts', 'tsx', 'md', 'mdx'],
   poweredByHeader: false,
   reactStrictMode: true,
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+  images: {
+    formats: ['image/avif', 'image/webp'],
   },
-  // Add security headers
   async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }];
+  },
+  async redirects() {
     return [
       {
         source: '/:path*',
-        headers: [
-          { key: 'X-DNS-Prefetch-Control', value: 'on' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'origin-when-cross-origin' },
-          {
-            key: 'Content-Security-Policy',
-            value:
-              "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.vercel-scripts.com https://*.vercel-insights.com https://*.vercel-analytics.com https://*.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://*.vercel-scripts.com https://*.vercel-insights.com https://*.vercel-analytics.com https://*.cloudflareinsights.com;",
-          },
-        ],
+        has: [{ type: 'host', value: 'qitonglan.com' }],
+        destination: 'https://www.qitonglan.com/:path*',
+        permanent: true,
       },
     ];
   },
-  // Webpack configuration
-  webpack: (config, { dev, isServer }) => {
-    // Optimize production builds
-    if (!dev && !isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        minSize: 20000,
-        maxSize: 244000,
-        minChunks: 1,
-        maxAsyncRequests: 30,
-        maxInitialRequests: 30,
-        cacheGroups: {
-          defaultVendors: {
-            test: /[\\/]node_modules[\\/]/,
-            priority: -10,
-            reuseExistingChunk: true,
-          },
-          default: {
-            minChunks: 2,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-        },
-      };
-    }
-    return config;
-  },
 };
 
-export default nextConfig;
+const withMDX = createMDX({});
+export default withMDX(nextConfig);

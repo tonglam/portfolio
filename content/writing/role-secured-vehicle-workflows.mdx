@@ -1,0 +1,69 @@
+The Vehicle Operations & Compliance Platform is a deployed product project for vehicle, driver, inspection, agreement, signature, document and compliance workflows. The application uses Next.js, TypeScript, Better Auth, Drizzle ORM and PostgreSQL. Its public deployment requires sign-in; the repository provides the inspectable implementation evidence.
+
+The difficult part is not drawing the dashboard. It is ensuring that the same permission and workflow rules apply when a request reaches the server.
+
+## One authorization boundary for agreement mutations
+
+The application has four roles: admin, manager, inspector and viewer. Agreement creation, editing, finalisation, export and supporting-document changes are restricted to admin and manager users.
+
+Earlier route handlers repeated the same sequence: read the Better Auth session, query the user and role, compare role names, then continue. Repetition made each endpoint locally understandable, but it also created several places where active-user checks or role lists could drift.
+
+The agreement endpoints now call one server helper that performs four steps:
+
+```text
+read session from request headers
+  -> reject missing session with 401
+  -> load the active user and role
+  -> compare the role with the operation policy
+  -> return the typed user or a 403 response
+```
+
+The policy itself is a small pure function. Focused tests verify that admin and manager are accepted while inspector and viewer are rejected. The interface can still hide unavailable actions, but the server check remains authoritative.
+
+## Give agreement state a transition policy
+
+The agreement lifecycle is explicit:
+
+```text
+draft -> pending_signature -> signed
+  |             |             |
+  +-------------+-------------+-> terminated
+```
+
+The implementation represents permitted transitions as data rather than scattering comparisons through pages. Tests cover the expected signing path and reject reversal from signed to pending signature or any new action after termination.
+
+This matters because a valid signing token is only one condition. The current agreement state must also permit signing. A terminated agreement with an old token should not become signed again.
+
+## Keep the HTTP route focused on transport
+
+Finalising an agreement used to combine session lookup, role checks, agreement and driver queries, content resolution, token generation, database updates, link construction and email delivery in one route file.
+
+The revised request path is narrower:
+
+```text
+POST /agreements/:id/finalise
+  -> authorize admin or manager
+  -> validate driverId and optional content
+  -> call finaliseAgreementForSigning(...)
+  -> map workflow errors to an HTTP response
+```
+
+The service loads the agreement and driver, checks the state transition, reuses or creates the signing token, persists the pending-signature state and sends the invitation. A retry reuses the token rather than generating a second signing URL.
+
+Email is an external side effect, so it cannot be made atomic with the database update. The chosen behaviour is explicit: persistence happens first; if delivery fails, the route returns a retryable error and the same token can be used on the next attempt. That trade-off is more honest than implying the database and email provider share one transaction.
+
+## Fail closed on production secrets
+
+Authentication configuration is also part of the product boundary. A development fallback must not quietly become the production signing secret.
+
+The auth setup now requires `BETTER_AUTH_SECRET` when `NODE_ENV` is production. Local development can use an isolated fallback, while a production build or startup without the configured secret fails immediately. Password-reset logs also avoid printing reset URLs or tokens; the sensitive link is sent through the email provider instead.
+
+During this hardening pass, production dependencies were upgraded to patched releases and audited again. The remaining advisories are moderate; there are no high or critical production audit findings in the reviewed branch.
+
+## Use server rendering where it fits the work
+
+Most operational screens are read-heavy: tables, vehicle details, inspection records and agreement context. Server Components render those views, while client components remain useful for forms, filtering and immediate feedback.
+
+This is not a claim that every route in the project is perfectly layered. The focused improvement is inspectable: shared authorization for agreement operations, a service-owned signing transition, a production secret guard and policy tests. Presenting that exact scope is more useful than describing an ideal architecture the repository has not reached.
+
+The broader lesson is that an operational interface can stay simple only when the server makes responsibility explicit: who may act, which transition is allowed, what record changes, and how a failed external side effect can be retried safely.

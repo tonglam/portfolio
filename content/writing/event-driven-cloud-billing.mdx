@@ -1,0 +1,83 @@
+Cloud billing connects product usage to financial records. Cloud-product teams emit usage, pricing and discount rules turn that usage into charges, account APIs expose the result, and invoice or payment workflows move it forward.
+
+I worked as one of three senior software engineers on a distributed billing program at China Telecom Cloud Technology Co., Ltd. The workstream used Java/Spring Boot, Node.js, Kafka and MySQL. This article uses a sanitized example to explain the engineering decisions without exposing internal code, pricing rules or operational data.
+
+## Make the event contract answer operational questions
+
+Kafka moves a record, but it does not define what that record means. A billing consumer needs enough information to identify the source, calculate the correct period and recognize a replay.
+
+A reduced contract might look like this:
+
+```json
+{
+  "eventId": "evt_01...",
+  "schemaVersion": 2,
+  "accountId": "acct_...",
+  "productCode": "compute",
+  "resourceId": "resource_...",
+  "usageStart": "2026-07-01T00:00:00Z",
+  "usageEnd": "2026-07-01T01:00:00Z",
+  "quantity": "12.500",
+  "unit": "instance-hour",
+  "correctionOf": null
+}
+```
+
+The identifiers and timestamps are more important than the example names. Together they answer: who produced the usage, which customer and resource it belongs to, what interval was measured, which unit and precision apply, and whether this is a correction.
+
+Versioning is part of that contract. Producers and consumers do not always deploy together, so a consumer should reject an unknown shape clearly rather than interpret it as an older record.
+
+## Treat duplicate delivery as normal
+
+An asynchronous consumer can finish its database work and restart before acknowledging the message. The broker then delivers the same event again. For billing, “probably once” is not an acceptable financial rule.
+
+The persistence decision needs a stable business key. In pseudocode:
+
+```text
+begin transaction
+  if processed_event exists for eventId + schemaVersion
+    return existing result
+
+  validate account, product, interval and unit
+  calculate charge with the selected rule version
+  persist calculation inputs and output
+  record processed_event
+commit
+```
+
+The processed-event record and the calculated charge belong in the same database transaction. Otherwise a crash between them recreates the ambiguity the idempotency check was meant to remove.
+
+A legitimate correction is not a duplicate. It should carry its own identity and reference the record it adjusts, so the financial history remains explainable instead of overwriting the earlier input silently.
+
+## Preserve the calculation, not only the amount
+
+Pricing and discounts change. A stored final amount is hard to support if nobody can recover the input quantity, unit, rule version and discount decision that produced it.
+
+The calculation record should retain enough context to answer a customer or reconciliation question later:
+
+- the normalized usage record;
+- the pricing rule version selected for the interval;
+- discounts applied and their order;
+- currency and rounding decisions;
+- the resulting charge and invoice reference;
+- correlation identifiers used across services.
+
+This is not the same as logging every internal value. It is a deliberate financial audit trail with controlled access and retention.
+
+## Classify failures before retrying
+
+Retries help temporary failures, but they amplify permanent ones. I use three categories when reasoning about a billing consumer:
+
+1. **Transient infrastructure failure** — database timeout or unavailable dependency; retry with limits and backoff.
+2. **Invalid business input** — unknown unit, missing account or impossible interval; record the reason and route for investigation.
+3. **Unsupported contract version** — stop interpretation, surface the producer and schema version, and resolve the compatibility gap.
+
+Every category should preserve the business identifiers from the event contract. An operator must be able to follow one usage record from ingestion through calculation, persistence and invoicing without searching by an approximate timestamp.
+
+## Domain boundaries keep teams independent
+
+“Billing service” is too large to be one useful responsibility. Usage ingestion, pricing, discounts, calculated charges, account presentation, invoicing and payment integration change for different reasons.
+
+Separating those domains does not require turning every class into a network service. It requires explicit ownership and contracts. A presentation change should not alter ingestion semantics; an upstream product should not need to understand discount implementation; an invoice workflow should consume an explainable charge rather than recalculate usage.
+
+The broader lesson from distributed billing is that correctness comes from the model around the message: stable identity, versioned contracts, idempotent persistence, traceable calculations and failure-specific recovery. Kafka supports those choices, but the broker cannot make them on the team’s behalf.
