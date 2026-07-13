@@ -7,9 +7,12 @@ const studies = [
     eyebrow: 'Real-time analytics & workflow platform',
     summary:
       'A maintained full-stack Fantasy Premier League platform that turns fast-moving external data into live analytics, tournament workflows, notifications, and companion experiences.',
+    seoDescription:
+      'Explore how I built and maintain LetLetMe, a full-stack FPL platform serving 800+ users with live data, APIs, workflows and recovery paths.',
     cardFocus:
       'Keeping live scores, tournament state and notifications consistent when upstream data changes.',
     period: 'April 2020 — present',
+    updatedAt: '2026-07-13',
     role: 'Builder and maintainer across product, backend services, data workflows and cloud delivery',
     ownership: [
       'Product and architecture decisions across web, API, processing and delivery surfaces',
@@ -158,9 +161,12 @@ const studies = [
     eyebrow: 'Role-secured operational product',
     summary:
       'A deployed full-stack web application for vehicle, driver, inspection, agreement, signature, document and compliance workflows.',
+    seoDescription:
+      'A full-stack Next.js case study covering role-secured vehicle, inspection, agreement, signature, document and compliance workflows.',
     cardFocus:
       'Making role-secured operational records understandable across inspections, signatures, agreements and documents.',
     period: '2025',
+    updatedAt: '2026-07-13',
     role: 'Full-stack product design and implementation',
     ownership: [
       'Domain modelling for vehicles, users and operational records',

@@ -108,6 +108,40 @@ test('resume files and discovery endpoints are available', async ({ request }) =
   }
 });
 
+test('indexable routes expose complete discovery metadata', async ({ page }) => {
+  for (const route of publicRoutes.filter(route => route !== '/writing/archive')) {
+    await page.goto(route);
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.+/);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /.+/);
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute('content', /.+/);
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /.+/);
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', /.+/);
+    await expect(page.locator('h1')).toHaveCount(1);
+  }
+});
+
+test('writing uses a logical heading hierarchy and advertises RSS', async ({ page }) => {
+  await page.goto('/writing');
+  await expect(page.locator('h1')).toHaveCount(1);
+  await expect(page.locator('.article-card h2')).toHaveCount(3);
+  await expect(page.locator('link[rel="alternate"][type="application/rss+xml"]')).toHaveAttribute(
+    'href',
+    'https://www.qitonglan.com/rss.xml'
+  );
+});
+
+test('articles expose image and breadcrumb structured data', async ({ page }) => {
+  await page.goto('/writing/reliable-live-data-pipelines');
+  const schemas = await page.locator('script[type="application/ld+json"]').allTextContents();
+  const parsed = schemas.flatMap(value => {
+    const data = JSON.parse(value);
+    return Array.isArray(data) ? data : [data];
+  });
+  expect(parsed.find(item => item['@type'] === 'Article')?.image).toContain('/opengraph-image');
+  expect(parsed.find(item => item['@type'] === 'BreadcrumbList')).toBeDefined();
+});
+
 test('unknown routes render the custom 404', async ({ page }) => {
   const response = await page.goto('/this-route-does-not-exist');
   expect(response?.status()).toBe(404);

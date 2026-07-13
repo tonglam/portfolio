@@ -1,6 +1,7 @@
 import { access, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import robots from '@/app/robots';
 import sitemap from '@/app/sitemap';
 import { GET as getRss } from '@/app/rss.xml/route';
 import { archiveGroups, archivePosts } from '@/src/content/archive';
@@ -63,13 +64,27 @@ describe('portfolio content', () => {
   });
 
   it('generates a sitemap containing only real canonical routes', () => {
-    const routes = sitemap().map(({ url }) => url);
+    const entries = sitemap();
+    const routes = entries.map(({ url }) => url);
     expect(routes).toContain(site.url);
     expect(routes).toContain(site.url + '/work/letletme');
     expect(routes).toContain(site.url + '/work/vehicle-operations');
     expect(routes).toContain(site.url + '/writing');
     expect(routes).not.toContain(site.url + '/about');
     expect(routes).not.toContain(site.url + '/writing/archive');
+    expect(entries.every(({ lastModified }) => lastModified instanceof Date)).toBe(true);
+  });
+
+  it('keeps noindex pages crawlable so crawlers can observe their metadata', () => {
+    expect(JSON.stringify(robots())).not.toContain('/writing/archive');
+  });
+
+  it('provides concise search titles and page-specific descriptions', () => {
+    expect(new Set(articleMetadata.map(({ seoTitle }) => seoTitle)).size).toBe(
+      articleMetadata.length
+    );
+    expect(articleMetadata.every(({ seoTitle }) => seoTitle.length <= 40)).toBe(true);
+    expect(caseStudies.every(({ seoDescription }) => seoDescription.length <= 160)).toBe(true);
   });
 
   it('generates an RSS document for all three articles', async () => {

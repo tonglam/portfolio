@@ -23,15 +23,19 @@ export async function generateMetadata({
   if (!study) return {};
   return {
     title: study.title,
-    description: study.summary,
+    description: study.seoDescription,
     alternates: { canonical: `/work/${study.slug}` },
     openGraph: {
       type: 'article',
       url: `/work/${study.slug}`,
       title: study.title,
-      description: study.summary,
+      description: study.seoDescription,
     },
-    twitter: { card: 'summary_large_image', title: study.title, description: study.summary },
+    twitter: {
+      card: 'summary_large_image',
+      title: study.title,
+      description: study.seoDescription,
+    },
   };
 }
 
@@ -40,14 +44,23 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
   const study = getCaseStudy(slug);
   if (!study) notFound();
   const canonical = `${site.url}/work/${study.slug}`;
+  const image = `${canonical}/opengraph-image`;
   const jsonLd = [
     {
       '@context': 'https://schema.org',
       '@type': 'CreativeWork',
       name: study.title,
-      description: study.summary,
+      description: study.seoDescription,
       url: canonical,
-      author: { '@type': 'Person', name: site.name, url: site.url },
+      mainEntityOfPage: canonical,
+      image,
+      dateModified: study.updatedAt,
+      author: {
+        '@type': 'Person',
+        name: site.name,
+        url: site.url,
+        sameAs: [site.social.linkedin, site.social.github],
+      },
       keywords: study.capabilities.join(', '),
     },
     {
@@ -55,8 +68,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: site.url },
-        { '@type': 'ListItem', position: 2, name: 'Work', item: `${site.url}/#work` },
-        { '@type': 'ListItem', position: 3, name: study.title, item: canonical },
+        { '@type': 'ListItem', position: 2, name: study.title, item: canonical },
       ],
     },
   ];

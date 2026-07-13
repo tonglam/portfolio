@@ -5,6 +5,7 @@ export const site = {
   email: 'qitonglan@gmail.com',
   location: 'Perth, WA',
   workRights: 'Full Australian working rights',
+  updatedAt: '2026-07-13',
   description:
     'Perth-based full-stack software engineer with 8+ years of commercial experience delivering web products, APIs, data workflows and cloud systems.',
   social: {

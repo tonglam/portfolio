@@ -77,7 +77,17 @@ export function CaseStudyCard({ study, index }: { study: CaseStudy; index: numbe
   );
 }
 
-export function ArticleCard({ article, index }: { article: WritingMeta; index: number }) {
+export function ArticleCard({
+  article,
+  index,
+  headingLevel = 3,
+}: {
+  article: WritingMeta;
+  index: number;
+  headingLevel?: 2 | 3;
+}) {
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
+
   return (
     <article className="article-card">
       <div className="article-index">0{index + 1}</div>
@@ -85,9 +95,9 @@ export function ArticleCard({ article, index }: { article: WritingMeta; index: n
         <p className="article-meta">
           {formatPublicationDate(article.publishedAt)} · {article.minutes} min read
         </p>
-        <h3>
+        <Heading>
           <Link href={`/writing/${article.slug}`}>{article.title}</Link>
-        </h3>
+        </Heading>
         <p>{article.description}</p>
         <div className="tag-row">
           {article.tags.map(tag => (

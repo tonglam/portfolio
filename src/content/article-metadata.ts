@@ -16,6 +16,7 @@ const metadata = [
   {
     slug: 'reliable-live-data-pipelines',
     title: 'Building reliable live-data pipelines for a real-time FPL platform',
+    seoTitle: 'Reliable FPL Data Pipelines',
     description:
       'How explicit freshness, synchronized storage and repair workflows keep a live analytics product dependable.',
     publishedAt: '2026-07-13',
@@ -27,6 +28,7 @@ const metadata = [
   {
     slug: 'event-driven-cloud-billing',
     title: 'From usage records to invoices: lessons from event-driven cloud billing',
+    seoTitle: 'Event-Driven Cloud Billing Lessons',
     description:
       'A sanitized view of the boundaries, contracts and failure handling that make distributed billing workflows understandable.',
     publishedAt: '2026-07-13',
@@ -38,6 +40,7 @@ const metadata = [
   {
     slug: 'role-secured-vehicle-workflows',
     title: 'Designing role-secured vehicle operations and compliance workflows',
+    seoTitle: 'Role-Secured Vehicle Workflows',
     description:
       'How a full-stack operational product keeps permissions, records and workflow state understandable.',
     publishedAt: '2026-07-13',

@@ -932,6 +932,7 @@ h3 {
 }
 
 .work-card h3,
+.article-card h2,
 .article-card h3,
 .timeline-row h3,
 .capability-card h3,
@@ -1228,12 +1229,14 @@ h3 {
   color: var(--quiet);
 }
 
+.article-card h2,
 .article-card h3 {
   max-width: 820px;
   margin-bottom: 12px;
   font-size: clamp(1.8rem, 3vw, 2.8rem);
 }
 
+.article-card h2 a,
 .article-card h3 a {
   text-decoration: none;
 }

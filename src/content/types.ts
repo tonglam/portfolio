@@ -5,8 +5,10 @@ export const caseStudySchema = z.object({
   title: z.string().min(1),
   eyebrow: z.string().min(1),
   summary: z.string().min(1),
+  seoDescription: z.string().min(1),
   cardFocus: z.string().min(1),
   period: z.string().min(1),
+  updatedAt: z.string().date(),
   role: z.string().min(1),
   ownership: z.array(z.string().min(1)).min(1),
   evidence: z.array(z.object({ label: z.string(), value: z.string() })).min(1),
@@ -73,6 +75,7 @@ export const caseStudySchema = z.object({
 export const writingMetaSchema = z.object({
   slug: z.string().min(1),
   title: z.string().min(1),
+  seoTitle: z.string().min(1),
   description: z.string().min(1),
   publishedAt: z.string().date(),
   updatedAt: z.string().date(),
