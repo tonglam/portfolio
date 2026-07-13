@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = 'Qitong Lan — Software engineer building dependable systems and useful products';
+export const alt = 'Qitong Lan — Full-stack software engineer in Perth';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -28,12 +28,12 @@ export default function OpenGraphImage() {
           color: '#9facb7',
         }}
       >
-        <span>QL / SYSTEMS &amp; PRODUCTS</span>
+        <span>QL / FULL-STACK SOFTWARE ENGINEER</span>
         <span>PERTH, WA</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
         <div style={{ fontSize: 76, lineHeight: 1.02, maxWidth: 980 }}>
-          Dependable backend platforms. Useful web products.
+          End-to-end product delivery. Deep backend engineering.
         </div>
         <div style={{ fontSize: 28, color: '#aeb9c2' }}>
           Qitong Lan · Software Engineer · Full Australian working rights

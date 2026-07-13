@@ -54,7 +54,7 @@ export function SiteHeader() {
       <div className="site-header-inner">
         <Link className="brand" href="/" aria-label="Qitong Lan, home">
           <span className="brand-mark">QL</span>
-          <span className="brand-name">systems &amp; products</span>
+          <span className="brand-name">full-stack software engineer</span>
         </Link>
 
         <nav className="desktop-nav" aria-label="Primary navigation">

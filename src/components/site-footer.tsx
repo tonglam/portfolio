@@ -8,7 +8,7 @@ export function SiteFooter() {
       <div className="shell footer-grid">
         <div>
           <p className="footer-name">Qitong Lan</p>
-          <p>Software engineer building dependable systems and useful products.</p>
+          <p>Full-stack software engineer delivering dependable products end to end.</p>
         </div>
         <nav aria-label="Footer navigation">
           <Link href="/#work">Work</Link>

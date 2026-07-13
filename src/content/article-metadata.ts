@@ -39,7 +39,7 @@ const metadata = [
     slug: 'role-secured-vehicle-workflows',
     title: 'Designing role-secured vehicle operations and compliance workflows',
     description:
-      'How a backend-heavy operational product keeps permissions, records and workflow state understandable.',
+      'How a full-stack operational product keeps permissions, records and workflow state understandable.',
     publishedAt: '2026-07-13',
     updatedAt: '2026-07-13',
     tags: ['Next.js', 'Authentication', 'Domain modelling'],

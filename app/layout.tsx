@@ -43,12 +43,13 @@ export const metadata: Metadata = {
   authors: [{ name: site.name, url: site.url }],
   creator: site.name,
   keywords: [
+    'full-stack software engineer Perth',
     'software engineer Perth',
+    'React Next.js engineer',
+    'TypeScript Node.js engineer',
     'backend engineer',
     'platform engineer',
-    'full-stack engineer',
     'Java Spring Boot',
-    'TypeScript Node.js',
   ],
   alternates: { canonical: '/' },
   openGraph: {

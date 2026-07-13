@@ -157,7 +157,7 @@ const studies = [
     title: 'Vehicle Operations & Compliance Platform',
     eyebrow: 'Role-secured operational product',
     summary:
-      'A deployed backend-heavy web application for vehicle, driver, inspection, agreement, signature, document and compliance workflows.',
+      'A deployed full-stack web application for vehicle, driver, inspection, agreement, signature, document and compliance workflows.',
     cardFocus:
       'Making role-secured operational records understandable across inspections, signatures, agreements and documents.',
     period: '2025',

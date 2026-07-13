@@ -16,7 +16,7 @@ export default function HomePage() {
       name: site.name,
       url: site.url,
       email: `mailto:${site.email}`,
-      jobTitle: 'Software Engineer',
+      jobTitle: 'Full-Stack Software Engineer',
       address: {
         '@type': 'PostalAddress',
         addressLocality: 'Perth',
@@ -26,11 +26,13 @@ export default function HomePage() {
       sameAs: [site.social.linkedin, site.social.github],
       alumniOf: { '@type': 'CollegeOrUniversity', name: 'The University of Western Australia' },
       knowsAbout: [
-        'Backend engineering',
+        'Full-stack product delivery',
+        'React',
+        'Next.js',
+        'TypeScript',
         'API design',
         'Distributed systems',
         'Java',
-        'TypeScript',
         'Cloud delivery',
       ],
     },
@@ -51,10 +53,10 @@ export default function HomePage() {
           <p className="availability">
             <span aria-hidden="true" /> Open to Perth, hybrid and remote software roles
           </p>
-          <h1>I build dependable backend systems and useful products.</h1>
+          <h1>I build dependable products across interfaces, APIs, data and cloud.</h1>
           <p className="hero-intro">
-            Hands-on software engineer with 8+ years of commercial experience across cloud billing,
-            telecommunications CRM, game operations and current full-stack products.
+            Hands-on full-stack software engineer with 8+ years of commercial experience across
+            cloud billing, telecommunications CRM, game operations and current web products.
           </p>
           <div className="hero-location">
             <MapPin aria-hidden="true" size={17} /> {site.location} · {site.workRights}
@@ -104,7 +106,7 @@ export default function HomePage() {
       <section id="work" className="section shell">
         <SectionHeading
           eyebrow="Selected work / 01"
-          title="Systems with real operating context."
+          title="Products built for real operating conditions."
           intro="Two products, shown through architecture, decisions and defensible evidence—not just technology lists."
         />
         <div className="work-grid">
@@ -186,7 +188,7 @@ export default function HomePage() {
       <section id="about" className="section shell about-grid">
         <div>
           <p className="eyebrow">About / 05</p>
-          <h2 className="about-title">A backend foundation with product instincts.</h2>
+          <h2 className="about-title">Full-stack delivery with substantial backend depth.</h2>
         </div>
         <div className="about-copy">
           <p>
@@ -194,9 +196,9 @@ export default function HomePage() {
             the user experience need to make sense together.
           </p>
           <p>
-            My commercial background is strongest in Java/Spring Boot services, APIs, distributed
-            workflows and SQL. Current products extend that foundation through TypeScript, Node.js,
-            React, Next.js and cloud delivery.
+            I currently deliver products across TypeScript, React, Next.js, Node.js, APIs, data and
+            cloud deployment. That end-to-end work is backed by substantial commercial experience
+            with Java/Spring Boot services, distributed workflows and SQL.
           </p>
           <div className="education-block">
             <div>
