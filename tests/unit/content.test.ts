@@ -105,4 +105,10 @@ describe('portfolio content', () => {
       expect((await stat(path)).size).toBeGreaterThan(100_000);
     }
   });
+
+  it('avoids late font swaps that can shift the long homepage', async () => {
+    const layout = await readFile(join(process.cwd(), 'app/layout.tsx'), 'utf8');
+    expect(layout.match(/display: 'optional'/g)).toHaveLength(3);
+    expect(layout).not.toContain("display: 'swap'");
+  });
 });

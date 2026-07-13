@@ -22,14 +22,14 @@ const sans = IBM_Plex_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   variable: '--font-sans',
-  display: 'swap',
+  display: 'optional',
 });
 
 const mono = IBM_Plex_Mono({
   subsets: ['latin'],
   weight: ['400'],
   variable: '--font-mono',
-  display: 'swap',
+  display: 'optional',
 });
 
 export const metadata: Metadata = {
