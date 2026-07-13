@@ -18,8 +18,8 @@ const securityHeaders = [
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
-      `script-src 'self' 'unsafe-inline'${developmentScriptSource} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
-      "connect-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+      `script-src 'self' 'unsafe-inline'${developmentScriptSource} https://va.vercel-scripts.com https://vitals.vercel-insights.com https://static.cloudflareinsights.com`,
+      "connect-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com https://cloudflareinsights.com",
     ].join('; '),
   },
 ];

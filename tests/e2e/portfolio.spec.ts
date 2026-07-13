@@ -108,6 +108,16 @@ test('resume files and discovery endpoints are available', async ({ request }) =
   }
 });
 
+test('content security policy permits configured analytics providers', async ({ request }) => {
+  const response = await request.get('/');
+  const policy = response.headers()['content-security-policy'];
+
+  expect(policy).toContain('https://va.vercel-scripts.com');
+  expect(policy).toContain('https://vitals.vercel-insights.com');
+  expect(policy).toContain('https://static.cloudflareinsights.com');
+  expect(policy).toContain('https://cloudflareinsights.com');
+});
+
 test('indexable routes expose complete discovery metadata', async ({ page }) => {
   for (const route of publicRoutes.filter(route => route !== '/writing/archive')) {
     await page.goto(route);
