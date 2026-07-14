@@ -2,6 +2,10 @@
 
 An evidence-led engineering portfolio built with Next.js App Router, React, TypeScript, and local MDX. The public site is intentionally static-first: there is no runtime CMS, database, contact form, or email service.
 
+## Problem and audience
+
+The site gives recruiters and engineering reviewers a short path from professional identity to verifiable work. It presents two implemented case studies, consistent career evidence, technical writing, and role-specific CV downloads without requiring a reviewer to navigate unrelated repositories.
+
 ## Public routes
 
 - `/` — evidence-led homepage
@@ -21,6 +25,13 @@ An evidence-led engineering portfolio built with Next.js App Router, React, Type
 - Semantic design tokens with system, light, and dark themes
 
 The production canonical is `https://www.qitonglan.com`. Requests to the apex host are redirected to `www` by `next.config.js`.
+
+## Design decisions and trade-offs
+
+- Local typed content trades non-technical CMS editing for build-time validation, simpler deployment, and no runtime content dependency.
+- Static-first rendering keeps the public surface small and reliable; interactive code is limited to controls that need client state.
+- Two role-specific CV downloads add a small maintenance cost, so stable filenames and hash verification are part of the release process.
+- The portfolio summarizes commercial systems without publishing confidential source code, customer data, or unsupported architecture claims.
 
 ## Requirements
 
@@ -50,3 +61,7 @@ Résumé files must be copied from the two approved job-artifacts baselines and 
 ## Security and operations
 
 Security headers and the apex redirect live in `next.config.js`. No service secret is required by this application. If an older deployment ever exposed a Resend key through client configuration, rotate that key independently before production release.
+
+## Current status
+
+Portfolio V2 is deployed at [www.qitonglan.com](https://www.qitonglan.com). The current release contains two implemented case studies and two approved CV downloads. Changes are accepted only after `npm run validate`, a production build, and focused browser verification.
